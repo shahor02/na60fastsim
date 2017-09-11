@@ -76,6 +76,7 @@ class KMCProbeFwd: public TObject {
   double   GetP()                        const {return fTrack.GetP();}
   Double_t GetSigmaX2()                  const {return fTrack.GetSigmaZ2();}
   Double_t GetSigmaY2()                  const {return fTrack.GetSigmaY2();}
+  Double_t GetSigmaXY()                  const {return fTrack.GetSigmaZY();}  
   Double_t GetSigmaP2()                  const;
   Double_t GetSigmaPX2()                 const;
   Double_t GetSigmaPY2()                 const;

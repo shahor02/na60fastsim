@@ -37,6 +37,7 @@ class KMCDetectorFwd : public TNamed {
   void         ClassifyLayers();
   void         ResetMCTracks(Int_t maxLr);
   //
+  void     SetApplyBransonPCorrection(float v = 1e-6) {fApplyBransonPCorrection = v;} // set to negative to not apply BP correction
   void     SetIncludeVertex(Bool_t v=kTRUE)       {fIncludeVertex = v;}
   Bool_t   GetIncludeVertex()               const {return fIncludeVertex;}
   //-------------------
@@ -161,6 +162,7 @@ class KMCDetectorFwd : public TNamed {
   KMCProbeFwd fProbe;
   Bool_t   fExternalInput; // MC particles are set externally
   Bool_t   fIncludeVertex;
+  float    fApplyBransonPCorrection; // if >=0, apply BP correction with additional error on the vertex
   Bool_t   fUseBackground; // do we want to simulate background?
   // reconstruction settings
   Double_t fMaxChi2Cl;   // max cluster-track chi2 
