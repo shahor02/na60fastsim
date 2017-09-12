@@ -34,6 +34,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   ,fProbe()
   ,fExternalInput(kFALSE)
   ,fIncludeVertex(kTRUE)
+  ,fApplyBransonPCorrection(1e-6)
   ,fUseBackground(kTRUE)
   ,fMaxChi2Cl(10.)
   ,fMaxNormChi2NDF(10)
@@ -748,6 +749,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   Bool_t checkMS = kTRUE;
   //
   KMCProbeFwd *currTrP=0,*currTr=0;
+  static KMCProbeFwd trcConstr;
   int maxLr = fLastActiveLayerITS;
   if (offset>0) maxLr += offset;
   if (maxLr>fLastActiveLayer) maxLr = fLastActiveLayer;
@@ -816,7 +818,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	}
 	// printf("\nAt Lr:%s ",lrP->GetName()); currTr->GetTrack()->Print();
 	if (!clmc->IsKilled()) {
+	  //	  lrP->Print("");
+	  //	  printf("BeforeMS Update: "); currTr->Print("etp");
 	  if (!UpdateTrack(currTr, lrP, clmc)) {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // update with correct MC cl.
+	  //	  printf("AfterMS Update: "); currTr->Print("etp");
 	}
 	if (!PropagateToLayer(currTr,lrP,lr,-1))            {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer	
       }      
@@ -829,6 +834,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     //    KMCClusterFwd* clMC = lrP->GetMCCluster();
     //int nseeds = 0;
     // here ITS layers
+    //   
     //
     AliDebug(2,Form("From Lr: %d | %d seeds, %d bg clusters",j+1,ntPrev,lrP->GetNBgClusters()));
     for (int itrP=0;itrP<ntPrev;itrP++) { // loop over all tracks from previous layer
@@ -845,7 +851,44 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	if (fHChi2MS) fHChi2MS->Fill(currTr->GetChi2(),currTr->GetNHits());      
       }
       //
+      // Are we entering to the last ITS layer? Apply Branson plane correction if requested
+      if (lrP->GetID() == fLastActiveLayerITS && fVtx && !fVtx->IsDead() && fApplyBransonPCorrection>=0) {
+	//	printf("%e -> %e (%d %d) | %e\n",lrP->GetZ(),lr->GetZ(), lrP->GetID(),j, currTr->GetZ());
+
+	trcConstr = *currTrP;
+	if (!PropagateToLayer(&trcConstr,lrP,fVtx,-1))  {currTrP->Kill();continue;} // propagate to vertex
+	//////	trcConstr.ResetCovariance();
+	// update with vertex point + eventual additional error
+	float origErrX = fVtx->GetYRes(), origErrY = fVtx->GetXRes(); // !!! Ylab<->Ytracking, Xlab<->Ztracking
+	KMCClusterFwd* clv = fVtx->GetMCCluster();
+	double measCV[2] = {clv->GetY(),clv->GetZ()}, errCV[3] = {
+	  origErrX*origErrX+fApplyBransonPCorrection*fApplyBransonPCorrection,
+	  0.,
+	  origErrY*origErrY+fApplyBransonPCorrection*fApplyBransonPCorrection
+	};
+	//	printf("UpdVtx: {%+e %+e}/{%e %e %e}\n",measCV[0],measCV[1],errCV[0],errCV[1],errCV[2]);
+	//	printf("Muon@Vtx:  "); trcConstr.Print("etp");
+	if (!trcConstr.Update(measCV,errCV)) {currTrP->Kill();continue;}
+	//	printf("Truth@VTX: "); fProbe.Print("etp");
+	//	printf("Constraint@VTX: "); trcConstr.Print("etp");	
+	if (!PropagateToLayer(&trcConstr,fVtx,lrP,1)) {currTrP->Kill();continue;}
+	// constrain Muon Track
+	//	printf("Constraint: "); trcConstr.Print("etp");
+
+	//////	double measCM[2] = {trcConstr.GetYLoc(), trcConstr.GetZLoc()}, errCM[3] = {
+	//////	  trcConstr.GetSigmaY2(),trcConstr.GetSigmaXY(),trcConstr.GetSigmaX2()
+	//////	};
+
+	//////	printf("UpdMuon: {%+e %+e}/{%e %e %e}\n",measCM[0],measCM[1],errCM[0],errCM[1],errCM[2]);
+	//////	printf("Before constraint: "); currTrP->Print("etp");
+	//////	if (!currTrP->Update(measCM,errCM)) {currTrP->Kill();continue;}
+	(*currTrP->GetTrack()) = *trcConstr.GetTrack(); // override with constraint
+	//	printf("After  constraint: "); currTrP->Print("etp");
+	//	printf("MuTruth "); lrP->GetAnProbe()->Print("etp");
+      }
+      
       currTr = lr->AddMCTrack( currTrP );
+      
       if (fst<fstLim) {
 	fst++;
 	currTr->Print("etp");

@@ -289,7 +289,7 @@ void KMCProbeFwd::ResetCovariance(float err)
   double *trPars = (double*)fTrack.GetParameter();
   const double kLargeErr2Coord = 50*50;
   const double kLargeErr2Dir = 0.6*0.6;
-  const double kLargeErr2PtI = 0.5*0.5;
+  const double kLargeErr2PtI = 2.;
   for (int ic=15;ic--;) trCov[ic] = 0.;
   trCov[kY2]   = trCov[kZ2]   = err<0 ? kLargeErr2Coord : err*err; 
   trCov[kSnp2] = trCov[kTgl2] = kLargeErr2Dir;
