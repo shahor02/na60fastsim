@@ -34,7 +34,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   ,fProbe()
   ,fExternalInput(kFALSE)
   ,fIncludeVertex(kTRUE)
-  ,fApplyBransonPCorrection(1e-6)
+  ,fApplyBransonPCorrection(0.1)
   ,fUseBackground(kTRUE)
   ,fMaxChi2Cl(10.)
   ,fMaxNormChi2NDF(10)
@@ -49,6 +49,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
 ,fDecayZProf(0)
 ,fZDecay(0)
 ,fDecMode(kNoDecay)
+,fChi2MuVtx(0)
 ,fFldNReg(0)
 ,fFldZMins(0)
 ,fFldZMaxs(0)
@@ -58,6 +59,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
 ,fNCh(-1)
 ,fdNdY(0)
 ,fdNdPt(0)
+,fHChi2Branson(0)
 ,fHChi2LrCorr(0)
 ,fHChi2NDFCorr(0)
 ,fHChi2NDFFake(0)
@@ -866,6 +868,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	  0.,
 	  origErrY*origErrY+fApplyBransonPCorrection*fApplyBransonPCorrection
 	};
+	fChi2MuVtx = trcConstr.GetPredictedChi2(measCV,errCV);
+	fHChi2Branson->Fill(fChi2MuVtx);
 	//	printf("UpdVtx: {%+e %+e}/{%e %e %e}\n",measCV[0],measCV[1],errCV[0],errCV[1],errCV[2]);
 	//	printf("Muon@Vtx:  "); trcConstr.Print("etp");
 	if (!trcConstr.Update(measCV,errCV)) {currTrP->Kill();continue;}
@@ -1454,13 +1458,14 @@ void KMCDetectorFwd::RequirePattern(UInt_t patt)
 //_____________________________________________________________________
 void KMCDetectorFwd::BookControlHistos()
 {
-  fHChi2LrCorr = new TH2F("chi2Cl","chi2 corr cluster",fNActiveLayersITS,0,fNActiveLayersITS,100,0,fMaxChi2Cl);
-  fHChi2NDFCorr = new TH2F("chi2NDFCorr","chi2/ndf corr tr.",fNActiveLayersITS,1,fNActiveLayersITS+1,100,0,fMaxNormChi2NDF);
-  fHChi2NDFFake = new TH2F("chi2NDFFake","chi2/ndf fake tr.",fNActiveLayersITS,1,fNActiveLayersITS+1,100,0,fMaxNormChi2NDF);
+  fHChi2Branson = new TH1F("chi2Branson","chi2 Mu @ vtx",      100,0,100);
+  fHChi2LrCorr = new TH2F("chi2Cl","chi2 corr cluster",        fNActiveLayersITS+1,0,fNActiveLayersITS+1,100,0,fMaxChi2Cl);
+  fHChi2NDFCorr = new TH2F("chi2NDFCorr","chi2/ndf corr tr.",  fNActiveLayersITS+1,0,fNActiveLayersITS+1,100,0,fMaxNormChi2NDF);
+  fHChi2NDFFake = new TH2F("chi2NDFFake","chi2/ndf fake tr.",  fNActiveLayersITS+1,0,fNActiveLayersITS+1,100,0,fMaxNormChi2NDF);
   fHChi2VtxCorr = new TH2F("chi2VCorr","chi2 to VTX corr tr." ,fNActiveLayersITS+1,0,fNActiveLayersITS+1,100,0,100);
   fHChi2VtxFake = new TH2F("chi2VFake","chi2 to VTX fake tr." ,fNActiveLayersITS+1,0,fNActiveLayersITS+1,100,0,100);
-  fHNCand     = new TH2F("hNCand","Ncand per layer",          fNActiveLayersITS,0,fNActiveLayersITS,200,0,-1);
-  fHCandCorID = new TH2F("CandCorID","Corr.cand ID per layer",fNActiveLayersITS,1,fNActiveLayersITS+1,200,0,-1);
+  fHNCand     = new TH2F("hNCand","Ncand per layer",           fNActiveLayersITS+1,0,fNActiveLayersITS+1,200,0,-1);
+  fHCandCorID = new TH2F("CandCorID","Corr.cand ID per layer", fNActiveLayersITS+1,0,fNActiveLayersITS+1,200,0,-1);
   //
   fHChi2MS = new TH2F("chi2ms","chi2ms",100,0,30,10,0,10);
   //
