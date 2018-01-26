@@ -71,7 +71,7 @@ class KMCDetectorFwd : public TNamed {
   void         SetUseBackground(Bool_t v=kTRUE)  {fUseBackground = v;}
   void         CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP, KMCLayerFwd* lr);
   Bool_t       IsCorrect(KMCProbeFwd *probe);
-  void         RequirePattern(UInt_t patt);
+  void         RequirePattern(TBits& patt);
   void         SetMinITSHits(int n);
   void         SetMinMSHits(int n);
   void         SetMinTRHits(int n);
@@ -118,9 +118,6 @@ class KMCDetectorFwd : public TNamed {
   Double_t HitDensity(double xLab,double ylab,double zlab) const;
   void     PerformDecay(KMCProbeFwd* trc);
   //
-  float GetChi2MuAtVtx() const {return fChi2MuVtx;}
-  
-  TH1*     GetHChi2Branson()    const {return fHChi2Branson;}
   TH2*     GetHChi2LrCorr()    const {return fHChi2LrCorr;}
   TH2*     GetHChi2NDFCorr()   const {return fHChi2NDFCorr;}
   TH2*     GetHChi2NDFFake()   const {return fHChi2NDFFake;}
@@ -183,7 +180,6 @@ class KMCDetectorFwd : public TNamed {
   TH1*     fDecayZProf; // optional decay Z profile
   Double_t fZDecay;     // impose decay here
   Int_t    fDecMode;    // decay mode
-  float fChi2MuVtx; // chi2 of muon at vertex, if Branson correction is on
   //
   // field stepping optimization
   Int_t     fFldNReg;   // number of field regions
@@ -196,7 +192,7 @@ class KMCDetectorFwd : public TNamed {
   Double_t  fGenPnt[3];     // particle generation point
   Double_t  fRefVtx[3];     // reference vertex
   //
-  TArrayI  fPattITS;                     // bit pattern of each group of active layers where hit is required
+  TObjArray fPattITS;                     // bit pattern of each group of active layers where hit is required
   Double_t fNCh;        // rapidity density
   TF1*     fdNdY;       // Y profile of bg
   TF1*     fdNdPt;      // Pt profile of bg
@@ -212,7 +208,6 @@ class KMCDetectorFwd : public TNamed {
 
   //
   // control histos
-  TH1F*    fHChi2Branson;    // chi2 of muon at the vertex
   TH2F*    fHChi2LrCorr;    // chi2 of correct cluster
   TH2F*    fHChi2NDFCorr;   // total chi2 of correct tracks
   TH2F*    fHChi2NDFFake;   // total chi2 of fake tracks

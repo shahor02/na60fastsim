@@ -3,13 +3,14 @@
 
 #include "AliExternalTrackParam.h"
 #include "AliLog.h"
+#include <TBits.h>
 class KMCLayerFwd;
 
 class KMCProbeFwd: public TObject {
 
  public:
   enum {kBitKilled=BIT(14)};
-  enum {kNDOF=5,kMaxITSLr=32};
+  enum {kNDOF=5,kMaxITSLr=400};
   enum {kY2=0,kZ2=2,kSnp2=5,kTgl2=9,kPtI2=14};
   enum {kY,kZ,kSnp,kTgl,kPtI};
   //
@@ -50,15 +51,15 @@ class KMCProbeFwd: public TObject {
   Int_t     GetNFakeITSHits()                     const {return fNHitsITSFake;}
   Int_t     GetNHits()                            const {return fNHits;}
   Int_t     GetInnerLayerChecked()                const {return fInnLrCheck;}
-  UInt_t&   GetHitsPatt()                               {return fHits;}
-  UInt_t&   GetFakesPatt()                              {return fFakes;}
+  TBits&    GetHitsPatt()                               {return fHits;}
+  TBits&    GetFakesPatt()                              {return fFakes;}
 
   Double_t  GetNormChi2(Bool_t penalize=kFALSE)      const;
   Double_t  GetNormChi2ITS(Bool_t penalize=kFALSE)   const;
   void      AddHit(const KMCLayerFwd*lr , double chi2, Int_t clID=-1);
   void      ResetHit(Int_t lr);
-  Bool_t    IsHit(Int_t lr)                       const {return (lr<fgNITSLayers) ? IsWBit(fHits,lr)  : kFALSE;}
-  Bool_t    IsHitFake(Int_t lr)                   const {return (lr<fgNITSLayers) ? IsWBit(fFakes,lr) : kFALSE;}
+  Bool_t    IsHit(Int_t lr)                       const {return (lr<fgNITSLayers) ? fHits.TestBitNumber(lr)  : kFALSE;}
+  Bool_t    IsHitFake(Int_t lr)                   const {return (lr<fgNITSLayers) ? fFakes.TestBitNumber(lr) : kFALSE;}
 
   Bool_t   ApplyMSEL(double x2X0, double xTimesRho);
   Bool_t   CorrectForMeanMaterial(double xOverX0, double xTimesRho, Bool_t modeMC=kFALSE, Bool_t anglecorr=kFALSE);
@@ -112,8 +113,8 @@ class KMCProbeFwd: public TObject {
   Double_t fMass;   // particle mass
   Double_t fChi2;   // total chi2
   Double_t fChi2ITS;// total chi2 ITS
-  UInt_t   fHits;   // pattern on hits (max 32!)
-  UInt_t   fFakes;  // pattern of fakes among hits
+  TBits    fHits;   // pattern on hits 
+  TBits    fFakes;  // pattern of fakes among hits
   Int_t    fNHits;    // total hits
   Int_t    fNHitsITS; // total ITS hits
   Int_t    fNHitsMS;  // total MS hits
@@ -227,8 +228,8 @@ inline Double_t KMCProbeFwd::GetNormChi2ITS(Bool_t penalize) const
 inline void KMCProbeFwd::ResetHit(Int_t lr) {
   // note: lr is active layer ID
   if (lr>=fgNITSLayers) return; 
-  if (IsWBit(fHits,lr))  {fNHitsITS--;     ResetWBit(fHits,lr);}
-  if (IsWBit(fFakes,lr)) {fNHitsITSFake--; ResetWBit(fFakes,lr);}
+  if (IsHit(lr))  {fNHitsITS--;  fHits.ResetBitNumber(lr);}
+  if (IsHitFake(lr)) {fNHitsITSFake--; fFakes.ResetBitNumber(lr);}
 }
 
 //_______________________________________

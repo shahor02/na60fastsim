@@ -74,7 +74,7 @@ double vX=0,vY=0,vZ=0; // event vertex
 KMCDetectorFwd* det = 0;
 
 TH2F *hYPtAll=0,*hYPtFake=0, *hYPtGen;
-TH1F *hMassAll=0,*hMassFake=0, *hMassFake1=0, *hMassFake2=0, *hMassFake3=0, *hMassFake4=0, *hMassFake5=0;
+TH1F *hMassAll=0,*hMassFake=0;
 TH1F *hYGen=0;
 TH1F *hMassSignalZoom=0;
 TH2F *hYPtAllCBMbin=0, *hYPtFakeCBMbin=0;
@@ -84,7 +84,6 @@ TH2F *hSext1VsSext0, *hSext1VsSext0Trig;
 TH1F *hPhi;
 TH2F *hY0Y1=0;
 TH1F *hY0=0, *hY1=0;
-TH1F *hnFake;
 
 //Double_t RhoLineShapeNew(Double_t *x, Double_t *para);
 Int_t GetSextant(Double_t x,Double_t y);
@@ -94,7 +93,7 @@ void SetProcessParameters(const Char_t *Process, Double_t E);
 void BookHistos();
 void CalcBkgPar(Double_t E);
 
-void runDiMuGenLMR(int nev=30000,     // n events to generate
+void runDiMuGenLMR(int nev=5,     // n events to generate
 		   const Char_t *Process = "rho",
 		   int Seed=12345,
 		   double Eint=40.,   // bg particles density - 30 GeV
@@ -195,6 +194,8 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   TGenPhaseSpace decay;
   TLorentzVector parentgen, mugen[2], parent,murec[2];//eli
   TParticle mupart[2];
+  KMCProbeFwd recProbe[2];
+  
 
   TTree *t1 = new TTree("t1","TLorentzVectorMuons");
   TClonesArray *arr = new TClonesArray("TParticle");
@@ -277,8 +278,9 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 //       // hit map histogram of muon station qui!!!!!!!!!!!
 //      hxySextantCH[ch]->Fill(c[ch]->GetXLab(),c[ch]->GetYLab());
       //    }
-      
-      KMCClusterFwd* cl = det->GetLayerMS(0)->GetMCCluster();
+
+      /*      
+      KMCClusterFwd* cl = det->det->GetLayerMS(0) ? det->GetLayerMS(0)->GetMCCluster() : 0;
       if (!cl) break; 
       //      sext[imu] = GetSextant(cl->GetXLab(),cl->GetYLab());
       sext[imu] = GetSextant(cl->GetXLab(),cl->GetYLab());
@@ -304,7 +306,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 // 	hxySextantITS[i]->Fill(clITS[i]->GetXLab(),clITS[i]->GetYLab());
 //       }
 
-
+*/
 
       KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack();
       if (!trw) break;
@@ -314,9 +316,13 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
       trw->GetPXYZ(pxyz);
       murec[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],prodM[imu]);
       mupart[imu].SetMomentum(murec[imu].Px(),murec[imu].Py(),murec[imu].Pz(),murec[imu].Energy());
+      recProbe[imu] = *trw;
     }
     if (nrec<2) continue;
 
+    recProbe[0].PropagateToDCA( &recProbe[1] );
+    
+    
     KMCClusterFwd* clITS[5];
     for(Int_t i =0; i<5; i++){
       clITS[i]= det->GetLayerITS(i)->GetMCCluster();
@@ -344,7 +350,6 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
     t1->Fill();
 
     //
-    hnFake->Fill(1.*nfake);
     if (nfake>0) {
       hYPtFake->Fill(parent.Rapidity(),parent.Pt());
       hPtFake->Fill(parent.Pt());
@@ -358,23 +363,6 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
       parent.Print();
       return;
     }
-
-    if (nfake==1) {      
-      hMassFake1->Fill(parent.M());
-    }
-    else if (nfake==2) {      
-      hMassFake2->Fill(parent.M());
-    }
-    else if (nfake==3) {      
-      hMassFake3->Fill(parent.M());
-    }
-    else if (nfake==4) {      
-      hMassFake4->Fill(parent.M());
-    }
-    else if (nfake==5) {      
-      hMassFake5->Fill(parent.M());
-    }
-
     hYPtAll->Fill(parent.Rapidity(),parent.Pt());
     hPtAll->Fill(parent.Pt());
     hYPtAllCBMbin->Fill(parent.Rapidity(),parent.Pt());
@@ -400,13 +388,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   hY1   ->Write();
   hY0Y1 ->Write();
   hMassAll->Write();
-  hnFake->Write();
   hMassFake->Write();
-  hMassFake1->Write();
-  hMassFake2->Write();
-  hMassFake3->Write();
-  hMassFake4->Write();
-  hMassFake5->Write();
   hYPtGen->Write();
   hYPtAll->Write();
   hYPtFake->Write();
@@ -631,23 +613,11 @@ void BookHistos(){
   hYPtFake = new TH2F("YPTFake","Y-Pt fake match",80,1.0,5.4,30,ptminSG,ptmaxSG);
   hYPtAll = new TH2F("YPTAll","Y-Pt all match",80,1.0,5.4,30,ptminSG,ptmaxSG);
   
-  hnFake = new TH1F("hnFake","number of fake matches",20,0.,20.);
-
   if(ProcType == 9) {
     hMassFake = new TH1F("MassFake","Mass fake match",100,2.,3.5);
-    hMassFake1 = new TH1F("MassFake1","Mass fake match 1",100,2.,3.5);
-    hMassFake2 = new TH1F("MassFake2","Mass fake match 2",100,2.,3.5);
-    hMassFake3 = new TH1F("MassFake3","Mass fake match 3",100,2.,3.5);
-    hMassFake4 = new TH1F("MassFake4","Mass fake match 4",100,2.,3.5);
-    hMassFake5 = new TH1F("MassFake5","Mass fake match 5",100,2.,3.5);
     hMassAll = new TH1F("MassAll","Mass all match",100,2.,3.5);
   } else {
     hMassFake = new TH1F("MassFake","Mass fake match",100,0.,2.);
-    hMassFake1 = new TH1F("MassFake1","Mass fake match 1",100,0.,2.);
-    hMassFake2 = new TH1F("MassFake2","Mass fake match 2",100,0.,2.);
-    hMassFake3 = new TH1F("MassFake3","Mass fake match 3",100,0.,2.);
-    hMassFake4 = new TH1F("MassFake4","Mass fake match 4",100,0.,2.);
-    hMassFake5 = new TH1F("MassFake5","Mass fake match 5",100,0.,2.);
     hMassAll = new TH1F("MassAll","Mass all match",100,0.,2.0);
   }
 

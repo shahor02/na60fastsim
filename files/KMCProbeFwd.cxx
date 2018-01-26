@@ -14,8 +14,8 @@ KMCProbeFwd::KMCProbeFwd()
   ,fMass(0.10566)
   ,fChi2(0)
   ,fChi2ITS(0)
-  ,fHits(0)
-  ,fFakes(0)
+  ,fHits()
+  ,fFakes()
   ,fNHits(0)
   ,fNHitsITS(0)
   ,fNHitsMS(0)
@@ -32,8 +32,8 @@ KMCProbeFwd::KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose)
   ,fMass(0.10566)
   ,fChi2(0)
   ,fChi2ITS(0)
-  ,fHits(0)
-  ,fFakes(0)
+  ,fHits()
+  ,fFakes()
   ,fNHits(0)
   ,fNHitsITS(0)
   ,fNHitsMS(0)
@@ -100,7 +100,8 @@ void KMCProbeFwd::Reset()
   fMass=0.14; 
   fChi2=0; 
   fChi2ITS=0; 
-  fHits=fFakes=0;  
+  fHits.Clear();
+  fFakes.Clear();  
   fTrack.Reset();
   ResetCovariance();
   for (int i=kMaxITSLr;i--;) fClID[i]=-2; 
@@ -193,11 +194,11 @@ Bool_t KMCProbeFwd::PropagateToDCA(KMCProbeFwd* partner)
   Double_t dca=fTrack.GetDCA(&partner->fTrack,bxyzFwd[2],zthis,zpartner);
 
   if (!PropagateToZBxByBz(zthis) || !partner->PropagateToZBxByBz(zpartner)) return kFALSE;
-
+  /*
   printf("Prop to DCA at %f %f | DCA = %f\n",zthis,zpartner,dca);
   Print("etp");
   partner->Print("etp");
-  
+  */  
   return kTRUE;
   //
 }
@@ -397,8 +398,8 @@ void KMCProbeFwd::Print(Option_t* opt) const
   // hit pattern
   printf(" Pattern: |");
   for (int i=0;i<fgNITSLayers;i++) {
-    if (!(fHits&(0x1<<i))) printf(".");
-    else if ( fFakes&(0x1<<i) ) printf("-");
+    if (!(IsHit(i))) printf(".");
+    else if (IsHitFake(i)) printf("-");
     else printf("+");
   }
   printf("|  ");
@@ -421,14 +422,14 @@ void KMCProbeFwd::AddHit(const KMCLayerFwd* lr, double chi2, Int_t clID) {
   int lrID = lr->GetActiveID();
   if (lr->IsITS()) {
     fChi2ITS += chi2;
-    SetWBit(fHits,lrID); 
+    fHits.SetBitNumber(lrID);
     fNHitsITS++;
     if (clID>-1) {
-      SetWBit(fFakes,lrID);
+      fFakes.SetBitNumber(lrID);
       fNHitsITSFake++;
     }
     fClID[lrID] = clID;
-    //else ResetWBit(fFakes,lr);
+   
   }
   else if (lr->IsMS()) fNHitsMS++;
   else if (lr->IsTrig()) fNHitsTR++;

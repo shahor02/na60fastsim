@@ -1,0 +1,412 @@
+# keep this if slices are to be ordered in decreasing z
+define:zinverted
+
+# if not defined or -1 : Alice field, otherwise custom
+define:magfield  0
+
+#		r	dr	material
+#beampipe:	0.5	0.08    BERYLLIUM
+
+# dummy layer as a vertex	Zc	DZ		resX	resY
+vertex:		      		0.	0.		500e-4	500e-4
+
+# active target: closely spaced layers of silicon
+###activelayer:vt VTAT001	SILICON	1.000000e-4  30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT002	SILICON	3.000000e-03 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT003	SILICON	6.000000e-03 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT004	SILICON	9.000000e-03 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT005	SILICON	1.200000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT006	SILICON	1.500000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT007	SILICON	1.800000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT008	SILICON	2.100000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT009	SILICON	2.400000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT010	SILICON	2.700000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT011	SILICON	3.000000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT012	SILICON	3.300000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT013	SILICON	3.600000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT014	SILICON	3.900000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT015	SILICON	4.200000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT016	SILICON	4.500000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT017	SILICON	4.800000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT018	SILICON	5.100000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT019	SILICON	5.400000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT020	SILICON	5.700000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT021	SILICON	6.000000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT022	SILICON	6.300000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT023	SILICON	6.600000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT024	SILICON	6.900000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT025	SILICON	7.200000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT026	SILICON	7.500000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT027	SILICON	7.800000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT028	SILICON	8.100000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT029	SILICON	8.400000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT030	SILICON	8.700000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT031	SILICON	9.000000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT032	SILICON	9.300000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT033	SILICON	9.600000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT034	SILICON	9.900000e-02 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT035	SILICON	1.020000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT036	SILICON	1.050000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT037	SILICON	1.080000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT038	SILICON	1.110000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT039	SILICON	1.140000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT040	SILICON	1.170000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT041	SILICON	1.200000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT042	SILICON	1.230000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT043	SILICON	1.260000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT044	SILICON	1.290000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT045	SILICON	1.320000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT046	SILICON	1.350000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT047	SILICON	1.380000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT048	SILICON	1.410000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT049	SILICON	1.440000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT050	SILICON	1.470000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT051	SILICON	1.500000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT052	SILICON	1.530000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT053	SILICON	1.560000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT054	SILICON	1.590000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT055	SILICON	1.620000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT056	SILICON	1.650000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT057	SILICON	1.680000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT058	SILICON	1.710000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT059	SILICON	1.740000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT060	SILICON	1.770000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT061	SILICON	1.800000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT062	SILICON	1.830000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT063	SILICON	1.860000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT064	SILICON	1.890000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT065	SILICON	1.920000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT066	SILICON	1.950000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT067	SILICON	1.980000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT068	SILICON	2.010000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT069	SILICON	2.040000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT070	SILICON	2.070000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT071	SILICON	2.100000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT072	SILICON	2.130000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT073	SILICON	2.160000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT074	SILICON	2.190000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT075	SILICON	2.220000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT076	SILICON	2.250000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT077	SILICON	2.280000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT078	SILICON	2.310000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT079	SILICON	2.340000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT080	SILICON	2.370000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT081	SILICON	2.400000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT082	SILICON	2.430000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT083	SILICON	2.460000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT084	SILICON	2.490000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT085	SILICON	2.520000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT086	SILICON	2.550000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT087	SILICON	2.580000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT088	SILICON	2.610000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT089	SILICON	2.640000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT090	SILICON	2.670000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT091	SILICON	2.700000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT092	SILICON	2.730000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT093	SILICON	2.760000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT094	SILICON	2.790000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT095	SILICON	2.820000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT096	SILICON	2.850000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT097	SILICON	2.880000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT098	SILICON	2.910000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT099	SILICON	2.940000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT100	SILICON	2.970000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT101	SILICON	3.000000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT102	SILICON	3.030000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT103	SILICON	3.060000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT104	SILICON	3.090000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT105	SILICON	3.120000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT106	SILICON	3.150000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT107	SILICON	3.180000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT108	SILICON	3.210000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT109	SILICON	3.240000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT110	SILICON	3.270000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT111	SILICON	3.300000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT112	SILICON	3.330000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT113	SILICON	3.360000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT114	SILICON	3.390000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT115	SILICON	3.420000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT116	SILICON	3.450000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT117	SILICON	3.480000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT118	SILICON	3.510000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT119	SILICON	3.540000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT120	SILICON	3.570000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT121	SILICON	3.600000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT122	SILICON	3.630000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT123	SILICON	3.660000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT124	SILICON	3.690000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT125	SILICON	3.720000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT126	SILICON	3.750000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT127	SILICON	3.780000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT128	SILICON	3.810000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT129	SILICON	3.840000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT130	SILICON	3.870000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT131	SILICON	3.900000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT132	SILICON	3.930000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT133	SILICON	3.960000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT134	SILICON	3.990000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT135	SILICON	4.020000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT136	SILICON	4.050000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT137	SILICON	4.080000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT138	SILICON	4.110000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT139	SILICON	4.140000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT140	SILICON	4.170000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT141	SILICON	4.200000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT142	SILICON	4.230000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT143	SILICON	4.260000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT144	SILICON	4.290000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT145	SILICON	4.320000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT146	SILICON	4.350000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT147	SILICON	4.380000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT148	SILICON	4.410000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT149	SILICON	4.440000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT150	SILICON	4.470000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT151	SILICON	4.500000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT152	SILICON	4.530000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT153	SILICON	4.560000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT154	SILICON	4.590000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT155	SILICON	4.620000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT156	SILICON	4.650000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT157	SILICON	4.680000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT158	SILICON	4.710000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT159	SILICON	4.740000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT160	SILICON	4.770000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT161	SILICON	4.800000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT162	SILICON	4.830000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT163	SILICON	4.860000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT164	SILICON	4.890000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT165	SILICON	4.920000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT166	SILICON	4.950000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT167	SILICON	4.980000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT168	SILICON	5.010000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT169	SILICON	5.040000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT170	SILICON	5.070000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT171	SILICON	5.100000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT172	SILICON	5.130000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT173	SILICON	5.160000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT174	SILICON	5.190000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT175	SILICON	5.220000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT176	SILICON	5.250000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT177	SILICON	5.280000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT178	SILICON	5.310000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT179	SILICON	5.340000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT180	SILICON	5.370000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT181	SILICON	5.400000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT182	SILICON	5.430000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT183	SILICON	5.460000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT184	SILICON	5.490000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT185	SILICON	5.520000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT186	SILICON	5.550000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT187	SILICON	5.580000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT188	SILICON	5.610000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT189	SILICON	5.640000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT190	SILICON	5.670000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT191	SILICON	5.700000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT192	SILICON	5.730000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT193	SILICON	5.760000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT194	SILICON	5.790000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT195	SILICON	5.820000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT196	SILICON	5.850000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT197	SILICON	5.880000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT198	SILICON	5.910000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT199	SILICON	5.940000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT200	SILICON	5.970000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT201	SILICON	6.000000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT202	SILICON	6.030000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT203	SILICON	6.060000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT204	SILICON	6.090000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT205	SILICON	6.120000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT206	SILICON	6.150000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT207	SILICON	6.180000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT208	SILICON	6.210000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT209	SILICON	6.240000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT210	SILICON	6.270000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT211	SILICON	6.300000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT212	SILICON	6.330000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT213	SILICON	6.360000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT214	SILICON	6.390000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT215	SILICON	6.420000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT216	SILICON	6.450000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT217	SILICON	6.480000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT218	SILICON	6.510000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT219	SILICON	6.540000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT220	SILICON	6.570000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT221	SILICON	6.600000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT222	SILICON	6.630000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT223	SILICON	6.660000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT224	SILICON	6.690000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT225	SILICON	6.720000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT226	SILICON	6.750000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT227	SILICON	6.780000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT228	SILICON	6.810000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT229	SILICON	6.840000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT230	SILICON	6.870000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT231	SILICON	6.900000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT232	SILICON	6.930000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT233	SILICON	6.960000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT234	SILICON	6.990000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT235	SILICON	7.020000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT236	SILICON	7.050000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT237	SILICON	7.080000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT238	SILICON	7.110000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT239	SILICON	7.140000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT240	SILICON	7.170000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT241	SILICON	7.200000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT242	SILICON	7.230000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT243	SILICON	7.260000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT244	SILICON	7.290000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT245	SILICON	7.320000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT246	SILICON	7.350000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT247	SILICON	7.380000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT248	SILICON	7.410000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT249	SILICON	7.440000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT250	SILICON	7.470000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT251	SILICON	7.500000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT252	SILICON	7.530000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT253	SILICON	7.560000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT254	SILICON	7.590000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT255	SILICON	7.620000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT256	SILICON	7.650000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT257	SILICON	7.680000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT258	SILICON	7.710000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT259	SILICON	7.740000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT260	SILICON	7.770000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT261	SILICON	7.800000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT262	SILICON	7.830000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT263	SILICON	7.860000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT264	SILICON	7.890000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT265	SILICON	7.920000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT266	SILICON	7.950000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT267	SILICON	7.980000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT268	SILICON	8.010000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT269	SILICON	8.040000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT270	SILICON	8.070000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT271	SILICON	8.100000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT272	SILICON	8.130000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT273	SILICON	8.160000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT274	SILICON	8.190000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT275	SILICON	8.220000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT276	SILICON	8.250000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT277	SILICON	8.280000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT278	SILICON	8.310000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT279	SILICON	8.340000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT280	SILICON	8.370000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT281	SILICON	8.400000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT282	SILICON	8.430000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT283	SILICON	8.460000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT284	SILICON	8.490000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT285	SILICON	8.520000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT286	SILICON	8.550000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT287	SILICON	8.580000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT288	SILICON	8.610000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT289	SILICON	8.640000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT290	SILICON	8.670000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT291	SILICON	8.700000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT292	SILICON	8.730000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT293	SILICON	8.760000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT294	SILICON	8.790000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT295	SILICON	8.820000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT296	SILICON	8.850000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT297	SILICON	8.880000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT298	SILICON	8.910000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT299	SILICON	8.940000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT300	SILICON	8.970000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT301	SILICON	9.000000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT302	SILICON	9.030000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT303	SILICON	9.060000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT304	SILICON	9.090000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT305	SILICON	9.120000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT306	SILICON	9.150000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT307	SILICON	9.180000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT308	SILICON	9.210000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT309	SILICON	9.240000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT310	SILICON	9.270000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT311	SILICON	9.300000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT312	SILICON	9.330000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT313	SILICON	9.360000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT314	SILICON	9.390000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT315	SILICON	9.420000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT316	SILICON	9.450000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT317	SILICON	9.480000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT318	SILICON	9.510000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT319	SILICON	9.540000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT320	SILICON	9.570000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT321	SILICON	9.600000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT322	SILICON	9.630000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT323	SILICON	9.660000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT324	SILICON	9.690000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT325	SILICON	9.720000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT326	SILICON	9.750000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT327	SILICON	9.780000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT328	SILICON	9.810000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT329	SILICON	9.840000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT330	SILICON	9.870000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT331	SILICON	9.900000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT332	SILICON	9.930000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT333	SILICON	9.960000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT334	SILICON	9.990000e-01 30e-4	5.e-4	10.e-4	1.00	0	5.
+activelayer:vt VTAT335	SILICON	1.002000e+00 30e-4	5.e-4	10.e-4	1.00	0	5.
+
+
+# the parameters eff,RMin,RMax are optional (default is 1,0,1e9), but if one is there, preciding ones also should be set
+#		name		material	Zc	DZ		resX	resY	eff	RMin	RMax
+activelayer:vt	VT1		SILICON		2	50e-4 		5.e-4	5.e-4  1.00	0.0    5.
+activelayer:vt	VT2		SILICON		4	50e-4 		5.e-4	5.e-4  1.00	0.0    5.
+activelayer:vt	VT3		SILICON		6	50e-4 		5.e-4	5.e-4  1.00	0.0    5.
+activelayer:vt	VT4		SILICON		8	50e-4 		5.e-4	5.e-4  1.00	0.0    10.
+activelayer:vt	VT5		SILICON		10	50e-4 		5.e-4	5.e-4  1.00	0.0    10.
+activelayer:vt	VT6		SILICON		12	50e-4 		5.e-4	5.e-4  1.00	0.0    10.
+activelayer:vt	VT7		SILICON		14	50e-4 		5.e-4	5.e-4  1.00	0.0    10.
+activelayer:vt	VT8		SILICON		16	50e-4 		5.e-4	5.e-4  1.00	0.0    20.
+activelayer:vt	VT9		SILICON		18	50e-4 		5.e-4	5.e-4  1.00	0.0    20.
+activelayer:vt	VT10		SILICON		20	50e-4 		5.e-4	5.e-4  1.00	0.0    20.
+
+#
+activelayer:ms	MS-CH0		SILICON		205.	610e-4		200e-4	200e-4	1.00	15. 150.0749
+activelayer:ms	MS-CH1		SILICON		225.	610e-4		200e-4	200e-4	1.00	15. 250.5409
+activelayer:ms	MS-CH2		SILICON		430.	700e-4		200e-4	200e-4	1.00	15. 300.164894
+activelayer:ms	MS-CH3		SILICON		450.	700e-4		200e-4	200e-4	1.00	15. 300.617021
+
+#activelayer:ms	MS-CH4		SILICON		900.	330e-4		200e-4	200e-4	1.00	30. 422.6782
+#activelayer:ms	MS-CH5		SILICON		1122	330e-4		200e-4	200e-4	1.00
+#activelayer:ms	MS-CH6		SILICON		1319  	330e-4		200e-4	200e-4	1.00
+#
+# trigger chambers
+activelayer:tr	MS-TR1		SILICON		550	1330e-4		0.1	0.1	1.00	20. 300.521277
+activelayer:tr	MS-TR2		SILICON		590  	1330e-4		0.1	0.1	1.00	20. 300.302128
+
+#		name		material	Zc	DZ
+absorber:	ABS_BEO_0	BEO		86.	128.	
+##absorber:	ABSO_C_0	CARBONA		175.0	30.00
+absorber:	ABSO_C_0	CARBONA		170.0	40.00
+#absorber:	ABSO_C_1	CARBONA		200.0	20.00
+#absorber:	ABSO_C_2	CARBONA		220.0	20.00
+#absorber:	ABSO_FE_0	CARBONA		240.0	20.00
+#absorber:	ABSO_FE_1	CARBONA		260.0	20.00
+#absorber:	ABSO_FE_2	CARBONA		275.0	10.00
+
+#
+absorber:	ABSO_WALL_0	CARBONA		495.0	70.00
+absorber:	ABSO_WALL_1	IRON		535.0	10.00
+#
+
+############################################################
+######                                                ######
+######                   MATERIALS                    ######
+######                                                ######
+############################################################
+#           Name         A	Z	Density		RadL(g/cm2)	AbsL(g/cm2)	
+#	    
+material:   VACUUM      1.E-16  1.E-16	1.E-16		1.E16		1.E16
+material:   AIR         14.61   7.3   	1.205e-3  	36.6 		90.37
+material:   BERYLLIUM   9.012   4.0    	1.848      	65.19    	56.30
+material:   SILICON     28.09 	14.0	2.329         	21.82		70.2
+
+#material:   BEO        	13.482  6.559   2.810  		40.548		100.73
+# Fluka BeO
+material:   BEO        	12.510  6.000   2.810  		41.307		100.73
+material:   IRON        55.85   26.0   	7.87       	13.84		81.7
+material:   CARBON      12.01   6.0   	2.00      	42.70		59.2
+material:   CARBONA     12.01   6.0     1.93            42.6916         59.2
+material:   CERAMICS   	22.313  10.855  3.600           27.54		114.84
+material:   AL2O3      	21.812  10.646  3.520  		27.87  		114.92
