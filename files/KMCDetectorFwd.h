@@ -95,6 +95,17 @@ class KMCDetectorFwd : public TNamed {
 				    double Tpi=0.17, double TK=0.23, double TP=0.25, double ptmin=0.01, double ptmax=5);
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
+
+  void         ImposeVertex(float x=0.,float y=0., float z=0.) {
+    fImposeVertexPosition = kTRUE;
+    fRefVtx[0] = y; // assign in tracking frame
+    fRefVtx[1] = z;
+    fRefVtx[2] = x;
+  }
+  void         UseTrackOriginAsVertex() {
+    fImposeVertexPosition = kFALSE;
+    fRefVtx[0] = fRefVtx[1] = fRefVtx[2] = 0.;    
+  }
   //
   void Print(const Option_t* opt = "") const; 
   //
@@ -195,6 +206,7 @@ class KMCDetectorFwd : public TNamed {
   Double_t  fDefStepMat;    // default step size in material
   Double_t  fGenPnt[3];     // particle generation point
   Double_t  fRefVtx[3];     // reference vertex
+  Bool_t fImposeVertexPosition; // impose vertex position externally
   //
   TArrayI  fPattITS;                     // bit pattern of each group of active layers where hit is required
   Double_t fNCh;        // rapidity density

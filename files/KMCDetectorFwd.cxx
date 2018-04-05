@@ -55,6 +55,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
 ,fFldZMaxs(0)
 ,fDefStepAir(1.0)
 ,fDefStepMat(1.0)
+,fImposeVertexPosition(kFALSE)
 ,fPattITS(0)
 ,fNCh(-1)
 ,fdNdY(0)
@@ -756,7 +757,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   if (offset>0) maxLr += offset;
   if (maxLr>fLastActiveLayer) maxLr = fLastActiveLayer;
   if (fExternalInput) maxLr = fLastActiveLayerTracked;
-  if (fVtx) {
+  if (fVtx && !fImposeVertexPosition) {
     fVtx->GetMCCluster()->Set(fProbe.GetTrack()->GetX(),fProbe.GetTrack()->GetY(),fProbe.GetTrack()->GetZ());
     fRefVtx[0] = fProbe.GetTrack()->GetY();
     fRefVtx[1] = fProbe.GetTrack()->GetZ();
@@ -939,8 +940,16 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     for (int itr=0;itr<ntr;itr++) {
       currTr = fVtx->GetMCTrack(itr);
       if (currTr->IsKilled()) continue;
-      KMCClusterFwd* clv = fVtx->GetMCCluster();
-      double meas[2] = {clv->GetY(),clv->GetZ()};
+      double meas[2] = {0.,0.};
+      if (fImposeVertexPosition) {
+	meas[0] = fRefVtx[0];
+	meas[1] = fRefVtx[1];	
+      }
+      else {
+	KMCClusterFwd* clv = fVtx->GetMCCluster();
+	meas[0] = clv->GetY();
+	meas[1] = clv->GetZ();
+      }
       double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; //  Ylab<->Ytracking, Xlab<->Ztracking
       double chi2v = currTr->GetPredictedChi2(meas,measErr2);
       if (!currTr->Update(meas,measErr2)) continue;
