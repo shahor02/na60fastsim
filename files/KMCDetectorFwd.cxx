@@ -757,6 +757,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   if (offset>0) maxLr += offset;
   if (maxLr>fLastActiveLayer) maxLr = fLastActiveLayer;
   if (fExternalInput) maxLr = fLastActiveLayerTracked;
+  if (maxLr<0) return kFALSE;
   if (fVtx && !fImposeVertexPosition) {
     fVtx->GetMCCluster()->Set(fProbe.GetTrack()->GetX(),fProbe.GetTrack()->GetY(),fProbe.GetTrack()->GetZ());
     fRefVtx[0] = fProbe.GetTrack()->GetY();
