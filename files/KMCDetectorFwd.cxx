@@ -750,6 +750,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   const float kErrScale = 100.; // RS: this is the parameter defining the initial cov.matrix error wrt sensor resolution
       
   Bool_t checkMS = kTRUE;
+  fMuTrackTrackVertex.SetUniqueID(999); // invalidate
+  fMuTrackBCVertex.SetUniqueID(999); // invalidate
+  fMuTrackBCLastITS.SetUniqueID(999); // invalidate
+  fMuTrackLastITS.SetUniqueID(999); // invalidate
   //
   KMCProbeFwd *currTrP=0,*currTr=0;
   static KMCProbeFwd trcConstr;
@@ -860,6 +864,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	//	printf("%e -> %e (%d %d) | %e\n",lrP->GetZ(),lr->GetZ(), lrP->GetID(),j, currTr->GetZ());
 
 	trcConstr = *currTrP;
+	fMuTrackLastITS = trcConstr;
 	if (!PropagateToLayer(&trcConstr,lrP,fVtx,-1))  {currTrP->Kill();continue;} // propagate to vertex
 	//////	trcConstr.ResetCovariance();
 	// update with vertex point + eventual additional error
@@ -874,9 +879,15 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	fHChi2Branson->Fill(fChi2MuVtx);
 	//	printf("UpdVtx: {%+e %+e}/{%e %e %e}\n",measCV[0],measCV[1],errCV[0],errCV[1],errCV[2]);
 	//	printf("Muon@Vtx:  "); trcConstr.Print("etp");
+
+	fMuTrackVertex = trcConstr;
 	if (!trcConstr.Update(measCV,errCV)) {currTrP->Kill();continue;}
 	//	printf("Truth@VTX: "); fProbe.Print("etp");
-	//	printf("Constraint@VTX: "); trcConstr.Print("etp");	
+	//	printf("Constraint@VTX: "); trcConstr.Print("etp");
+	fMuTrackBCVertex = trcConstr;
+	fMuTrackBCVertex.SetUniqueID(0);
+	
+	
 	if (!PropagateToLayer(&trcConstr,fVtx,lrP,1)) {currTrP->Kill();continue;}
 	// constrain Muon Track
 	//	printf("Constraint: "); trcConstr.Print("etp");
@@ -888,6 +899,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	//////	printf("UpdMuon: {%+e %+e}/{%e %e %e}\n",measCM[0],measCM[1],errCM[0],errCM[1],errCM[2]);
 	//////	printf("Before constraint: "); currTrP->Print("etp");
 	//////	if (!currTrP->Update(measCM,errCM)) {currTrP->Kill();continue;}
+	fMuTrackBCLastITS = trcConstr;
+	fMuTrackBCLastITS.SetUniqueID(0);
 	(*currTrP->GetTrack()) = *trcConstr.GetTrack(); // override with constraint
 	//	printf("After  constraint: "); currTrP->Print("etp");
 	//	printf("MuTruth "); lrP->GetAnProbe()->Print("etp");

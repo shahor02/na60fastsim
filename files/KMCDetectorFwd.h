@@ -64,6 +64,20 @@ class KMCDetectorFwd : public TNamed {
   //
   KMCProbeFwd* GetProbe()                  const {return (KMCProbeFwd*)&fProbe;}
   Double_t     GetZDecay()                 const {return fZDecay;}
+
+  KMCProbeFwd* GetMuBransonCorrVtx()    const {
+    return fMuTrackBCVertex.GetUniqueID()==0 ? (KMCProbeFwd*)&fMuTrackBCVertex : 0;
+  }
+  KMCProbeFwd* GetMuBransonCorrLastITS()    const {
+    return fMuTrackBCLastITS.GetUniqueID()==0 ? (KMCProbeFwd*)&fMuTrackBCLastITS : 0;
+  }
+  KMCProbeFwd* GetMuLastITS()    const {
+    return fMuTrackLastITS.GetUniqueID()==0 ? (KMCProbeFwd*)&fMuTrackLastITS : 0;
+  }
+  KMCProbeFwd* GetMuVtx()    const {
+    return fMuTrackVertex.GetUniqueID()==0 ? (KMCProbeFwd*)&fMuTrackVertex : 0;
+  }
+  
   //
   Bool_t       UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, const KMCClusterFwd* cl) const;
   Bool_t       NeedToKill(KMCProbeFwd* probe) const;
@@ -174,6 +188,11 @@ class KMCDetectorFwd : public TNamed {
   //
   //-------------RS---------------------------
   KMCProbeFwd fProbe;
+  KMCProbeFwd fMuTrackVertex;
+  KMCProbeFwd fMuTrackLastITS;  
+  KMCProbeFwd fMuTrackBCVertex;
+  KMCProbeFwd fMuTrackBCLastITS;  
+  
   Bool_t   fExternalInput; // MC particles are set externally
   Bool_t   fIncludeVertex;
   float    fApplyBransonPCorrection; // if >=0, apply BP correction with additional error on the vertex
