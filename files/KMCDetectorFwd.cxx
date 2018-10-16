@@ -750,7 +750,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   const float kErrScale = 100.; // RS: this is the parameter defining the initial cov.matrix error wrt sensor resolution
       
   Bool_t checkMS = kTRUE;
-  fMuTrackTrackVertex.SetUniqueID(999); // invalidate
+  fMuTrackVertex.SetUniqueID(999); // invalidate
   fMuTrackBCVertex.SetUniqueID(999); // invalidate
   fMuTrackBCLastITS.SetUniqueID(999); // invalidate
   fMuTrackLastITS.SetUniqueID(999); // invalidate
