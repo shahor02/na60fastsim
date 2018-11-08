@@ -194,9 +194,9 @@ Bool_t KMCProbeFwd::PropagateToDCA(KMCProbeFwd* partner)
 
   if (!PropagateToZBxByBz(zthis) || !partner->PropagateToZBxByBz(zpartner)) return kFALSE;
 
-  printf("Prop to DCA at %f %f | DCA = %f\n",zthis,zpartner,dca);
-  Print("etp");
-  partner->Print("etp");
+  // printf("Prop to DCA at %f %f | DCA = %f\n",zthis,zpartner,dca);
+  // Print("etp");
+  // partner->Print("etp");
   
   return kTRUE;
   //
