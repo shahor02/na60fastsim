@@ -130,6 +130,8 @@ class KMCDetectorFwd : public TNamed {
   void   SetLastActiveLayerTracked(int lr)   {fLastActiveLayerTracked = lr;}
   Int_t  GetLastActiveLayerTracked() const {return fLastActiveLayerTracked;}
   Int_t  GetLastActiveLayer()        const {return fLastActiveLayer;}
+  Int_t  GetLastActiveLayerITS()     const {return fLastActiveLayerITS;}
+  void  ForceLastActiveLayer(int lr);
 
   Double_t GetNCh() const {return fNCh;}
   Double_t GetNChPi() const {return fNChPi;}

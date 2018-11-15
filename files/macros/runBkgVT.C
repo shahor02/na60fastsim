@@ -154,7 +154,8 @@ void runBkgVT(Int_t nevents = 100, Bool_t optdebug = kTRUE, double Eint = 160.,
     fdNdPtK->SetParameter(0, TBGK);
     fdNdPtP->SetParameter(0, TBGP);
 
-    printf("min number of hits in MS = %d\n", det->GetNumberOfActiveLayersMS());
+    det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VT
+
     det->SetMinITSHits(det->GetNumberOfActiveLayersITS()); //NA60+
     // we don't need MS part here, even if it is in the setup
     //det->SetMinITSHits(det->GetNumberOfActiveLayersITS()-1); //NA60

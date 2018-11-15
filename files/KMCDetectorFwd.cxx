@@ -1519,3 +1519,10 @@ void  KMCDetectorFwd::SetMinTRHits(int n)
 {
   fMinTRHits = TMath::Min(n,fNActiveLayersTR);
 }
+
+//_____________________________________________________________________
+void  KMCDetectorFwd::ForceLastActiveLayer(int lr)
+{
+  printf("Attention: overriding last active layer from %d to %d\n",fLastActiveLayer,lr);
+  fLastActiveLayer = lr;
+}
