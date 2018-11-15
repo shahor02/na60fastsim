@@ -1380,6 +1380,7 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
 //     bgtr.SetTrID(itr);
 //     TransportKalmanTrackWithMS(&bgtr, maxLr,kTRUE);
 //   }
+  int ntrTot = 0;
   // pions
   double ntrPi = gRandom->Poisson( fNChPi );
   printf("fNChPi=%f ntrPi=%f\n",fNChPi,ntrPi);
@@ -1389,7 +1390,7 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
     double phi = gRandom->Rndm()*TMath::Pi()*2;
     int charge = gRandom->Rndm()>0.52 ? 1:-1;
     CreateProbe(&bgtr, pt, yrap, phi, kMassPi, charge, x,y,z);
-    bgtr.SetTrID(itr);
+    bgtr.SetTrID(ntrTot++);
     TransportKalmanTrackWithMS(&bgtr, maxLr,kTRUE);
   }
   // kaons
@@ -1401,7 +1402,7 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
     double phi = gRandom->Rndm()*TMath::Pi()*2;
     int charge = gRandom->Rndm()>0.3 ? 1:-1;
     CreateProbe(&bgtr, pt, yrap, phi, kMassK, charge, x,y,z);
-    bgtr.SetTrID(itr+ntrPi);
+    bgtr.SetTrID(ntrTot++);
     TransportKalmanTrackWithMS(&bgtr, maxLr,kTRUE);
   }
   // protons
@@ -1413,7 +1414,7 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
     double phi = gRandom->Rndm()*TMath::Pi()*2;
     int charge = 1;
     CreateProbe(&bgtr, pt, yrap, phi, kMassP, charge, x,y,z);
-    bgtr.SetTrID(itr+ntrPi+ntrK);
+    bgtr.SetTrID(ntrTot++);
     TransportKalmanTrackWithMS(&bgtr, maxLr,kTRUE);
   }
   //
