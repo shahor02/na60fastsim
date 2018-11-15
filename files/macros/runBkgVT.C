@@ -437,7 +437,7 @@ void CalcBkgPar(Double_t Efloat)
         yminBG = 1.5; // min y to generate
         ymaxBG = 4.5; //
         ptminBG = 0.01;
-        ptmaxBG = 3;
+        ptmaxBG = 5;
         dndyBGPi = 1258.;
         dndyBGK = 155.;
         dndyBGP = 292.;
@@ -458,7 +458,7 @@ void CalcBkgPar(Double_t Efloat)
         ymaxBG = 4.5; //
         TBG = 0.17;   // inv.slope of thermal pt distribution
         ptminBG = 0.01;
-        ptmaxBG = 3;
+        ptmaxBG = 5;
         dndyBGPi = 615.;
         dndyBGK = 78.;
         dndyBGP = 150.;
