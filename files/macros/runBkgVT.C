@@ -87,6 +87,7 @@ void runBkgVT(Int_t nevents = 100, Bool_t optdebug = kTRUE, double Eint = 160.,
     TH3F *h3DPiBkg = new TH3F("h3DPiBkg", "pt,y,phi pions", 50, 0., 5., 50, 0., 5., 50, 0, 2 * TMath::Pi());
     TH3F *h3DKBkg = new TH3F("h3DKBkg", "pt,y,phi pions", 50, 0., 5., 50, 0., 5., 50, 0, 2 * TMath::Pi());
     TH3F *h3DPBkg = new TH3F("h3DPBkg", "pt,y,phi pions", 50, 0., 5., 50, 0., 5., 50, 0, 2 * TMath::Pi());
+    TH1F *hNevents = new TH1F("hNevents", "", 1, 0, 1);
     TH1F* hGenStat = new TH1F("hGenStat","",18,0.5,18.5);
     hGenStat->GetXaxis()->SetBinLabel(1,"#pi to gen");
     hGenStat->GetXaxis()->SetBinLabel(2,"#pi bad SolveSingleTrack");
@@ -135,6 +136,7 @@ void runBkgVT(Int_t nevents = 100, Bool_t optdebug = kTRUE, double Eint = 160.,
     //if (outN<1) outN=1;
 
     det = new KMCDetectorFwd();
+    printf("Setup file = %s\n",setup);
     det->ReadSetup(setup, setup);
     //  det->InitBgGeneration(dndyBG,y0BG,sigyBG,yminBG,ymaxBG,TBG,ptminBG,ptmaxBG);
     det->InitBgGenerationPart(NBGPi, NBGKplus, NBGKminus, NBGP, Piratio, y0BG, y0BGPi, y0BGKplus, y0BGKminus, y0BGP, sigyBGPi, sigyBGKplus, sigyBGKminus, sigyBGP, yminBG, ymaxBG, TBGpi, TBGK, TBGP, ptminBG, ptmaxBG); //ORIG commented
@@ -202,7 +204,7 @@ void runBkgVT(Int_t nevents = 100, Bool_t optdebug = kTRUE, double Eint = 160.,
         aarrtr.Clear();
         printf(" ***************  ev = %d \n", iev);
         double pxyz[3];
-
+	hNevents->Fill(0.5);
         if (dndyBGPi > 0 && (iev % refreshBg) == 0)
             det->GenBgEvent(vX, vY, vZ);
 
@@ -331,6 +333,7 @@ void runBkgVT(Int_t nevents = 100, Bool_t optdebug = kTRUE, double Eint = 160.,
 
     TFile *outfile = new TFile("bkgdistributions.root", "recreate");
     outfile->cd();
+    hNevents->Write();
     hGenStat->Write();
     h3DPiBkg->Write();
     h3DKBkg->Write();
@@ -359,25 +362,28 @@ void CalcBkgPar(Double_t Efloat)
         dndyBGP = 148.;
         TBGpi = 0.17;
         TBGK = 0.22;
-        TBGP = 0.25;
+        TBGP = 0.26;
     }
     else if (E == 40)
-    {
+      { // pions and Kaons from  NA49 nucl-ex/0205002 
         y0BG = 2.22; // gaussian y mean - 40 GeV
         y0BGPi = 0.666;
         y0BGKplus = 0.694;
         y0BGKminus = 0.569;
         y0BGP = 0.907;
+        sigyBG = 1.2; // .. sigma
         sigyBGPi = 0.872;
         sigyBGKplus = 0.725;
         sigyBGKminus = 0.635;
         sigyBGP = 0.798;
-        sigyBG = 1.2; // .. sigma
         yminBG = 1.5; // min y to generate
         ymaxBG = 4.5; //
         TBG = 0.17;   // inv.slope of thermal pt distribution
+        TBGpi = 0.17;
+        TBGK = 0.23;
+        TBGP = 0.26;
         ptminBG = 0.01;
-        ptmaxBG = 3;
+        ptmaxBG = 5;
         dndyBGPi = 615.;
         dndyBGK = 78.;
         dndyBGP = 150.;
@@ -386,41 +392,64 @@ void CalcBkgPar(Double_t Efloat)
         NBGKminus = 6.03;
         NBGP = 37.5;
         Piratio = 0.91;
-        TBGpi = 0.17;
-        TBGK = 0.23;
-        TBGP = 0.25;
     }
     else if (E == 60)
-    {
+      { // average of values at 40 and 80
         y0BG = 2.42;  // gaussian y mean - 60 GeV
+        y0BGPi = 0.5*(0.666+0.756);
+        y0BGKplus = 0.5*(0.694+0.742);
+        y0BGKminus = 0.5*(0.569+0.668);
+        y0BGP = 0.5*(0.907+0.907);
         sigyBG = 1.2; // .. sigma
+        sigyBGPi = 0.5*(0.872+0.974);
+        sigyBGKplus = 0.5*(0.725+0.792);
+        sigyBGKminus = 0.5*(0.635+0.705);
+	sigyBGP = 0.5*(0.798+0.798);
         yminBG = 1.5; // min y to generate
         ymaxBG = 4.5; //
         TBG = 0.17;   // inv.slope of thermal pt distribution
-        ptminBG = 0.01;
-        ptmaxBG = 3;
-        dndyBGPi = 615.;
-        dndyBGK = 78.;
-        dndyBGP = 150.;
         TBGpi = 0.17;
         TBGK = 0.23;
-        TBGP = 0.25;
+        TBGP = 0.26;
+        ptminBG = 0.01;
+        ptmaxBG = 5;
+        dndyBGPi =  0.5*(615.+920.);
+        dndyBGK =  0.5*(78.+109.);
+        dndyBGP =  0.5*(150.+(30.1/41.3)*150.);
+        NBGPi = 0.5*(74.+97.);
+	NBGKplus = 0.5*(16.2+19.3);
+	NBGKminus = 0.5*(6.03+9.16);
+	NBGP = 0.5*(37.5+(30.1/41.3)*37.5);
+        Piratio = 0.93;
     }
     else if (E == 80)
     {
         y0BG = 2.57;  // gaussian y mean - 80 GeV
+        y0BGPi = 0.756;
+        y0BGKplus = 0.742;
+        y0BGKminus = 0.668;
+        y0BGP = 0.907;
+        sigyBGPi = 0.974;
+        sigyBGKplus = 0.792;
+        sigyBGKminus = 0.705;
+        sigyBGP = 0.798;
         sigyBG = 1.2; // .. sigma
         yminBG = 1.5; // min y to generate
         ymaxBG = 4.5; //
-        TBG = 0.17;   // inv.slope of thermal pt distribution
-        ptminBG = 0.01;
-        ptmaxBG = 3;
-        dndyBGPi = 615.;
-        dndyBGK = 78.;
-        dndyBGP = 150.;
-        TBGpi = 0.17;
+        TBG = 0.18;   // inv.slope of thermal pt distribution
+        TBGpi = 0.18;
         TBGK = 0.23;
-        TBGP = 0.25;
+        TBGP = 0.26;
+        ptminBG = 0.01;
+        ptmaxBG = 5;
+        dndyBGPi = 920.;
+        dndyBGK = 109.;
+        dndyBGP = (30.1/41.3)*150.;
+        NBGPi = 97.;
+        NBGKplus = 19.3;
+        NBGKminus = 9.16;
+        NBGP = (30.1/41.3)*37.5; //ratio 80/40 from PRC73, 044910 (2006)
+        Piratio = 0.94;
     }
 
     else if (E == 160)
