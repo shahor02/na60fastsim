@@ -107,6 +107,8 @@ class KMCDetectorFwd : public TNamed {
 				    double y0=2., double y0BGPi= 0.8,double y0BGKplus =0.8, double y0BGKminus =0.8,double y0BGP=0.8, 
 				    double sigyBGPi=1.2, double sigmayBGKplus=0.8, double sigmayBGKminus=0.8, double sigmaBGP =0.8, double ymin=1.8,double ymax=4.,
 				    double Tpi=0.17, double TK=0.23, double TP=0.25, double ptmin=0.01, double ptmax=5);
+  void         InitBkg(double beamenergy);
+
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
 
@@ -137,6 +139,12 @@ class KMCDetectorFwd : public TNamed {
   Double_t GetNChPi() const {return fNChPi;}
   Double_t GetNChK() const {return fNChK;}
   Double_t GetNChP() const {return fNChP;}
+  TF1*     GetdNdYPi() const {return fdNdYPi;}
+  TF1*     GetdNdYK() const {return fdNdYK;}
+  TF1*     GetdNdYP() const {return fdNdYP;}
+  TF1*     GetdNdPtPi() const {return fdNdPtPi;}
+  TF1*     GetdNdPtK() const {return fdNdPtK;}
+  TF1*     GetdNdPtP() const {return fdNdPtP;}
 
   //
   // Helper functions

@@ -1494,7 +1494,194 @@ void KMCDetectorFwd::BookControlHistos()
   fHChi2MS = new TH2F("chi2ms","chi2ms",100,0,30,10,0,10);
   //
 }
+//_________________________________________________________
+void KMCDetectorFwd::InitBkg(double beamenergy){
 
+  int E=TMath::Nint(beamenergy);
+
+  // default values (from 40 GeV)
+  double y0BG = 2.22; // gaussian y mean - 40 GeV
+  double y0BGPi = 0.666;
+  double y0BGKplus = 0.694;
+  double y0BGKminus = 0.569;
+  double y0BGP = 0.907;
+  double sigyBG = 1.2; // .. sigma
+  double sigyBGPi = 0.872;
+  double sigyBGKplus = 0.725;
+  double sigyBGKminus = 0.635;
+  double sigyBGP = 0.798;
+  double yminBG = 1.5; // min y to generate
+  double ymaxBG = 4.5; //
+  double TBG = 0.17;   // inv.slope of thermal pt distribution
+  double TBGpi = 0.17;
+  double TBGK = 0.23;
+  double TBGP = 0.26;
+  double ptminBG = 0.01;
+  double ptmaxBG = 5;
+  double dndyBGPi = 615.;
+  double dndyBGK = 78.;
+  double dndyBGP = 150.;
+  double NBGPi = 74.;
+  double NBGKplus = 16.2;
+  double NBGKminus = 6.03;
+  double NBGP = 37.5;
+  double Piratio = 0.91;
+
+  if (E == 20){
+    printf("--- Background parameters for E=20 GeV/nucleon ---\n");
+    y0BG = 1.9;   // gaussian y mean - 40 GeV
+    sigyBG = 1.2; // .. sigma
+    yminBG = 1.5; // min y to generate
+    ymaxBG = 4.5; //
+    TBG = 0.17;   // inv.slope of thermal pt distribution
+    ptminBG = 0.01;
+    ptmaxBG = 3;
+    dndyBGPi = 410.;
+    dndyBGK = 51.;
+    dndyBGP = 148.;
+    TBGpi = 0.17;
+    TBGK = 0.22;
+    TBGP = 0.26;
+  }else if (E == 40){ 
+    // pions and Kaons from  NA49 nucl-ex/0205002 
+    printf("--- Background parameters for E=40 GeV/nucleon ---\n");
+    y0BG = 2.22; // gaussian y mean - 40 GeV
+    y0BGPi = 0.666;
+    y0BGKplus = 0.694;
+    y0BGKminus = 0.569;
+    y0BGP = 0.907;
+    sigyBG = 1.2; // .. sigma
+    sigyBGPi = 0.872;
+    sigyBGKplus = 0.725;
+    sigyBGKminus = 0.635;
+    sigyBGP = 0.798;
+    yminBG = 1.5; // min y to generate
+    ymaxBG = 4.5; //
+    TBG = 0.17;   // inv.slope of thermal pt distribution
+    TBGpi = 0.17;
+    TBGK = 0.23;
+    TBGP = 0.26;
+    ptminBG = 0.01;
+    ptmaxBG = 5;
+    dndyBGPi = 615.;
+    dndyBGK = 78.;
+    dndyBGP = 150.;
+    NBGPi = 74.;
+    NBGKplus = 16.2;
+    NBGKminus = 6.03;
+    NBGP = 37.5;
+    Piratio = 0.91;
+  }else if (E == 60){ 
+    // average of values at 40 and 80
+    printf("--- Background parameters for E=60 GeV/nucleon ---\n");
+    y0BG = 2.42;  // gaussian y mean - 60 GeV
+    y0BGPi = 0.5*(0.666+0.756);
+    y0BGKplus = 0.5*(0.694+0.742);
+    y0BGKminus = 0.5*(0.569+0.668);
+    y0BGP = 0.5*(0.907+0.907);
+    sigyBG = 1.2; // .. sigma
+    sigyBGPi = 0.5*(0.872+0.974);
+    sigyBGKplus = 0.5*(0.725+0.792);
+    sigyBGKminus = 0.5*(0.635+0.705);
+    sigyBGP = 0.5*(0.798+0.798);
+    yminBG = 1.5; // min y to generate
+    ymaxBG = 4.5; //
+    TBG = 0.17;   // inv.slope of thermal pt distribution
+    TBGpi = 0.17;
+    TBGK = 0.23;
+    TBGP = 0.26;
+    ptminBG = 0.01;
+    ptmaxBG = 5;
+    dndyBGPi =  0.5*(615.+920.);
+    dndyBGK =  0.5*(78.+109.);
+    dndyBGP =  0.5*(150.+(30.1/41.3)*150.);
+    NBGPi = 0.5*(74.+97.);
+    NBGKplus = 0.5*(16.2+19.3);
+    NBGKminus = 0.5*(6.03+9.16);
+    NBGP = 0.5*(37.5+(30.1/41.3)*37.5);
+    Piratio = 0.93;
+  }else if (E == 80){
+    // pions and Kaons from  NA49 nucl-ex/0205002 
+    printf("--- Background parameters for E=80 GeV/nucleon ---\n");
+    y0BG = 2.57;  // gaussian y mean - 80 GeV
+    y0BGPi = 0.756;
+    y0BGKplus = 0.742;
+    y0BGKminus = 0.668;
+    y0BGP = 0.907;
+    sigyBGPi = 0.974;
+    sigyBGKplus = 0.792;
+    sigyBGKminus = 0.705;
+    sigyBGP = 0.798;
+    sigyBG = 1.2; // .. sigma
+    yminBG = 1.5; // min y to generate
+    ymaxBG = 4.5; //
+    TBG = 0.18;   // inv.slope of thermal pt distribution
+    TBGpi = 0.18;
+    TBGK = 0.23;
+    TBGP = 0.26;
+    ptminBG = 0.01;
+    ptmaxBG = 5;
+    dndyBGPi = 920.;
+    dndyBGK = 109.;
+    dndyBGP = (30.1/41.3)*150.;
+    NBGPi = 97.;
+    NBGKplus = 19.3;
+    NBGKminus = 9.16;
+    NBGP = (30.1/41.3)*37.5; //ratio 80/40 from PRC73, 044910 (2006)
+    Piratio = 0.94;
+  }else if (E == 160){
+    // pions and Kaons from  NA49 nucl-ex/0205002 
+    printf("--- Background parameters for E=160 GeV/nucleon ---\n");
+    y0BG = 2.9; // gaussian y mean - 160 GeV
+    y0BGPi = 0.72;
+    y0BGKplus = 0.839;
+    y0BGKminus = 0.727;
+    y0BGP = 39.8;
+    sigyBGPi = 1.18;
+    sigyBGKplus = 0.88;
+    sigyBGKminus = 0.81;
+    sigyBGP = 8.07;
+    yminBG = 1.5; // min y to generate
+    ymaxBG = 4.5; //
+    ptminBG = 0.01;
+    ptmaxBG = 5;
+    dndyBGPi = 1258.;
+    dndyBGK = 155.;
+    dndyBGP = 292.;
+    NBGPi = 107.6;
+    NBGKplus = 23.4;
+    NBGKminus = 12.8;
+    NBGP = 2.55e+06;
+    Piratio = 0.97;
+    TBGpi = 0.18; // inv.slope of thermal pt distribution
+    TBGK = 0.23;  // inv.slope of thermal pt distribution
+    TBGP = 0.31;  // inv.slope of thermal pt distribution
+  }else if (E == 400){
+    y0BG = 3.37;  // gaussian y mean - 80 GeV
+    sigyBG = 1.2; // .. sigma
+    yminBG = 1.5; // min y to generate
+    ymaxBG = 4.5; //
+    TBG = 0.17;   // inv.slope of thermal pt distribution
+    ptminBG = 0.01;
+    ptmaxBG = 5;
+    dndyBGPi = 615.;
+    dndyBGK = 78.;
+    dndyBGP = 150.;
+    TBGpi = 0.17;
+    TBGK = 0.23;
+    TBGP = 0.25;
+  }else{
+    printf("--- Parameters not available at this energy, use those for E=40 GeV/nucleon ---\n");
+  }
+  
+  printf("Simulation of background at %d GeV/nucleon\n", E);
+  printf("pions:   total multiplicity = %f ; T = %f\n", dndyBGPi, TBGpi);
+  printf("kaons:   total multiplicity = %f ; T = %f\n", dndyBGK, TBGK);
+  printf("protons: total multiplicity = %f ; T = %f\n", dndyBGP, TBGP);
+
+  InitBgGenerationPart(NBGPi, NBGKplus, NBGKminus, NBGP, Piratio, y0BG, y0BGPi, y0BGKplus, y0BGKminus, y0BGP, sigyBGPi, sigyBGKplus, sigyBGKminus, sigyBGP, yminBG, ymaxBG, TBGpi, TBGK, TBGP, ptminBG, ptmaxBG);
+  return;
+}
 
 //_____________________________________________________________________
 Bool_t KMCDetectorFwd::IsCorrect(KMCProbeFwd *probTr)
