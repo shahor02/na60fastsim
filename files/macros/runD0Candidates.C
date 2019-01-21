@@ -192,6 +192,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hMassVsPt = new TH2F("hMassVsPt", "", 200, 1.5, 2.5, 6, 0, 3);
+  TH2F *hMassVsY = new TH2F("hMassVsY", "", 200, 1.5, 2.5, 10, 0, 5);
   
   TH2F *hResVx = new TH2F("hResVx", "", 200, -1000., 1000., 30, 0, 3);
   TH2F *hResVy = new TH2F("hResVy", "", 200, -1000., 1000., 30, 0, 3);
@@ -199,6 +200,12 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH2F *hResPx = new TH2F("hResPx", "", 100, -1, 1, 30, 0, 3); //for Kaons
   TH2F *hResPy = new TH2F("hResPy", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResPz = new TH2F("hResPz", "", 100, -1, 1, 30, 0, 3);
+  TH2F *hResVxVsY = new TH2F("hResVxVsY", "", 200, -1000., 1000., 50, 0, 5);
+  TH2F *hResVyVsY = new TH2F("hResVyVsY", "", 200, -1000., 1000., 30, 0, 5);
+  TH2F *hResVzVsY = new TH2F("hResVzVsY", "", 200, -1000., 1000., 30, 0, 5);
+  TH2F *hResPxVsY = new TH2F("hResPxVsY", "", 100, -1, 1, 50, 0, 5); //for Kaons
+  TH2F *hResPyVsY = new TH2F("hResPyVsY", "", 100, -1, 1, 50, 0, 5);
+  TH2F *hResPzVsY = new TH2F("hResPzVsY", "", 100, -1, 1, 50, 0, 5);
   TH2F *hResDist = new TH2F("hResDist", "", 100, -0.5, 0.5, 30, 0, 3);
   TH2F *hResDistXY = new TH2F("hResDistXY", "", 100, -0.1, 0.1, 30, 0, 3);
   TH1F *hNevents = new TH1F("hNevents", "", 1, 0, 1);
@@ -333,6 +340,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
       hMassFake->Fill(massRecD);
     }
     hMassVsPt->Fill(massRecD,ptRecD);
+    hMassVsY->Fill(massRecD,yRecD);
     
     Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
     Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
@@ -356,6 +364,9 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hResVx->Fill(residVx, ptRecD);
     hResVy->Fill(residVy, ptRecD);
     hResVz->Fill(residVz, ptRecD);
+    hResVxVsY->Fill(residVx, yRecD);
+    hResVyVsY->Fill(residVy, yRecD);
+    hResVzVsY->Fill(residVz, yRecD);
     
     hResPx->Fill(daurec[0].Px() - daugen[0].Px(), ptRecD);
     hResPy->Fill(daurec[0].Py() - daugen[0].Py(), ptRecD);
@@ -363,6 +374,13 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hResPx->Fill(daurec[1].Px() - daugen[1].Px(), ptRecD);
     hResPy->Fill(daurec[1].Py() - daugen[1].Py(), ptRecD);
     hResPz->Fill(daurec[1].Pz() - daugen[1].Pz(), ptRecD);
+
+    hResPxVsY->Fill(daurec[0].Px() - daugen[0].Px(), yRecD);
+    hResPyVsY->Fill(daurec[0].Py() - daugen[0].Py(), yRecD);
+    hResPzVsY->Fill(daurec[0].Pz() - daugen[0].Pz(), yRecD);
+    hResPxVsY->Fill(daurec[1].Px() - daugen[1].Px(), yRecD);
+    hResPyVsY->Fill(daurec[1].Py() - daugen[1].Py(), yRecD);
+    hResPzVsY->Fill(daurec[1].Pz() - daugen[1].Pz(), yRecD);
     
     // cout << "secvert generated Pion: " << secvertgenPi[0] << "  " << secvertgenPi[1] << "  " << secvertgenPi[2] << endl;
     // cout << "Reco Vert  Pion: " << xP << "  " << yP << "  " << zP << endl;
@@ -454,6 +472,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hMassAll->Write();
   hMassFake->Write();
   hMassVsPt->Write();
+  hMassVsY->Write();
   hYPtGen->Write();
   hYPtAll->Write();
   hYPtFake->Write();
@@ -476,6 +495,12 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hResPx->Write();
   hResPy->Write();
   hResPz->Write();
+  hResVxVsY->Write();
+  hResVyVsY->Write();
+  hResVzVsY->Write();
+  hResPxVsY->Write();
+  hResPyVsY->Write();
+  hResPzVsY->Write();
   hResDist->Write();
   hResDistXY->Write();
   hd0XYprod->Write();
