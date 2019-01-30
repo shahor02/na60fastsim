@@ -45,7 +45,7 @@ public:
   Float_t GetLayerEff()  const {
     return fEff;
   }
-
+  
   Float_t GetThickness() const {return fThickness;}
   Int_t   GetActiveID()  const {return fActiveID;}
   Int_t   GetID()        const {return GetUniqueID();}
