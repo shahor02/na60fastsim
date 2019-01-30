@@ -9,29 +9,59 @@
 class KMCLayerFwd : public TNamed {
 public:
   enum {kTypeNA=-1,kVTX,kITS,kMS,kTRIG,kABS,kDUMMY,kBitVertex=BIT(15)};
+  enum {kMaxAccReg = 5};
   KMCLayerFwd(const char *name);
   Float_t GetZ()         const {return fZ;}
-  Float_t GetRMin()      const {return fRMin;}
-  Float_t GetRMax()      const {return fRMax;}
+  Float_t GetRMin()      const {return fRMin[0];}
+  Float_t GetRMax()      const {return fRMax[fNAccReg-1];}
+  Float_t GetRMin(int i)      const {return fRMin[i];}
+  Float_t GetRMax(int i)      const {return fRMax[i];}
+  int GetNAccRegions() const {return fNAccReg;}
+  void SetNAccRegions(int n=1) {
+    if (n<1) n=1;
+    if (n>kMaxAccReg) n = kMaxAccReg;
+    fNAccReg = n;
+  }
+  
   Float_t GetX2X0()      const {return fx2X0;}
   Float_t GetXTimesRho() const {return fXRho;}
-  Float_t GetXRes()      const {return fXRes;}
-  Float_t GetYRes()      const {return fYRes;}
-  Float_t GetLayerEff()  const {return fEff;}
+  int GetAccRegion(float r) const {
+    for (int rid=0;rid<fNAccReg;rid++) if (r>=fRMin[rid] && r<fRMax[rid]) return rid;
+    return -1;
+  }
+
+  Float_t GetXResId(int i)  const {return fXRes[i];}
+  Float_t GetXRes(float r=-1)  const {
+    int id = r<0 ? 0 : GetAccRegion(r);
+    return (id<0) ? fXRes[0] : fXRes[id];
+  }
+
+  Float_t GetYResId(int i)  const {return fYRes[i];}
+  Float_t GetYRes(float r=-1)  const {
+    int id = r<0 ? 0 : GetAccRegion(r);
+    return (id<0) ? fYRes[0] : fYRes[id];
+  }
+
+  Float_t GetLayerEff()  const {
+    return fEff;
+  }
+
   Float_t GetThickness() const {return fThickness;}
   Int_t   GetActiveID()  const {return fActiveID;}
   Int_t   GetID()        const {return GetUniqueID();}
   void    SetID(int id)        {SetUniqueID(id);}
   //
   void    SetZ(Float_t v)         {fZ = v;}
-  void    SetRMin(Float_t v)      {fRMin = v;}
-  void    SetRMax(Float_t v)      {fRMax = v;}
+  void    SetRMin(Float_t v, int i=0)      {fRMin[i] = v;}
+  void    SetRMax(Float_t v, int i=0)      {fRMax[i] = v;}
+  void    SetXRes(Float_t v, int i=0)      {fXRes[i] = v;}
+  void    SetYRes(Float_t v, int i=0)      {fYRes[i] = v;}
+  void    SetLayerEff(Float_t v)  {fEff = v;}
+
   void    SetX2X0(Float_t v)      {fx2X0 = v;}
   void    SetXTimesRho(Float_t v) {fXRho = v;}
-  void    SetXRes(Float_t v)      {fXRes = v;}
-  void    SetYRes(Float_t v)      {fYRes = v;}
+
   void    SetThickness(Float_t v) {fThickness = v;}
-  void    SetLayerEff(Float_t v)  {fEff = v;}
   void    SetActiveID(Int_t v)    {fActiveID = v;}
   void    SetDead(Bool_t v)       {fIsDead = v;}
   void    SetType(Int_t tp)       {fType = tp;}
@@ -79,15 +109,16 @@ public:
  protected:
   //
   Float_t fZ; 
-  Float_t fRMin;
-  Float_t fRMax;
+  Float_t fRMin[kMaxAccReg];
+  Float_t fRMax[kMaxAccReg];
   Float_t fThickness;
   Float_t fx2X0;
   Float_t fXRho;    // x*density
-  Float_t fXRes; 
-  Float_t fYRes;   
+  Float_t fXRes[kMaxAccReg]; 
+  Float_t fYRes[kMaxAccReg];   
   Float_t fEff;
   Bool_t  fIsDead;
+  Int_t   fNAccReg;
   Int_t   fType;   // its, tpc etc
   Int_t   fActiveID;   // active layer id
   Float_t fSig2EstX;
@@ -126,5 +157,7 @@ protected:
 
   ClassDef(BeamPipe,1);
 };
+
+
 
 #endif
