@@ -17,6 +17,7 @@ class KMCProbeFwd: public TObject {
   KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose=-1);  
   KMCProbeFwd(const KMCProbeFwd& src);
   KMCProbeFwd& operator=(const KMCProbeFwd& src);
+  void ImposeKinematics(const double* xyzLab,const double* cosinesLab, double en, double mass, int charge);
   //
   Int_t GetTrID()     const   {return int(GetUniqueID())-1;}
   void  SetTrID(int id)       {SetUniqueID(id+1);}
@@ -26,7 +27,7 @@ class KMCProbeFwd: public TObject {
   //
   void      Reset(); 
   void      ResetCovariance(float err=-1.);
-  Bool_t    Init(double *xyz, double *pxyz, Int_t sign, double errLoose=-1);
+  Bool_t    Init(const double *xyz, const double *pxyz, Int_t sign, double errLoose=-1);
   virtual   Bool_t IsSortable()                     const {return kTRUE;}
   virtual   Int_t  Compare(const TObject* obj)      const;
   void      Kill(Bool_t v=kTRUE)                          {SetBit(kBitKilled,v);}

@@ -109,7 +109,7 @@ void KMCProbeFwd::Reset()
 }
   
 //_______________________________________________________________________
-Bool_t KMCProbeFwd::Init(double *xyz, double *pxyz, Int_t sign, double errLoose)
+Bool_t KMCProbeFwd::Init(const double *xyz, const double *pxyz, Int_t sign, double errLoose)
 {
   // Init with track position/momentum in usual Lab frame
   // If errLoose>0 then scale initially small errors by this amount
@@ -194,9 +194,9 @@ Bool_t KMCProbeFwd::PropagateToDCA(KMCProbeFwd* partner)
 
   if (!PropagateToZBxByBz(zthis) || !partner->PropagateToZBxByBz(zpartner)) return kFALSE;
 
-  // printf("Prop to DCA at %f %f | DCA = %f\n",zthis,zpartner,dca);
-  // Print("etp");
-  // partner->Print("etp");
+  printf("Prop to DCA at %f %f | DCA = %f\n",zthis,zpartner,dca);
+  Print("etp");
+  partner->Print("etp");
   
   return kTRUE;
   //
@@ -436,4 +436,20 @@ void KMCProbeFwd::AddHit(const KMCLayerFwd* lr, double chi2, Int_t clID) {
     lr->Print();
     AliFatal("Invalid layer type");
   }
+}
+
+//____________________________________________
+void KMCProbeFwd::ImposeKinematics(const double* xyzLab,const double* cosinesLab,
+				   double en, double mass, int charge) 
+{
+  // RS: note: we assume p=e here to avoid problem with e+ e- interpreted as muon
+  double p = en; // *en - mass*mass;
+  //  if (p<=0) {printf("Anomalous kinematics: E:%e M:%e",en,mass); exit(1);}
+  //  p = TMath::Sqrt(p);
+  double pxyz[3] = {p*cosinesLab[0],p*cosinesLab[1],p*cosinesLab[2]};
+  //  printf("Imp : %f %f %f | %f\n",pxyz[0],pxyz[0],pxyz[0], en);
+  Init(xyzLab,pxyz,charge,1.e4);
+  SetMass(mass);
+  ResetCovariance();// reset cov.matrix
+  //  printf("set at %f %f %f \n",xyzLab[0],xyzLab[1],xyzLab[2]);
 }
