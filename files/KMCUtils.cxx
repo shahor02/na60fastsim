@@ -5,7 +5,7 @@
 const double MagField::fZMin[MagField::kNReg] = {-40., 380.};// cm, cm
 
 const double MagField::fZMax[MagField::kNReg] = {40.,680.};//cm cm
-const double MagField::fBVal[MagField::kNReg][3] = {{-30,0,0},{25.,30.,300.}}; //
+const double MagField::fBVal[MagField::kNReg][3] = {{-30,0,0},{250.,30.,300.}}; //
 //const double MagField::fZMax[MagField::kNReg] = {40.,830.};//cm cm 
 
 

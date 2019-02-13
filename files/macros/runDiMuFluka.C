@@ -167,10 +167,10 @@ void runMuFluka(double Eint=40., // Elab energy
     dimuGen = muGen[0];
     dimuRec = muRec[0];
     dimuGen+= muGen[1];
-    dimuGen+= muRec[1];
+    dimuRec+= muRec[1];
     int ngenEv = flStat.totalRead;
     int nrecEv = flStat.totalAccepted;
-    outStream << "genrecAcc" << "gen=" << &dimuGen << "rec=" << &dimuGen << "ngen=" << ngenEv << "nrec=" << nrecEv <<"\n";
+    outStream << "genrecAcc" << "gen=" << &dimuGen << "rec=" << &dimuRec << "ngen=" << ngenEv << "nrec=" << nrecEv <<"\n";
     printf("GenMass: %.3f RecMass: %.3f\n",dimuGen.M(), dimuRec.M());
   }
   //

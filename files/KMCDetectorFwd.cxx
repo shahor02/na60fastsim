@@ -915,7 +915,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	  origErrY*origErrY+fApplyBransonPCorrection*fApplyBransonPCorrection
 	};
 	fChi2MuVtx = trcConstr.GetPredictedChi2(measCV,errCV);
-	fHChi2Branson->Fill(fChi2MuVtx);
+	if (fHChi2Branson) fHChi2Branson->Fill(fChi2MuVtx);
 	//	printf("UpdVtx: {%+e %+e}/{%e %e %e}\n",measCV[0],measCV[1],errCV[0],errCV[1],errCV[2]);
 	//	printf("Muon@Vtx:  "); trcConstr.Print("etp");
 
