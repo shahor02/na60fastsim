@@ -1,0 +1,61 @@
+ROOT5/FLUKA interface v0 for NA60+ performance studies (E. Scomparin, Feb 2019)
+==============================================================================
+
+This interface allows the user to generate a dimuon signal, using the processes defined in the C++ class GenMUONLMR, and to feed them into FLUKA. The output of FLUKA is a text file containing the muon kinematics, to be used for reconstruction. A ROOT file containing some control histograms is also created.
+It is tested and working on Linux Ubuntu 16.04 and requires a working installation of FLUKA and of ROOT5.
+
+The following files are needed and should be placed in the working directory (except lfuka_root, see below).
+
+FluLib.cpp
+----------
+
+Contains the C++ code that performs the choice of the process, books control histograms, invokes GenMUONLMR and trigger the generation of events.
+
+The number of generated events (1000, in this case) is contained in the FLUKA data card
+
+* ..+....1....+....2....+....3....+....4....+....5....+....6....+....7..
+START         1000.0                                          1000000.
+
+GenMUONLMR.h, GenMUONLMR.cpp
+----------------------------
+
+The class that performs the generation.
+
+source_interface.f
+------------------
+
+Calls the C++ function and puts the momenta of the decay muon in the FLUKA stack. In order for the interface to be activated the following FLUKA data card should be set
+
+* ..+....1....+....2....+....3....+....4....+....5....+....6....+....7..
+SOURCE           1.         1.
+ 
+
+usrout.f
+--------
+
+Prints the ROOT control histograms.
+
+stuprf.f, mgdraw.f
+------------------
+
+Contains instructions related to the definition of the primaries.
+
+magfld.f
+--------
+
+Magnetic field information.
+
+lfluka_root
+-----------
+
+It is a customized version of the lfluka link macro, it has to be placed in the directory $FLUPRO/flutil.
+
+Makefile
+--------
+
+Performs the compilation and linking of all the files. It is suggested to perform a "make clean" before issuing the command "make".
+
+rfluka.sh
+---------
+
+Runs FLUKA.

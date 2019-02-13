@@ -1,0 +1,171 @@
+#!/bin/sh
+#
+ if [ -z "$FLUPRO" ] ; then
+    echo \$FLUPRO not defined
+    exit 1
+ fi
+ echo \$FLUPRO = $FLUPRO
+ FTOP=$FLUPRO
+ export FTOP
+ . ${FTOP}/flutil/ffluka.sh
+ echo " now linking "
+ echo ${FTOP}
+ echo ${F77}
+# Default: D_lines off: not for the linker if g77 is used!
+ if [ "$F77" = "g77" ] ; then
+     DLINESON=
+ fi
+ DLINES="${DLINESOF}"
+# Default: bound checking on
+ BOUNDS="${BOUNDSON}"
+ FFLAGS="${FOPTS} ${DLINES} ${BOUNDS}"
+ FFLAGS="$FFLAGS $INCINC"
+ EXE=flukahp
+ OBJ=
+ LIBO=
+ LIBA=
+ LIBJ=
+ LIBF=flukahp
+ DIRF=-L${FTOP}
+ CURDIR=`pwd`
+#
+ set -- `getopt o:l:m:L:O:F:a:h $*`
+ if [ $? -ne 0 ] ; then
+    cat <<!
+
+Usage: lfluka -o <executable> -l <user libraries> -a <user libraries> 
+              -m <main program> -L <library directories> -F <fluka library>
+              -O <user lib> [obj files...]
+
+!
+    exit 2
+ fi
+#
+ while [ $# -gt 0 ] ; do 
+    case $1 in
+    -h)
+cat <<!
+
+       lfluka -o <executable> -l <user libraries> -m <main program>
+              -L <library directories> -F <fluka library>
+              -O <user lib> [obj files...]
+
+       -o<file>  name of the executable to be created, if more are
+                 specified, the last one is taken, default is flukahp
+
+       -l<lib>   user library to be added in the link sequence, before
+                 the fluka library, more than one library will be
+                 specified and they will be searched in order. The name
+                 of the file must be lib<lib>.a
+
+       -a<lib>   user library to be added in the link sequence, after
+                 the fluka library, more than one library will be
+                 specified and they will be searched in order. The name
+                 of the file must be lib<lib>.a
+
+       -O<lib>  user library to be added in the link sequence AS OBJECT
+                 file. The name of the file must be lib<lib>.a
+ 
+       -m<prog>  main program to be used, it will be extracted from
+                 the fluka library and linked as first object code
+
+       -L<dir>   directory where libraries should be searched. The
+                 default is ${FTOP}. This option can be repeated
+                 and the directories will searched in the order given
+
+       -F<flib>  name of the main fluka library. The default value is
+                 libflukahp.a
+
+       -h        print this help file
+
+       obj       object files to be linked after <main> (if specified)
+                 but before the user libraries
+
+!
+	exit
+	;;
+    -o) 
+       	EXE=${2}
+       	shift 2
+       	;;
+    -l)
+       	LIBO="${LIBO} -l${2}"
+       	shift 2
+       	;;
+    -O)
+       	LIBJ="${LIBJ} ${2}"
+       	shift 2
+       	;;
+   -a)
+       	LIBA="${LIBA} -l${2}"
+       	shift 2
+       	;;
+    -L)
+       	DIRF=
+       	DIR="${DIR} -L${2}"
+       	shift 2
+       	;;
+    -m)
+       	OBJ=${2}
+       	shift 2
+       	;;
+    -F)
+       	LIBF=${2}
+       	shift 2
+       	;;
+    --)
+       	shift
+       	break
+      	 ;;
+    esac
+ done
+ DIR=${DIRF}${DIR}    
+ WHERE=`echo $DIR | sed -e 's/-L/ /g' -e 's/,/ /g'`
+ FLU=`find $WHERE -name lib${LIBF}.a 2>/dev/null`
+ if [ `echo $FLU | wc -w` -gt 1 ] ; then
+    echo " "
+    echo "lfluka: More than one fluka library found:"
+    echo "        $FLU"
+    echo "        First taken"
+    echo " "
+    FLU=`echo $FLU | awk '{print $1}'`
+ fi
+ if [ ! -z "$LIBJ" ] ; then
+    mkdir tmpo
+    cd tmpo
+    for LIBJJ in $LIBJ ; do
+        ar -x ${FTOP}/lib${LIBJJ}.a
+    done
+    cd $CURDIR
+    LIBJ=`ls tmpo/*.o`
+    echo "${LIBJ}"
+#    cat *.o > ../${LIBJ}.o
+#    cd $CURDIR
+#    rm -r tmpo
+#    echo "${LIBJ}.o"
+#    LIBJ=${LIBJ}.o
+ fi
+
+ if [ ! -z "$OBJ" ] ; then
+    echo ar x ${FLU} ${OBJ}.o
+    ar x ${FLU} ${OBJ}.o
+    OBJO=${OBJ}.o
+ fi
+ if [ "${LINKMAP}" = "yes" ] ; then
+     rm ${EXE}.map
+     echo $F77 $FFLAGS -v -o ${EXE} -Xlinker -Map -Xlinker ${EXE}.map ${OBJO} $* ${LIBJ} ${DIR}${LIBO} -l${LIBF} ${LIBA}
+     $F77 $FFLAGS -v -o ${EXE} -Xlinker -Map -Xlinker ${EXE}.map ${OBJO} $* \
+     ${LIBJ} ${DIR}${LIBO} -l${LIBF} ${LIBA} -l gfortran -l m -shared-libgcc `root-config --glibs` -lEG -lstdc++
+# N.B. command modified to run with the C++/Fortran interface (E. Scomparin, 12/02/2019)
+ else
+     echo $F77 $FFLAGS -v -o ${EXE} ${OBJO} $* ${LIBJ} ${DIR}${LIBO} -l${LIBF} ${LIBA}
+     $F77 $FFLAGS -v -o ${EXE} ${OBJO} $* \
+         ${LIBJ} ${DIR}${LIBO} -l${LIBF} ${LIBA} -l gfortran -l m -shared-libgcc `root-config --glibs` -lEG -lstdc++
+ fi
+ if [ ! -z "$OBJ" ] ; then
+    rm -f ${OBJO}
+ fi
+ if [ ! -z "$LIBJ" ] ; then
+    rm -Rf tmpo
+#    rm ${LIBJ}
+ fi
