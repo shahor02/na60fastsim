@@ -2,10 +2,10 @@
 #include <TMath.h>
 //---------------------------------
 
-const double MagField::fZMin[MagField::kNReg] = {0., 700.};// cm, cm
+const double MagField::fZMin[MagField::kNReg] = {-40., 380.};// cm, cm
 
-const double MagField::fZMax[MagField::kNReg] = {40.,1020.};//cm cm
-const double MagField::fBVal[MagField::kNReg][3] = {{-30,0,0},{1.e2,30.,300.}}; //
+const double MagField::fZMax[MagField::kNReg] = {40.,680.};//cm cm
+const double MagField::fBVal[MagField::kNReg][3] = {{-30,0,0},{25.,30.,300.}}; //
 //const double MagField::fZMax[MagField::kNReg] = {40.,830.};//cm cm 
 
 
