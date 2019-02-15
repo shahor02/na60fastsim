@@ -443,9 +443,12 @@ void KMCProbeFwd::ImposeKinematics(const double* xyzLab,const double* cosinesLab
 				   double en, double mass, int charge) 
 {
   // RS: note: we assume p=e here to avoid problem with e+ e- interpreted as muon
-  double p = en; // *en - mass*mass;
-  //  if (p<=0) {printf("Anomalous kinematics: E:%e M:%e",en,mass); exit(1);}
-  //  p = TMath::Sqrt(p);
+  double p = en*en - mass*mass;
+  if (p<=0) {
+    printf("Anomalous kinematics: E:%e M:%e",en,mass);
+    exit(1);
+  }
+  p = TMath::Sqrt(p);
   double pxyz[3] = {p*cosinesLab[0],p*cosinesLab[1],p*cosinesLab[2]};
   //  printf("Imp : %f %f %f | %f\n",pxyz[0],pxyz[0],pxyz[0], en);
   Init(xyzLab,pxyz,charge,1.e4);

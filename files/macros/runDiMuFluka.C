@@ -60,7 +60,7 @@ Int_t GetSextant(Double_t x,Double_t y);
 void CalcBkgPar(Double_t E);
 //====================================================================
 
-void runMuFluka(double Eint=40., // Elab energy 
+void runDiMuFluka(double Eint=40., // Elab energy 
 		const char* setup="setup.txt", // setup to load
 		const char* lstName="inpFluka.txt", // list of fluka files to process
 		int numITS=5,         // N ITS
@@ -170,7 +170,10 @@ void runMuFluka(double Eint=40., // Elab energy
     dimuRec+= muRec[1];
     int ngenEv = flStat.totalRead;
     int nrecEv = flStat.totalAccepted;
-    outStream << "genrecAcc" << "gen=" << &dimuGen << "rec=" << &dimuRec << "ngen=" << ngenEv << "nrec=" << nrecEv <<"\n";
+    outStream << "genrecAcc" << "gen=" << &dimuGen << "rec=" << &dimuRec
+	      << "genMu0=" << &muGen[0] << "genMu1=" << &muGen[1]
+	      << "recMu0=" << &muRec[0] << "recMu1=" << &muRec[1] 
+	      << "ngen=" << ngenEv << "nrec=" << nrecEv <<"\n";
     printf("GenMass: %.3f RecMass: %.3f\n",dimuGen.M(), dimuRec.M());
   }
   //
@@ -226,7 +229,7 @@ void SetupFlukaParticle(const FlukaPart& part)
       anProbe = lr->GetAnProbe();
       Fluka2Particle(part.recTypePix[ih],mass,charge);
       //      printf("\nSetLr PIX "); lr->Print();
-      anProbe->ImposeKinematics(&part.recDataPix[ih][kX],&part.recDataPix[ih][kCX],part.recDataPix[ih][kE],massImp,charge);
+      anProbe->ImposeKinematics(&part.recDataPix[ih][kX],&part.recDataPix[ih][kCX],part.recDataPix[ih][kE],mass,charge);
       if (lr->GetID()>maxLr) maxLr = lr->GetID();
     }
   }
@@ -245,7 +248,7 @@ void SetupFlukaParticle(const FlukaPart& part)
       Fluka2Particle(part.recTypeMS[ih],mass,charge);
       anProbe = lr->GetAnProbe();
       //      printf("\nSetLr MS  "); lr->Print();
-      anProbe->ImposeKinematics(&part.recDataMS[ih][kX],&part.recDataMS[ih][kCX],part.recDataMS[ih][kE],massImp,charge);
+      anProbe->ImposeKinematics(&part.recDataMS[ih][kX],&part.recDataMS[ih][kCX],part.recDataMS[ih][kE],mass,charge);
       if (lr->GetID()>maxLr) maxLr = lr->GetID();
     }
   }
@@ -264,7 +267,7 @@ void SetupFlukaParticle(const FlukaPart& part)
       Fluka2Particle(part.recTypeTR[ih],mass,charge);
       anProbe = lr->GetAnProbe();
       //      printf("\nSetLr TR  "); lr->Print();
-      anProbe->ImposeKinematics(&part.recDataTR[ih][kX],&part.recDataTR[ih][kCX],part.recDataTR[ih][kE],massImp,charge);
+      anProbe->ImposeKinematics(&part.recDataTR[ih][kX],&part.recDataTR[ih][kCX],part.recDataTR[ih][kE],mass,charge);
       if (lr->GetID()>maxLr) maxLr = lr->GetID();
     }
   }

@@ -573,7 +573,7 @@ void SetupFlukaParticle()
   int charge;
   anProbe = det->GetProbe();
   FlukaParticle(codeOr,mass,charge);
-  ImposeKinematics(anProbe,&recDataPrim[kX],&recDataPrim[kCX],recDataPrim[kE],massImp,charge);
+  ImposeKinematics(anProbe,&recDataPrim[kX],&recDataPrim[kCX],recDataPrim[kE],mass,charge);
   TList* lstLay = det->GetLayers();
   TIter nextL(lstLay);
   KMCLayerFwd* lrq = 0;
@@ -597,7 +597,7 @@ void SetupFlukaParticle()
       anProbe = lr->GetAnProbe();
       FlukaParticle(recTypePix[ih],mass,charge);
       //      printf("\nSetLr PIX "); lr->Print();
-      ImposeKinematics(anProbe,&recDataPix[ih][kX],&recDataPix[ih][kCX],recDataPix[ih][kE],massImp,charge);
+      ImposeKinematics(anProbe,&recDataPix[ih][kX],&recDataPix[ih][kCX],recDataPix[ih][kE],mass,charge);
       if (lr->GetID()>maxLr) maxLr = lr->GetID();
     }
   }
@@ -616,7 +616,7 @@ void SetupFlukaParticle()
       FlukaParticle(recTypeMS[ih],mass,charge);
       anProbe = lr->GetAnProbe();
       //      printf("\nSetLr MS  "); lr->Print();
-      ImposeKinematics(anProbe,&recDataMS[ih][kX],&recDataMS[ih][kCX],recDataMS[ih][kE],massImp,charge);
+      ImposeKinematics(anProbe,&recDataMS[ih][kX],&recDataMS[ih][kCX],recDataMS[ih][kE],mass,charge);
       if (lr->GetID()>maxLr) maxLr = lr->GetID();
     }
   }
@@ -635,7 +635,7 @@ void SetupFlukaParticle()
       FlukaParticle(recTypeTR[ih],mass,charge);
       anProbe = lr->GetAnProbe();
       //      printf("\nSetLr TR  "); lr->Print();
-      ImposeKinematics(anProbe,&recDataTR[ih][kX],&recDataTR[ih][kCX],recDataTR[ih][kE],massImp,charge);
+      ImposeKinematics(anProbe,&recDataTR[ih][kX],&recDataTR[ih][kCX],recDataTR[ih][kE],mass,charge);
       if (lr->GetID()>maxLr) maxLr = lr->GetID();
     }
   }
@@ -646,10 +646,13 @@ void SetupFlukaParticle()
 //____________________________________________
 void ImposeKinematics(KMCProbeFwd* probe, double* xyzLab,double* cosinesLab, double en, double mass, int charge) 
 {
-  // RS: note: we assume p=e here to avoid problem with e+ e- interpreted as muon
-  double p = en; // *en - mass*mass;
-  //  if (p<=0) {printf("Anomalous kinematics: E:%e M:%e",en,mass); exit(1);}
-  //  p = TMath::Sqrt(p);
+  //
+  double p = en*en - mass*mass;
+  if (p<=0) {
+    printf("Anomalous kinematics: E:%e M:%e",en,mass);
+    exit(1);
+  }
+  p = TMath::Sqrt(p);
   double pxyz[3] = {p*cosinesLab[0],p*cosinesLab[1],p*cosinesLab[2]};
   //  printf("Imp : %f %f %f | %f\n",pxyz[0],pxyz[0],pxyz[0], en);
   probe->Init(xyzLab,pxyz,charge,1.e4);
