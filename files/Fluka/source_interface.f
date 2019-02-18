@@ -381,6 +381,9 @@ c-------------------------------------------------------------------
       integer NENE, ijmuon_plus, ijmuon_minus
       parameter (NENE=7)
       parameter (ijmuon_plus = 10, ijmuon_minus=11)
+      double precision amass_muon
+      parameter ( amass_muon=0.105 )
+
 c      double precision amass_j, amass_muon, pmuon
 c      parameter ( amass_j = 3.096, pmuon = 1.5444, amass_muon=0.105 )
       
