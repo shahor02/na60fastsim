@@ -219,9 +219,28 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   NaCardsInput *inp = new NaCardsInput();
   if( !(inp->OpenFile(setup)) ) {Error("BuilSetup","Did not find setup File %s",setup);exit(1);}
   //
+  // -------------------------------------------------------------------
+  // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
+  // with optional data  
+  //  original line commented here; new lines follow 
+  //  if ( (narg=inp->FindEntry("define","magfield","d|",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
+  if ( (narg=inp->FindEntry("define","magfield","d?f?f?f?f?f?f?f?f",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
+  printf("Magnetic Field: %s\n",fMagFieldID==kMagAlice ? "ALICE":Form("Custom%d",fMagFieldID));
+  Double_t zminDipole  = narg > 1 ? inp->GetArgF(1) : -9999;  
+  Double_t zmaxDipole  = narg > 2 ? inp->GetArgF(2) : -9999;  
+  Double_t dipoleField = narg > 3 ? inp->GetArgF(3) : -9999;  
+  Double_t zminToroid  = narg > 4 ? inp->GetArgF(4) : -9999;  
+  Double_t zmaxToroid  = narg > 5 ? inp->GetArgF(5) : -9999;  
+  Double_t toroidField = narg > 6 ? inp->GetArgF(6) : -9999;  
+  Double_t toroidRmin  = narg > 7 ? inp->GetArgF(7) : -9999;  
+  Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;  
+  // end modification
+  // -------------------------------------------------------------------
+
+
   // flag for mag.field
   if ( (narg=inp->FindEntry("define","magfield","d|",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
-  printf("Magnetic Field: %s\n",fMagFieldID==kMagAlice ? "ALICE":Form("Custom%d",fMagFieldID));
+
   //
   // beampipe
   if ( (narg=inp->FindEntry("beampipe","","ffa|",1,1))<0 ) printf("No BeamPipe found in the setup %s\n",setup);
@@ -316,7 +335,20 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
       fld = new AliMagF("map","map");
     }
     else { // custom field
+      // -------------------------------------------------------------------
+      // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
+      // with optional data  
       fld = new MagField(TMath::Abs(fMagFieldID));
+      if (zminDipole>-9999) ((MagField *) fld)->SetZMin(0,zminDipole);
+      if (zmaxDipole>-9999) ((MagField *) fld)->SetZMax(0,zmaxDipole);
+      if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
+      if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
+      if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,0,dipoleField);
+      if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
+      if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
+      if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
+      // end modification
+      // -------------------------------------------------------------------
     }
     TGeoGlobalMagField::Instance()->SetField( fld );
     TGeoGlobalMagField::Instance()->Lock();

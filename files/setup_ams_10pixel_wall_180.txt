@@ -1,0 +1,85 @@
+# keep this if slices are to be ordered in decreasing z
+define:zinverted
+
+# if not defined or -1 : Alice field, otherwise custom
+# parameters from zminDipole onwards are optional (but you cannot omit one in the middle)
+#                ID zminDipole  zmaxDipole  Bdipole ZminToroid ZmaxToroid Btoroid ToroidRmin ToroidRmax
+define:magfield  0  0.0		100.0	    -9	    440.0      740.0	  250.	  30.0	     300.0
+#define:magfield  0
+#
+#		r	dr	material
+#beampipe:	0.5	0.08    BERYLLIUM
+
+# dummy layer as a vertex	Zc	DZ		resX	resY
+vertex:		      		0.	0.		500e-4	500e-4
+
+# the parameters eff,RMin,RMax are optional (default is 1,0,1e9), but if one is there, preciding ones also should be set
+#		name		material	Zc	DZ		resX	resY	eff	RMin	RMax
+activelayer:vt	VT1		SILICON		7.1175	50e-4 		5.e-4	5.e-4  0.99	0.15  15.
+#dummy:		VT1Plane	CARBON		7.07	1000e-4		
+activelayer:vt	VT2		SILICON		15.1175	50e-4		5.e-4	5.e-4	0.99	0.15  15.
+#dummy:          VT2Plane        CARBON         15.07   1000e-4
+activelayer:vt	VT3		SILICON		20.1175	50e-4		5.e-4	5.e-4	0.99	0.15  15.
+#dummy:          VT3Plane        CARBON          20.07   1000e-4
+activelayer:vt	VT4		SILICON		27.1175	50e-4		5.e-4	5.e-4	0.99	0.15  15.
+#dummy:          VT4Plane        CARBON          27.07   1000e-4
+activelayer:vt	VT5		SILICON		38.1175	50e-4		5.e-4	5.e-4	0.99	0.5   30.
+#dummy:          VT5Plane        CARBON          38.07   1000e-4
+activelayer:vt	VT6		SILICON		50.1175	50e-4 		5.e-4	5.e-4  0.99	0.5   30.
+#dummy:		VT6Plane	CARBON		50.07	1000e-4		
+activelayer:vt	VT7		SILICON		62.1175	50e-4		5.e-4	5.e-4	0.99	0.5   30.
+#dummy:          VT7Plane        CARBON          62.07   1000e-4
+activelayer:vt	VT8		SILICON		74.1175	50e-4		5.e-4	5.e-4	0.99	0.5   45.
+#dummy:          VT8Plane        CARBON          74.07   1000e-4
+activelayer:vt	VT9		SILICON		86.1175	50e-4		5.e-4	5.e-4	0.99	0.5   45.
+#dummy:          VT9Plane        CARBON          86.07   1000e-4
+activelayer:vt	VT10		SILICON		98.1175	50e-4		5.e-4	5.e-4	0.99	0.5   45.
+#dummy:          VT10Plane        CARBON          98.07   1000e-4
+
+#
+activelayer:ms	MS-CH0		SILICON		354.	610e-4		200e-4	200e-4	0.98	7.86614 166.25346
+activelayer:ms	MS-CH1		SILICON		421.	610e-4		200e-4	200e-4	0.98	34.98615 197.71944
+activelayer:ms	MS-CH2		SILICON		760.	700e-4		200e-4	200e-4	0.98	32.57143 337.83616
+activelayer:ms	MS-CH3		SILICON		860.	700e-4		200e-4	200e-4	0.98	17.91552 382.28831
+#activelayer:ms	MS-CH4		SILICON		960.	330e-4		200e-4	200e-4	0.98	21.33195 450.85674
+#activelayer:ms	MS-CH5		SILICON		1182	330e-4		200e-4	200e-4	0.98
+#activelayer:ms	MS-CH6		SILICON		1379  	330e-4		200e-4	200e-4	0.98
+#
+# trigger chambers
+activelayer:tr	MS-TR1		SILICON		1060	1330e-4		0.1	0.1	0.98	28.26479 471.19255
+activelayer:tr	MS-TR2		SILICON		1100  	1330e-4		0.1	0.1	0.98	29.37836 488.97340
+
+#		name		material	Zc	DZ
+absorber:	ABS_BEO_0	BEO		156.8	106.4
+#absorber:	ABSO_C_0	CARBONA		135.0	30.00
+absorber:	ABSO_C_0	CARBONA		230.0	40.00
+absorber:	ABSO_C_1	CARBONA		260.0	20.00
+absorber:	ABSO_C_2	CARBONA		280.0	20.00
+absorber:	ABSO_FE_0	CARBONA		300.0	20.00
+absorber:	ABSO_FE_1	CARBONA		320.0	20.00
+absorber:	ABSO_FE_2	CARBONA		335.0	10.00
+
+#
+absorber:	ABSO_WALL	CARBONA		960.0	180.00
+#
+
+############################################################
+######                                                ######
+######                   MATERIALS                    ######
+######                                                ######
+############################################################
+#           Name         A	Z	Density		RadL(g/cm2)	AbsL(g/cm2)	
+#	    
+material:   VACUUM      1.E-16  1.E-16	1.E-16		1.E16		1.E16
+material:   AIR         14.61   7.3   	1.205e-3  	36.6 		90.37
+material:   BERYLLIUM   9.012   4.0    	1.848      	65.19    	56.30
+material:   SILICON     28.09 	14.0	2.329         	21.82		70.2
+
+#material:   BEO        	13.482  6.559   2.810  		40.548		100.73
+# Fluka BeO
+material:   BEO        	12.510  6.000   2.810  		41.307		100.73
+material:   IRON        55.85   26.0   	7.87       	13.84		81.7
+material:   CARBON      12.01   6.0   	2.00      	42.70		59.2
+material:   CARBONA     12.01   6.0     1.93            42.6916         59.2
+material:   CERAMICS   	22.313  10.855  3.600           27.54		114.84
+material:   AL2O3      	21.812  10.646  3.520  		27.87  		114.92
