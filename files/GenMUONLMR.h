@@ -40,16 +40,16 @@ class GenMUONLMR  {
   static const Int_t fgkNpart = 8; // number of particles to be generated 
   Int_t fNMuMin;                   // min. number of muons to accept the event for writing
   Int_t fGenSingleProc;            // flag to generate a single process (1) or the whole cocktail (0)
-  Int_t fPDG[8];                   // pdg code of particle to be generated 
-  Double_t fScaleMult[8];          // multiplicity scaling factor (w.r.t. pythia@7TeV)
-  TF1 *fPt[8];                     // pt distribution
-  TF1 *fY[8];                      // rapidity distribution
-  TF1 *fMult[8];                   // multiplicity distribution 
+  Int_t fPDG[fgkNpart];                   // pdg code of particle to be generated 
+  Double_t fScaleMult[fgkNpart];          // multiplicity scaling factor (w.r.t. pythia@7TeV)
+  TF1 *fPt[fgkNpart];                     // pt distribution
+  TF1 *fY[fgkNpart];                      // rapidity distribution
+  TF1 *fMult[fgkNpart];                   // multiplicity distribution 
   TF1 *fDecay[2];                  // fDecay[0] = pion, fDecay[1] = kaon
   TH1F *fDalitz[3];                // Dalitz decay form factor for eta, omega, etaprime
   TF1 *fCosTheta;                  // function for polarized theta distributions
   TF1 *fRhoLineShape;              // rho line shape 
-  TParticle* fParticle[8];         // TPaticle object for the particles to be generated
+  TParticle* fParticle[fgkNpart];         // TPaticle object for the particles to be generated
   TParticle* fMu[2];               // fMu[0] = mu+    fMu[1] = mu-
   TH1D *fHMultMu;                  // muon multiplicity 
   TH1D *fHNProc;                   // number of events generated per process

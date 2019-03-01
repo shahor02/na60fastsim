@@ -118,6 +118,7 @@ GenMUONLMR::GenMUONLMR(Double_t energy, Int_t kLowEnergy) :
     TDatabasePDG* pdgp = TDatabasePDG::Instance();
 
     for (Int_t i=0; i<fgkNpart; i++) { 
+      printf("\n"); //problem with new aliroot version
       fPDG[i] = pdg[i]; 
       if (i>1) { // if (i!=0) se non includi i kaoni
 	fMult[i] = new TF1(fnname[i],"[0]*exp(-[1]*x)",0,30);
@@ -145,7 +146,7 @@ GenMUONLMR::GenMUONLMR(Double_t energy, Int_t kLowEnergy) :
 	fY[i]->SetParameters(yparam[i][0], yparam[i][1], yparam[i][2]);
       }
     }
-    
+   
     for(Int_t i = 0; i<2; i++){
       fDecay[i] = new TF1(fdname[i],"exp(-x/[0])",0,150);
       fDecay[i]->SetParameter(0,ctau[i]);
