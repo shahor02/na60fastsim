@@ -140,10 +140,11 @@ void runDiMuFluka(double Eint=40., // Elab energy
     if (dndyBGPi>0 && (flStat.totalAccepted%refreshBg)==0) det->GenBgEvent(vX,vY,vZ);
     //
     int nrec = 0, npix[2]={0}, nfake[2]={0};
+    float chiGlo[2] = {999.,999.};
     double pxyz[3];     
 
-    TLorentzVector muRec[2],muGen[2], dimuGen, dimuRec;
-
+    TLorentzVector muRec[2],muRecMS[2],muGen[2], dimuGen, dimuRec, dimuRecMS;
+    
     for (int imu=0;imu<2;imu++) {
       SetupFlukaParticle( flukaParts[imu] );
       
@@ -157,23 +158,37 @@ void runDiMuFluka(double Eint=40., // Elab energy
       if (!trw) break;
       if(trw->GetNormChi2(kTRUE)>ChiTot) continue;
       nrec++;
+      chiGlo[imu] = trw->GetNormChi2(kTRUE);
       npix[imu] = trw->GetNITSHits();
       nfake[imu] = trw->GetNFakeITSHits();
       trw->GetPXYZ(pxyz);
       muRec[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],KMCDetectorFwd::kMassMu);
+
+      KMCProbeFwd* muMS = det->GetMuBransonCorrVtx();
+      if (muMS) {
+	muMS->GetPXYZ(pxyz);
+	muRecMS[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],KMCDetectorFwd::kMassMu);
+      }
+      
     }
     if (nrec<2) continue;
 
     dimuGen = muGen[0];
     dimuRec = muRec[0];
+    dimuRecMS = muRecMS[0];
     dimuGen+= muGen[1];
     dimuRec+= muRec[1];
+    dimuRecMS += muRecMS[1];
     int ngenEv = flStat.totalRead;
     int nrecEv = flStat.totalAccepted;
-    outStream << "genrecAcc" << "gen=" << &dimuGen << "rec=" << &dimuRec
+    outStream << "genrecAcc" << "gen=" << &dimuGen << "rec=" << &dimuRec << "recMS=" << &dimuRecMS
 	      << "genMu0=" << &muGen[0] << "genMu1=" << &muGen[1]
-	      << "recMu0=" << &muRec[0] << "recMu1=" << &muRec[1] 
-	      << "ngen=" << ngenEv << "nrec=" << nrecEv <<"\n";
+	      << "recMu0=" << &muRec[0] << "recMu1=" << &muRec[1]
+      	      << "recMuMS0=" << &muRecMS[0] << "recMuMS1=" << &muRecMS[1]
+	      << "npix0=" << npix[0] << "npix1=" << npix[1]
+	      << "nfake0=" << nfake[0] << "nfake1=" << nfake[1]
+	      << "chi0=" << chiGlo[0] << "chi1=" << chiGlo[1]
+	      << "ngenEv=" << ngenEv << "nrecEv=" << nrecEv <<"\n";
     printf("GenMass: %.3f RecMass: %.3f\n",dimuGen.M(), dimuRec.M());
   }
   //
@@ -321,8 +336,35 @@ void CalcBkgPar(Double_t E){
   //    TBGK = 0.23;
   //    TBGP = 0.25;
   //  }
-
-  if(E == 40.){
+  if(E < 0) { // no bg
+    printf("Beam E is negative, diable BCKG generation\n");
+    y0BG   = 2.22;   // gaussian y mean - 40 GeV                                
+    y0BGPi  = 0.666;
+    y0BGKplus   = 0.694;
+    y0BGKminus  = 0.569;
+    y0BGP   = 0.907;
+    sigyBGPi = 0.872;
+    sigyBGKplus  = 0.725;
+    sigyBGKminus = 0.635;
+    sigyBGP = 0.798;
+    sigyBG = 1.2;   // .. sigma                                                 
+    yminBG = 1.5;   // min y to generate                                        
+    ymaxBG = 4.5;   //                                                          
+    TBG    = 0.17;  // inv.slope of thermal pt distribution                     
+    ptminBG = 0.01;
+    ptmaxBG = 3;
+    dndyBGPi = 0;
+    dndyBGK = 0;
+    dndyBGP = 0;
+    NBGPi     = 0;
+    NBGKplus  = 0;
+    NBGKminus = 0;
+    NBGP      = 0;
+    Piratio = 0.91;
+    TBGpi = 0.17;
+    TBGK = 0.23;
+    TBGP = 0.25;
+  } else if(E == 40.){
     y0BG   = 2.22;   // gaussian y mean - 40 GeV                                
     y0BGPi  = 0.666;
     y0BGKplus   = 0.694;
