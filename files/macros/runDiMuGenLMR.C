@@ -12,6 +12,7 @@
 #include "GenMUONLMR.h"
 #include "TStopwatch.h"
 #include "TTree.h"
+#include "TTreeStream.h"
 #endif
 
 //TRandom *rnd;
@@ -95,7 +96,7 @@ void BookHistos();
 void CalcBkgPar(Double_t E);
 
 void runDiMuGenLMR(int nev=30000,     // n events to generate
-		   const Char_t *Process = "rho",
+		   const Char_t *Process = "jpsi",
 		   int Seed=12345,
 		   double Eint=40.,   // bg particles density - 30 GeV
 		   int refreshBg=100,  // generate new bg event for each refreshBg-th
@@ -108,6 +109,8 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   gRandom->SetSeed(Seed);
 
   CalcBkgPar(Eint);
+  TTreeSRedirector outStream("dimuGenLMR.root"); // the output stream trees will go here
+  
 
   MagField *mag = new MagField(1);
   int BNreg = mag->GetNReg();
@@ -169,7 +172,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   // create signal generation f-ns
   //TF1* fRhoLineShape = new TF1("fRhoLineShape",RhoLineShapeNew,0,2,2); 
 
-  SetProcessParameters(Process,Eint);
+  SetProcessParameters(Process,TMath::Abs(Eint));
   GenMUONLMR *gener = new GenMUONLMR(7,1);
 //      0         1        2         3         4        5           6         7
 //  "fPtPion","fPtKaon","fPtEta","fPtRho","fPtOmega","fPtPhi","fPtEtaPrime"  "fPtJPsi"
@@ -193,7 +196,9 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   //
   // prepare decays
   TGenPhaseSpace decay;
-  TLorentzVector parentgen, mugen[2], parent,murec[2];//eli
+  TLorentzVector parent, dimuGen, muGen[2], muRec[2], muRecMS[2], dimuRecMS, dimuRec;//eli
+  int npix[2]={0}, nfake[2]={0};
+  float chiGlo[2] = {999.,999.};
   TParticle mupart[2];
 
   TTree *t1 = new TTree("t1","TLorentzVectorMuons");
@@ -228,7 +233,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
     int crgOrd = gRandom->Rndm() > 0.5 ? -1:1;
     //
     int nrec = 0;
-    int nfake = 0;
+    int nfakeHits = 0;
     double pxyz[3];
     int sext[2];
     //    if (iev==255) AliLog::SetGlobalDebugLevel(3);
@@ -240,10 +245,10 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
     parent.SetPxPyPzE(fMu[0]->Px()+fMu[1]->Px(),fMu[0]->Py()+fMu[1]->Py(),fMu[0]->Pz()+fMu[1]->Pz(),
 		      fMu[0]->Energy()+fMu[1]->Energy());
     for (int imu=0;imu<2;imu++) {
-      mugen[imu].SetXYZM(fMu[imu]->Px(),fMu[imu]->Py(),fMu[imu]->Pz(),0.105658369);//eli
+      muGen[imu].SetXYZM(fMu[imu]->Px(),fMu[imu]->Py(),fMu[imu]->Pz(),0.105658369);//eli
     }
-    parentgen  = mugen[0];
-    parentgen += mugen[1];
+    dimuGen  = muGen[0];
+    dimuGen += muGen[1];
 
     double y = parent.Rapidity();
     double pt = parent.Pt();
@@ -310,11 +315,21 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
       if (!trw) break;
       if(trw->GetNormChi2(kTRUE)>ChiTot) continue;
       nrec++;
-      nfake += trw->GetNFakeITSHits();
+      nfakeHits += trw->GetNFakeITSHits();
       trw->GetPXYZ(pxyz);
-      murec[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],prodM[imu]);
-      mupart[imu].SetMomentum(murec[imu].Px(),murec[imu].Py(),murec[imu].Pz(),murec[imu].Energy());
+      muRec[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],prodM[imu]);
+      npix[imu] = trw->GetNITSHits();
+      nfake[imu] = trw->GetNFakeITSHits();
+      chiGlo[imu] = trw->GetNormChi2(kTRUE);
+      mupart[imu].SetMomentum(muRec[imu].Px(),muRec[imu].Py(),muRec[imu].Pz(),muRec[imu].Energy());
+
+      KMCProbeFwd* muMS = det->GetMuBransonCorrVtx();
+      if (muMS) {
+	muMS->GetPXYZ(pxyz);
+	muRecMS[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],KMCDetectorFwd::kMassMu);
+      }
     }
+
     if (nrec<2) continue;
 
     KMCClusterFwd* clITS[5];
@@ -322,11 +337,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
       clITS[i]= det->GetLayerITS(i)->GetMCCluster();
       if (!clITS[i]) break; 
       hxySextantITS[i]->Fill(clITS[i]->GetXLab(),clITS[i]->GetYLab());
-      }
-
-
-
-
+    }
 
     hSext1VsSext0->Fill(sext[0],sext[1]);
     //if (sext[0]==sext[1]) {  
@@ -334,57 +345,69 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
     //  continue; // reject dimuon in same sextant                                                                  
     //}  
     hSext1VsSext0Trig->Fill(sext[0],sext[1]);
-    parent  = murec[0];
-    parent += murec[1];
+    dimuRec  = muRec[0];
+    dimuRec += muRec[1];
 
-    mupart[0].SetStatusCode(nfake);
-    mupart[1].SetStatusCode(nfake);
+    dimuRecMS = muRecMS[0];
+    dimuRecMS += muRecMS[1];
+    
+    mupart[0].SetStatusCode(nfakeHits);
+    mupart[1].SetStatusCode(nfakeHits);
     new(ar[0]) TParticle(mupart[0]);
     new(ar[1]) TParticle(mupart[1]);
     t1->Fill();
 
+    outStream << "genrecAcc" << "gen=" << &dimuGen << "rec=" << &dimuRec << "recMS=" << &dimuRecMS
+	      << "genMu0=" << &muGen[0] << "genMu1=" << &muGen[1]
+	      << "recMu0=" << &muRec[0] << "recMu1=" << &muRec[1]
+      	      << "recMuMS0=" << &muRecMS[0] << "recMuMS1=" << &muRecMS[1]
+	      << "npix0=" << npix[0] << "npix1=" << npix[1]
+	      << "nfake0=" << nfake[0] << "nfake1=" << nfake[1]
+	      << "chi0=" << chiGlo[0] << "chi1=" << chiGlo[1] << "\n";
+    
+    
     //
-    hnFake->Fill(1.*nfake);
-    if (nfake>0) {
-      hYPtFake->Fill(parent.Rapidity(),parent.Pt());
-      hPtFake->Fill(parent.Pt());
-      hYPtFakeCBMbin->Fill(parent.Rapidity(),parent.Pt());
-      hMassFake->Fill(parent.M());
+    hnFake->Fill(1.*nfakeHits);
+    if (nfakeHits>0) {
+      hYPtFake->Fill(dimuRec.Rapidity(),dimuRec.Pt());
+      hPtFake->Fill(dimuRec.Pt());
+      hYPtFakeCBMbin->Fill(dimuRec.Rapidity(),dimuRec.Pt());
+      hMassFake->Fill(dimuRec.M());
     }
-    else if (parent.M()<2.*prodM[0]) {
+    else if (dimuRec.M()<2.*prodM[0]) {
       printf("ev %d",iev);
-      murec[0].Print();
-      murec[1].Print();
-      parent.Print();
+      muRec[0].Print();
+      muRec[1].Print();
+      dimuRec.Print();
       return;
     }
 
-    if (nfake==1) {      
-      hMassFake1->Fill(parent.M());
+    if (nfakeHits==1) {      
+      hMassFake1->Fill(dimuRec.M());
     }
-    else if (nfake==2) {      
-      hMassFake2->Fill(parent.M());
+    else if (nfakeHits==2) {      
+      hMassFake2->Fill(dimuRec.M());
     }
-    else if (nfake==3) {      
-      hMassFake3->Fill(parent.M());
+    else if (nfakeHits==3) {      
+      hMassFake3->Fill(dimuRec.M());
     }
-    else if (nfake==4) {      
-      hMassFake4->Fill(parent.M());
+    else if (nfakeHits==4) {      
+      hMassFake4->Fill(dimuRec.M());
     }
-    else if (nfake==5) {      
-      hMassFake5->Fill(parent.M());
+    else if (nfakeHits==5) {      
+      hMassFake5->Fill(dimuRec.M());
     }
 
-    hYPtAll->Fill(parent.Rapidity(),parent.Pt());
-    hPtAll->Fill(parent.Pt());
-    hYPtAllCBMbin->Fill(parent.Rapidity(),parent.Pt());
-    hMassAll->Fill(parent.M());
-    //hPhi->Fill(parent.Phi()); 
-    printf("m=%f\n",parent.M());
-    if (nfake==0) hMassSignalZoom->Fill(parent.M());
-    hY0->Fill(murec[0].Rapidity());
-    hY1->Fill(murec[1].Rapidity());
-    hY0Y1->Fill(murec[0].Rapidity(),murec[1].Rapidity());
+    hYPtAll->Fill(dimuRec.Rapidity(),dimuRec.Pt());
+    hPtAll->Fill(dimuRec.Pt());
+    hYPtAllCBMbin->Fill(dimuRec.Rapidity(),dimuRec.Pt());
+    hMassAll->Fill(dimuRec.M());
+    //hPhi->Fill(dimuRec.Phi()); 
+    printf("m=%f\n",dimuRec.M());
+    if (nfakeHits==0) hMassSignalZoom->Fill(dimuRec.M());
+    hY0->Fill(muRec[0].Rapidity());
+    hY1->Fill(muRec[1].Rapidity());
+    hY0Y1->Fill(muRec[0].Rapidity(),muRec[1].Rapidity());
 
 
   }
@@ -676,7 +699,23 @@ void BookHistos(){
 
 void CalcBkgPar(Double_t E){
 
-  if(E == 20.){
+  if(E < 0.){
+    printf("Beam E is negative, diable BCKG generation\n");
+    y0BG   = 1.9;   // gaussian y mean - 40 GeV
+    sigyBG = 1.2;   // .. sigma
+    yminBG = 1.5;   // min y to generate 
+    ymaxBG = 4.5;   // 
+    TBG    = 0.17;  // inv.slope of thermal pt distribution
+    ptminBG = 0.01;
+    ptmaxBG = 3;
+    dndyBGPi = 0.;
+    dndyBGK = 0.;
+    dndyBGP = 0.;
+    TBGpi = 0.17;
+    TBGK = 0.22;
+    TBGP = 0.25;
+  }
+  else if(E == 20.){
     y0BG   = 1.9;   // gaussian y mean - 40 GeV
     sigyBG = 1.2;   // .. sigma
     yminBG = 1.5;   // min y to generate 
