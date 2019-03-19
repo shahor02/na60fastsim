@@ -55,7 +55,8 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 				     double Eint = 160., 
 				     const char *setup = "setup-10um-itssa_Eff1.txt", 
 				     const char *filNamPow="/home/prino/cernbox/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root", 
-				     const char *privateDecayTable = "/home/prino/cernbox/na60plus/decaytables/USERTABLC.DEC", 
+				     const char *privateDecayTable = "/home/prino/cernbox/na60plus/decaytables/USERTABLC.DEC",
+				     int optPartAntiPart=3,
 				     bool writeNtuple = kFALSE, 
 				     bool simulateBg=kTRUE){
   
@@ -84,7 +85,19 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   TH3D* h3Dpow=(TH3D*)filPow->Get("hptyeta4122");
   TH1D *hLcpt = (TH1D*)h3Dpow->ProjectionX("hLcpt");
   TH1D *hLcy = (TH1D*)h3Dpow->ProjectionY("hLcy");
-  
+  TH3D* h3Dbarpow=(TH3D*)filPow->Get("hptyetam4122");
+  if(h3Dbarpow){
+    TH1D *hLcbarpt = (TH1D*)h3Dbarpow->ProjectionX("hLcbarpt");
+    TH1D *hLcbary = (TH1D*)h3Dbarpow->ProjectionY("hLcbary");
+    if(optPartAntiPart==3){
+      hLcpt->Add(hLcbarpt);
+      hLcy->Add(hLcbary);
+    }else if(optPartAntiPart==2){
+      hLcpt=hLcbarpt;
+      hLcy=hLcbary;
+    }
+  }
+
   TH2F *hptK = new TH2F("hptK", "kaons from Lc decays", 50,0.,10.,50, 0., 10.);
   TH2F *hptPi = new TH2F("hptPi", "pions from Lc decays", 50, 0.,10.,50,0., 10.);
   TH2F *hptP = new TH2F("hptP", "protons from Lc decays", 50, 0.,10.,50,0., 10.);
