@@ -49,12 +49,13 @@ Double_t ImpParXY(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent);
 Double_t CosThetaStar(TLorentzVector &parent, TLorentzVector &dauk);
 
 void GenerateD0SignalCandidates(Int_t nevents = 100000, 
-			   double Eint = 160., 
-			   const char *setup = "setup-10um-itssa_Eff1.txt", 
-			   const char *filNamPow="/home/prino/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root", 
-			   const char *privateDecayTable = "/home/prino/na60plus/decaytables/USERTABD0.DEC", 
-			   bool writeNtuple = kFALSE, 
-			   bool simulateBg=kTRUE){
+				double Eint = 160., 
+				const char *setup = "setup-10um-itssa_Eff1.txt", 
+				const char *filNamPow="/home/prino/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root",
+				const char *privateDecayTable = "/home/prino/na60plus/decaytables/USERTABD0.DEC",
+				int optPartAntiPart=3,
+				bool writeNtuple = kFALSE, 
+				bool simulateBg=kTRUE){
   
   // Generate D0->Kpi signals and simulate detector response for decay tracks
   // Need input D0 pt and y ditribution from POWHEG
@@ -81,7 +82,18 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH3D* h3Dpow=(TH3D*)filPow->Get("hptyeta421");
   TH1D *hD0pt = (TH1D*)h3Dpow->ProjectionX("hD0pt");
   TH1D *hD0y = (TH1D*)h3Dpow->ProjectionY("hD0y");
-  
+  TH3D* h3Dbarpow=(TH3D*)filPow->Get("hptyetam421");
+  if(h3Dbarpow){
+    TH1D *hD0barpt = (TH1D*)h3Dbarpow->ProjectionX("hD0barpt");
+    TH1D *hD0bary = (TH1D*)h3Dbarpow->ProjectionY("hD0bary");
+    if(optPartAntiPart==3){
+      hD0pt->Add(hD0barpt);
+      hD0y->Add(hD0bary);
+    }else if(optPartAntiPart==2){
+      hD0pt=hD0barpt;
+      hD0y=hD0bary;
+    }
+  }
   TH2F *hptK = new TH2F("hptK", "kaons from D0 decays", 50,0.,10.,50, 0., 10.);
   TH2F *hptPi = new TH2F("hptPi", "pions from D0 decays", 50, 0.,10.,50,0., 10.);
   TH1F *hyK = new TH1F("hyK", "y kaons from D0 decays", 50, 0., 5.);
@@ -97,7 +109,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   printf("*************************************\n");
   printf("number of magnetic field regions = %d\n", BNreg);
   
-  TFile *fout = new TFile("Matching-histos.root", "recreate");
+  TFile *fout = new TFile("D0-Signal-histos.root", "recreate");
   
   for (int i = 0; i < BNreg; i++){
     BVal = mag->GetBVals(i);
@@ -568,7 +580,7 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   // define mother particle
   Int_t pdgParticle = 421;
   
-  TFile *fout = new TFile("Matching-histos.root", "recreate");
+  TFile *fout = new TFile("D0-Bkg-histos.root", "recreate");
   TH1F* hPtAll = new TH1F("PTAll", "Pt all match", 50, 0., 5.);
   TH2F* hYPtAll = new TH2F("YPTAll", "Y-Pt all match", 80, 1.0, 5.4, 50, 0., 5.);
   TH1F* hMassAll = new TH1F("MassAll", "Mass all match", 250, 0., 2.5);
