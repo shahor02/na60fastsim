@@ -1,0 +1,164 @@
+TITLE
+
+* Set the defaults for precision simulations
+DEFAULTS                                                              PRECISIO
+* Define the beam characteristics
+BEAM           100.0       0.0       0.0       0.0       0.0          PION+
+*SOURCE                                                                test-kin
+SOURCE           1.         1.
+MGNFIELD        30.0      0.01      0.03       0.0       0.0       0.0
+* Define the beam position
+BEAMPOS       0.0000     0.000     0.000       0.0       0.0
+GEOBEGIN                                                              COMBNAME
+    0    0          
+RCC PixSt0I    0. 0. 7.120000 0. 0. -0.14 0.1555
+RCC PixSt0O    0. 0. 7.120000 0. 0. -0.14 3.2875
+XYP PixPl0I    7.02
+XYP PixPl0O    7.120000
+RCC PixSt1I    0. 0. 15.12 0. 0. -0.14 0.3333
+RCC PixSt1O    0. 0. 15.12 0. 0. -0.14 7.0446
+XYP PixPl1I    15.02
+XYP PixPl1O    15.120000
+RCC PixSt2I    0. 0. 20.12 0. 0. -0.14 0.4444
+RCC PixSt2O    0. 0. 20.12 0. 0. -0.14 9.3928
+XYP PixPl2I    20.02
+XYP PixPl2O    20.120000
+RCC PixSt3I    0. 0. 25.12 0. 0. -0.14 0.5555
+RCC PixSt3O    0. 0. 25.12 0. 0. -0.14 11.7411
+XYP PixPl3I    25.02
+XYP PixPl3O    25.120000
+RCC PixSt4I    0. 0. 38.12 0. 0. -0.14 0.8444
+RCC PixSt4O    0. 0. 38.12 0. 0. -0.14 17.8464
+XYP PixPl4I    38.02
+XYP PixPl4O    38.120000
+RCC MS0In      0. 0. 293.9695 0. 0. 0.0610 6.5329
+RCC MS0Out     0. 0. 293.9695 0. 0. 0.0610 138.0749
+RCC MS1In      0. 0. 360.9695 0. 0. 0.0610 30.000
+RCC MS1Out     0. 0. 360.9695 0. 0. 0.0610 169.5409
+RCC MS2In      0. 0. 699.965 0. 0. 0.07 30.
+RCC MS2Out     0. 0. 699.965 0. 0. 0.07 311.16
+RCC MS3In      0. 0. 799.965 0. 0. 0.07 16.6656
+RCC MS3Out     0. 0. 799.965 0. 0. 0.07 355.61
+* Black body 1
+SPH bhout      0.0 0.0 500.0 1200.0
+* Black body 2
+SPH bhin       0.0 0.0 500.0 1100.0
+* Void sphere
+SPH void       0.0 0.0 500.0 1100.0
+* Muon Wall
+RCC Mwall      0.0 0.0 810.000000000 0.0 0.0 180.00000000000 500.
+* Trig station
+RCC TrigSt0O   0.0 0.0 999.9335 0.0 0.0 0.133 444.52
+* Trig station
+RCC TrigSt0I   0.0 0.0 999.9335 0.0 0.0 0.133 26.6649
+* Trig station
+RCC TrigSt1I   0.0 0.0 1039.9335 0.0 0.0 0.133 27.7759
+* Trig station
+RCC TrigSt1O   0.0 0.0 1039.9335 0.0 0.0 0.133 462.30
+XYP AbsoPl0    84.60
+TRC AbsoCon    0.00 0.00 280.0000000000 0.00 0.00 -236.4000000000 200.00 40.00
+TRC AbsoPlug   0.00 0.00 280.00 0.00 0.00 -236.400 11.00 1.00
+XYP AbsoPl1    150.000
+XYP AbsoPl2    250.00
+XYP AbsoPl3    280.00
+XYP PlugPl0    43.600
+ZCC BH1        0.00 0.00 510.00
+ZCC BH2        0.00 0.00 560.00
+XYP BHPL1      -15.00
+XYP BHPL2      -10.00
+XYP BHPL3      1050.00
+XYP BHPL4      1200.00
+RPP Box1       -200.0 200.0 -30.0 30.0 0.0 40.0
+RCC Box2       0.0 0.0 380. 0.0 0.0 300. 300.
+RCC Box3       0.0 0.0 380.0 0.0 0.0 300.0 30.
+END
+PixStn0      5 +PixPl0I+PixSt0O-PixSt0I
+Dum0         5 +PixPl0O-PixPl0I+PixSt0O -PixSt0I
+PixStn1      5 +PixPl1I+PixSt1O-PixSt1I
+Dum1         5 +PixPl1O-PixPl1I+PixSt1O -PixSt1I
+PixStn2      5 +PixPl2I+PixSt2O-PixSt2I
+Dum2         5 +PixPl2O-PixPl2I+PixSt2O -PixSt2I
+PixStn3      5 +PixPl3I+PixSt3O-PixSt3I
+Dum3         5 +PixPl3O-PixPl3I+PixSt3O -PixSt3I
+PixStn4      5 +PixPl4I+PixSt4O-PixSt4I
+Dum4         5 +PixPl4O-PixPl4I+PixSt4O -PixSt4I
+MS0          5 MS0Out-MS0In
+MS1          5 MS1Out-MS1In
+MS2          5 MS2Out-MS2In
+MS3          5 MS3Out-MS3In
+* Black hole
+BH           5 (+BH2 +BHPL4 -BHPL1 )-( +BH1 +BHPL3 -BHPL2 )
+* Void around
+VOID         5 +(+BH1 +BHPL3 -BHPL2 ) -AbsoCon -Mwall-(TrigSt0O-TrigSt0I)-( MS0Out-MS0In )
+               -( MS1Out-MS1In )-( MS2Out-MS2In )-( MS3Out-MS3In )
+               -( TrigSt1O-TrigSt1I )-Box1-(Box2-Box3)
+VacBox       5 +Box1 -( +PixSt0O -PixSt0I )-( +PixSt1O -PixSt1I )-( +PixSt2O -PixSt2I )-( +PixSt3O -PixSt3I )
+               -( +PixSt4O -PixSt4I )
+MSBox        5 Box2-Box3
+* Absorber Be0
+AbsoBeO      5 +AbsoPl0 +AbsoCon-AbsoPlug
+* Absorber A2O3
+AbsoAl       5 +AbsoPl1 +AbsoCon-AbsoPl0-AbsoPlug
+* Absorber Carbon
+AbsoC        5 +AbsoPl2 +AbsoCon -AbsoPl1-AbsoPlug
+* Absorber Iron
+AbsoFe       5 +AbsoPl3 +AbsoCon -AbsoPl2-AbsoPlug
+* Absorber Plug
+UPlug        5 +AbsoPlug+AbsoPl3 -AbsoPl1
+WPlug        5 +AbsoPlug +AbsoPl1 -PlugPl0
+* Muon Wall
+wall         5 +Mwall
+* Trigger station
+TrigStn0     5 +TrigSt0O -TrigSt0I
+* Trigger station
+TrigStn1     5 +TrigSt1O -TrigSt1I
+END
+GEOEND
+ASSIGNMA     SILICON   PixStn0                            1.
+ASSIGNMA      CARBON      Dum0                            1.
+ASSIGNMA     SILICON   PixStn1                            1.
+ASSIGNMA      CARBON      Dum1                            1.
+ASSIGNMA     SILICON   PixStn2                            1.
+ASSIGNMA      CARBON      Dum2                            1.
+ASSIGNMA     SILICON   PixStn3                            1.
+ASSIGNMA      CARBON      Dum3                            1.
+ASSIGNMA     SILICON   PixStn4                            1.
+ASSIGNMA      CARBON      Dum4                            1.
+ASSIGNMA     SILICON       MS0
+ASSIGNMA     SILICON       MS1
+ASSIGNMA     SILICON       MS2
+ASSIGNMA     SILICON       MS3
+ASSIGNMA      VACUUM     MSBox                            1.
+MATERIAL          6.     12.01      1.93                              GRAPHITE
+LOW-MAT     GRAPHITE        6.       -3.      296.                    CARBON
+ASSIGNMA    TUNGSTEN     UPlug
+ASSIGNMA    TUNGSTEN     WPlug
+ASSIGNMA    GRAPHITE      wall
+MATERIAL                           3.520                              Al2O3
+COMPOUND    -0.52925  ALUMINUM  -0.47075    OXYGEN                    Al2O3
+* ..+....1....+....2....+....3....+....4....+....5....+....6....+....7..
+ASSIGNMA    BLCKHOLE        BH
+ASSIGNMA      VACUUM      VOID
+ASSIGNMA         BeO   AbsoBeO
+ASSIGNMA         BeO    AbsoAl
+ASSIGNMA    GRAPHITE     AbsoC
+ASSIGNMA    GRAPHITE    AbsoFe
+ASSIGNMA     SILICON  TrigStn0
+ASSIGNMA     SILICON  TrigStn1
+ASSIGNMA      VACUUM    VacBox                            1.
+*MGNFIELD         15.
+MATERIAL                           2.810                              BeO
+COMPOUND    -0.36032  BERYLLIU  -0.63968    OXYGEN                    BeO
+MATERIAL                            2.35                              CERNCONC
+MATERIAL        19.0     39.10      0.86                              POTASSIU
+COMPOUND      -0.006  HYDROGEN     -0.03    CARBON      -0.5    OXYGENCERNCONC
+COMPOUND       -0.01    SODIUM    -0.005  MAGNESIU     -0.03  ALUMINUMCERNCONC
+COMPOUND        -0.2   SILICON     -0.01  POTASSIU    -0.195   CALCIUMCERNCONC
+COMPOUND      -0.014      IRON                                        CERNCONC
+USERDUMP        100.       80.        4.                              TEST-DUMP
+USROCALL
+* Set the random number seed
+RANDOMIZ         1.0   2710.
+* Set the number of primary histories to be simulated in the run
+START          100.0                                          1000000.
+STOP

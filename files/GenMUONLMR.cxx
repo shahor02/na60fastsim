@@ -1,9 +1,12 @@
 //#include <TClonesArray.h> 
 
+#include "iostream"
+
 #include <TDatabasePDG.h>
 #include <TFile.h>
 #include "GenMUONLMR.h" 
 #include "TRandom.h"
+#include "TParticle.h"
 
 ClassImp(GenMUONLMR)
   
@@ -23,45 +26,48 @@ GenMUONLMR::GenMUONLMR(Double_t energy, Int_t kLowEnergy) :
     for (Int_t ipart=0; ipart < fgkNpart; ipart++) fScaleMult[ipart] = 1; 
     fScaleMult[kPionLMR] = 0; // set pion multiplicity to zero 
     fScaleMult[kKaonLMR] = 0; // set kaon multiplicity to zero
-    Int_t pdg[8] = {211, 321, 221, 113, 223, 333, 331, 443}; 
-    const char* fptname[8] = {"fPtPion","fPtKaon","fPtEta","fPtRho","fPtOmega","fPtPhi","fPtEtaPrime","fPtJPsi"};
-    const char* fyname[8] = {"fYPion","fYKaon","fYEta","fYRho","fYOmega","fYPhi","fYEtaPrime","fYJPsi"}; 
-    const char* fnname[8] = {"fMultPion","fMultKaon","fMultEta","fMultRho","fMultOmega","fMultPhi","fMultEtaPrime","fMultJPsi"};
+    Int_t pdg[9] = {211, 321, 221, 113, 223, 333, 331, 443, 443}; 
+    const char* fptname[9] = {"fPtPion","fPtKaon","fPtEta","fPtRho","fPtOmega","fPtPhi","fPtEtaPrime","fPtJPsi","fPtJPsi"};
+    const char* fyname[9] = {"fYPion","fYKaon","fYEta","fYRho","fYOmega","fYPhi","fYEtaPrime","fYJPsi","fYJpsi_Sch"}; 
+    const char* fnname[9] = {"fMultPion","fMultKaon","fMultEta","fMultRho","fMultOmega","fMultPhi","fMultEtaPrime","fMultJPsi","fMultJPsi"};
     const char* fdname[2] = {"fDecPion","fDecKaon"};
     Double_t ctau[2] = {7.8045, 3.712};  
-    Double_t ptparam[8][9];
-    Double_t yparam[8][9];
-    Double_t nparam[8][9];
+    Double_t ptparam[9][9];
+    Double_t yparam[9][9];
+    Double_t nparam[9][9];
     
     // parameters for 7 TeV generation
     if (energy==7.0) {
       printf ("GenMUONLMR: using pp parameterization at 7 TeV\n");  
-      Double_t ptparam7000[8][9] = {{1,0.427,2.52,0,0,0,0,0,0}, // pions from Pythia
+      Double_t ptparam7000[9][9] = {{1,0.427,2.52,0,0,0,0,0,0}, // pions from Pythia
 				    {1,0.58,2.57,0,0,0,0,0,0},  // kaons from Pythia
 				    {1,0.641,2.62,0,0,0,0,0,0}, // eta from Pythia
 				    {1,1.44,3.16,0,0,0,0,0,0},  // rho+omega from ALICE muon  
 				    {1,1.44,3.16,0,0,0,0,0,0},  // rho+omega from ALICE muon  
 				    {1,1.16,2.74,0,0,0,0,0,0},  // phi from ALICE muon  
 				    {1,0.72,2.5,0,0,0,0,0,0},  // etaPrime from Pythia    
+      				    {1,0.72,2.5,0,0,0,0,0,0},   // J/psi - meaningless     
       				    {1,0.72,2.5,0,0,0,0,0,0}};  // J/psi - meaningless     
 
-      Double_t yparam7000[8][9] = {{1,0.8251,3.657,0,0,0,0,0,0}, // pions from pythia
+      Double_t yparam7000[9][9] = {{1,0.8251,3.657,0,0,0,0,0,0}, // pions from pythia
 				   {1,1.83,2.698,0,0,0,0,0,0},   // kaons from pythia
 				   {1,1.169,3.282,0,0,0,0,0,0},  // eta from pythia
 				   {1,1.234,3.264,0,0,0,0,0,0},  // rho from pythia
 				   {1,1.311,3.223,0,0,0,0,0,0},  // omega from pythia
 				   {1,2.388,2.129,0,0,0,0,0,0},  // phi from pythia
 				   {1,1.13,3.3,0,0,0,0,0,0},    // eta prime from pythia
+      				   {1,1.13,3.3,0,0,0,0,0,0},     // J/psi - meaningless
       				   {1,1.13,3.3,0,0,0,0,0,0}};    // J/psi - meaningless
 
       // multiplicity parameters from pythia
-      Double_t nparam7000[8][9] = {{353.582, 6.76263, 1.66979, 998.445, 9.73281, 12.6704, 175.187, 29.08, 40.2531},
+      Double_t nparam7000[9][9] = {{353.582, 6.76263, 1.66979, 998.445, 9.73281, 12.6704, 175.187, 29.08, 40.2531},
 				   {1.e4,  0.2841, 0,0,0,0,0,0,0},
 				   {1.e4,  0.2647, 0,0,0,0,0,0,0},
 				   {7055,  0.1786, 0,0,0,0,0,0,0},
 				   {7500,  0.1896, 0,0,0,0,0,0,0},
 				   {5.e4,  1.167,  0,0,0,0,0,0,0}, 
 				   {2.9e4, 0.714,  0,0,0,0,0,0,0},
+				   {2.9e4, 0.714,  0,0,0,0,0,0,0}, // J/psi - meaningless
 				   {2.9e4, 0.714,  0,0,0,0,0,0,0}}; // J/psi - meaningless
 
       for (Int_t i=0; i<fgkNpart; i++) { 
@@ -77,32 +83,35 @@ GenMUONLMR::GenMUONLMR(Double_t energy, Int_t kLowEnergy) :
     // pt params has been determined as <pt>ALICE_2.76 = <pt>ALICE_7 * <pt>PYTHIA_2.76 / <pt>PYTHIA_7
     if (energy == 2.76){
       printf ("GenMUONLMR: using pp parameterization at 2.76 TeV\n");  
-      Double_t ptparam2760[8][9] = {{1,0.1665,8.878,0,0,0,0,0,0},  // pions from Pythia
+      Double_t ptparam2760[9][9] = {{1,0.1665,8.878,0,0,0,0,0,0},  // pions from Pythia
 				    {1,0.1657,8.591,0,0,0,0,0,0},  // kaons from Pythia
 				    {1,0.641,2.62,0,0,0,0,0,0},    // eta from ALICE 7 TeV
 				    {1,1.3551,3.16,0,0,0,0,0,0},   // rho with <pt> scaled 
 				    {1,1.3551,3.16,0,0,0,0,0,0},   // omega with <pt> scaled 
 				    {1,1.0811,2.74,0,0,0,0,0,0},   // phi with <pt> scaled 
 				    {1,0.72,2.5,0,0,0,0,0,0},     // etaPrime from ALICE 7 TeV
+      				    {1,0.72,2.5,0,0,0,0,0,0},      // J/psi - meaningless
       				    {1,0.72,2.5,0,0,0,0,0,0}};     // J/psi - meaningless
 
-      Double_t yparam2760[8][9] = {{1,0.8251,3.657,0,0,0,0,0,0},      // pions from pythia
+      Double_t yparam2760[9][9] = {{1,0.8251,3.657,0,0,0,0,0,0},      // pions from pythia
 				   {1,1.83,2.698,0,0,0,0,0,0},        // kaons from pythia
 				   {1,0.011,3.474,0,0,0,0,0,0},       // eta from pythia
 				   {1,-0.01,3.409,0,0,0,0,0,0},       // rho from pythia
 				   {1,-0.037,3.294,0,0,0,0,0,0},      // omega from pythia
 				   {1,-0.016,2.717,0,0,0,0,0,0},      // phi from pythia
 				   {1,-0.010,3.312,0,0,0,0,0,0},     // eta prime from pythia  
+				   {1,-0.010,3.312,0,0,0,0,0,0},      // J/psi - meaningless 
 				   {1,-0.010,3.312,0,0,0,0,0,0}};     // J/psi - meaningless 
 
       
-      Double_t nparam2760[8][9] = {{1.e6,535.,0,0,0,0,0,0,0},                                 // pions
+      Double_t nparam2760[9][9] = {{1.e6,535.,0,0,0,0,0,0,0},                                 // pions
 				   {1.e5,70,0,0,0,0,0,0,0},                                   // kaons
 				   {1.e4,0.351,0,0,0,0,0,0,0},                                // eta
 				   {1.e4,0.2471,0,0,0,0,0,0,0},                               // rho
 				   {1.e4,0.2583,0,0,0,0,0,0,0},                               // omega
 				   {1.e5,1.393,0,0,0,0,0,0,0},                                // phi
 				   {1.e4,0.9005,0,0,0,0,0,0,0},                              // etaPrime
+				   {1.e4,0.9005,0,0,0,0,0,0,0},                              // J/psi meaningless
 				   {1.e4,0.9005,0,0,0,0,0,0,0}};                              // J/psi meaningless
 
       
@@ -138,12 +147,23 @@ GenMUONLMR::GenMUONLMR(Double_t energy, Int_t kLowEnergy) :
 	fY[i]->SetParameters(yparam[i][0], yparam[i][1], yparam[i][2]); 
       }
       else {
+        if(i != 7 && i != 8){
 	fPt[i] = new TF1(fptname[i],GenMUONLMR::PtDistrLowEnergy,0,20,3);
 	fPt[i]->SetParameters(ptparam[i][0], ptparam[i][1], pdgp->GetParticle(fPDG[i])->Mass());  
 	printf("mass=%f\n",pdgp->GetParticle(fPDG[i])->Mass());
 	fPt[i]->FixParameter(2,pdgp->GetParticle(fPDG[i])->Mass());
-	fY[i] = new TF1(fyname[i],GenMUONLMR::YDistrLowEnergy,-10.,10.,3);
+	} else {
+	fPt[i] = new TF1(fptname[i],GenMUONLMR::PtDistrPythia6,0,10,4);
+	fPt[i]->SetParameters(ptparam[i][0], ptparam[i][1], ptparam[i][2], ptparam[i][3]); 
+      }
+	if(i != 8){
+      	fY[i] = new TF1(fyname[i],GenMUONLMR::YDistrLowEnergy,-10.,10.,3);
 	fY[i]->SetParameters(yparam[i][0], yparam[i][1], yparam[i][2]);
+	} else {
+	fY[i] = new TF1(fyname[i],GenMUONLMR::YDistrSch,-10.,10.,5);
+	fY[i]->SetParameters(yparam[i][0], yparam[i][1], yparam[i][2], yparam[i][3], yparam[i][4]);
+
+	}
       }
     }
    
@@ -343,6 +363,23 @@ Double_t GenMUONLMR::YDistrLowEnergy(Double_t *px, Double_t *par){
   return func; 
 }
 
+Double_t GenMUONLMR::YDistrSch(Double_t *px, Double_t *par){ 
+  // param. obtained transforming dsigma/dy = (1-TMath::Abs(x))**d (Schuler, Tesi Fleuret)
+  // following formula gives ycms. 
+  Double_t func = 0.;
+  
+  Double_t ycms = par[4];
+  Double_t ymax = TMath::ASinH(par[2]/(2*par[1]))+ycms;
+  Double_t ymin = TMath::ASinH(-par[2]/(2*par[1]))+ycms;
+  
+  Double_t x = px[0];  
+  if(x>ymin && x<ymax){
+    func= par[0]*TMath::Power((1-2*par[1]/par[2]*TMath::Abs(sinh(x-ycms))),par[3])*2*par[1]/par[2]*cosh(x-ycms);
+  } else func = 0;
+  
+  return func; 
+}
+
 //-----------------------------------------------------------
 
 Double_t GenMUONLMR::PtDistr(Double_t *px, Double_t *par){
@@ -362,6 +399,14 @@ Double_t GenMUONLMR::PtDistrLowEnergy(Double_t *px, Double_t *par){
   Double_t func = 0.;
   func = par[0] * x * TMath::Exp(-pow((x*x + par[2] * par[2]),0.5)/par[1]);
 
+  return func; 
+}
+
+Double_t GenMUONLMR::PtDistrPythia6(Double_t *px, Double_t *par){
+  Double_t x = px[0];
+
+  Double_t func = 0.;
+  func = par[0]*x/TMath::Power((1+TMath::Power(x/par[1],par[3])),par[2]);
   return func; 
 }
 
@@ -403,12 +448,12 @@ void GenMUONLMR::Generate() {
 
   Double_t pt, y, phi, mass, px, py, pz, ene, mt; 
 
-  const Int_t nproc = 10; 
-  Int_t idRes[nproc] = {kEtaLMR, kEtaLMR, kRhoLMR, kOmegaLMR, kOmegaLMR, kPhiLMR, kEtaPrimeLMR, kPionLMR, kKaonLMR,kJPsi}; 
-  Double_t BR[nproc] = {5.8e-6, 3.1e-4, 4.55e-5, 7.28e-5, 1.3e-4, 2.86e-4, 1.04e-4, 1, 0.6344, 0.05};
+  const Int_t nproc = 11; 
+  Int_t idRes[nproc] = {kEtaLMR, kEtaLMR, kRhoLMR, kOmegaLMR, kOmegaLMR, kPhiLMR, kEtaPrimeLMR, kPionLMR, kKaonLMR,kJPsi,kJPsiSch}; 
+  Double_t BR[nproc] = {5.8e-6, 3.1e-4, 4.55e-5, 7.28e-5, 1.3e-4, 2.86e-4, 1.04e-4, 1, 0.6344, 0.05, 0.05};
   //  Double_t BR[nproc] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
-  Int_t idDec[nproc] = {0, 1, 0, 0, 1, 0, 1, 2, 2, 0}; // 0:2body, 1:Dalitz, 2:pi/K 
-  Int_t mult[nproc] = {0,0,0,0,0,0,0,0,0,0}; 
+  Int_t idDec[nproc] = {0, 1, 0, 0, 1, 0, 1, 2, 2, 0, 0}; // 0:2body, 1:Dalitz, 2:pi/K 
+  Int_t mult[nproc] = {0,0,0,0,0,0,0,0,0,0,0}; 
   //printf("fNMuMin=%d\n",fNMuMin);
   //  while (nmuons < fNMuMin) { 
 
