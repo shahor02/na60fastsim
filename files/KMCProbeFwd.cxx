@@ -193,11 +193,11 @@ Bool_t KMCProbeFwd::PropagateToDCA(KMCProbeFwd* partner)
   Double_t dca=fTrack.GetDCA(&partner->fTrack,bxyzFwd[2],zthis,zpartner);
 
   if (!PropagateToZBxByBz(zthis) || !partner->PropagateToZBxByBz(zpartner)) return kFALSE;
-
-  printf("Prop to DCA at %f %f | DCA = %f\n",zthis,zpartner,dca);
-  Print("etp");
-  partner->Print("etp");
-  
+  if (AliLog::GetGlobalDebugLevel()>=2) {
+    printf("Prop to DCA at %f %f | DCA = %f\n",zthis,zpartner,dca);
+    Print("etp");
+    partner->Print("etp");
+  }
   return kTRUE;
   //
 }
