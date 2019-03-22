@@ -55,7 +55,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 				     double Eint = 160., 
 				     const char *setup = "setup-10um-itssa_Eff1.txt", 
 				     const char *filNamPow="/home/prino/cernbox/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root", 
-				     const char *privateDecayTable = "/home/prino/cernbox/na60plus/decaytables/USERTABLC.DEC",
+				     const char *privateDecayTable = "../decaytables/USERTABLC.DEC",
 				     int optPartAntiPart=3,
 				     bool writeNtuple = kFALSE, 
 				     bool simulateBg=kTRUE){
@@ -953,7 +953,7 @@ void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, KMCProbeFwd &t2, Double_t z
   sigmasq[2]=1;
   wmat[0]=1./sigmasq[0];
   wmat[5]=1./sigmasq[1];
-  wmat[9]=1./sigmasq[2];
+  wmat[8]=1./sigmasq[2];
   linarray[0]= new AliStrLine(pos,sigmasq,wmat,dir);
   t1.GetXYZ(pos);
   t1.GetPXYZ(dir);
@@ -962,7 +962,7 @@ void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, KMCProbeFwd &t2, Double_t z
   sigmasq[2]=1;
   wmat[0]=1./sigmasq[0];
   wmat[5]=1./sigmasq[1];
-  wmat[9]=1./sigmasq[2];
+  wmat[8]=1./sigmasq[2];
   linarray[1]= new AliStrLine(pos,sigmasq,wmat,dir);
   t2.GetXYZ(pos);
   t2.GetPXYZ(dir);
@@ -971,7 +971,7 @@ void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, KMCProbeFwd &t2, Double_t z
   sigmasq[2]=1;
   wmat[0]=1./sigmasq[0];
   wmat[5]=1./sigmasq[1];
-  wmat[9]=1./sigmasq[2];
+  wmat[8]=1./sigmasq[2];
   linarray[2]= new AliStrLine(pos,sigmasq,wmat,dir);
   // do not use errors as weights for the moment
   AliESDVertex vv=AliVertexerTracks::TrackletVertexFinder(linarray,3,kFALSE); 
@@ -980,6 +980,6 @@ void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, KMCProbeFwd &t2, Double_t z
   zV=vv.GetZ();
   sigmaVert=vv.GetDispersion();
   for(Int_t k=0; k<3; k++) delete linarray[k];
-  delete linarray;
+  delete [] linarray;
   return;
 }
