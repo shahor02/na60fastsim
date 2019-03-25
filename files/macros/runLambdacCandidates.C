@@ -591,7 +591,8 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 
 void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 				    Int_t nevents = 999999, 
-				    Int_t writeNtuple = kFALSE){
+				    Int_t writeNtuple = kFALSE,
+				    Bool_t usePID=kFALSE){
 
   // Read the TTree of tracks produced with runBkgVT.C
   // Create D0 combinatorial background candidates (= OS pairs of tracks)
@@ -605,7 +606,8 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   printf("Number of events in tree = %d\n",entries);
   if(nevents>entries) nevents=entries;
   else printf(" --> Analysis performed on first %d events\n",nevents);
-
+  if(usePID) printf("Rough PID cuts will be used\n");
+  
   TDatime dt;
   static UInt_t seed = dt.Get();
   gRandom->SetSeed(seed);
@@ -624,6 +626,10 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
+
+  TH1F* hMomPion = new TH1F("hMomPion","",200,0.,10.);
+  TH1F* hMomKaon = new TH1F("hMomKaon","",200,0.,10.);
+  TH1F* hMomProton = new TH1F("hMomProton","",200,0.,10.);
   
   TH2F *hResVx = new TH2F("hResVx", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hResVy = new TH2F("hResVy", "", 100, -0.1, 0.1, 30, 0, 3);
@@ -655,7 +661,7 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 
   KMCProbeFwd recProbe[3];
   TLorentzVector parent, daurec[3];
-  nevents=3;
+
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -715,14 +721,25 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 
 	  for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	    // mass hypothesis: pKpi, piKp
+	    Double_t momPi=0;
+	    Double_t momK=0;
+	    Double_t momP=0;
 	    if(iMassHyp==0){
 	      daurec[0].SetXYZM(pxyz0[0], pxyz0[1], pxyz0[2], KMCDetectorFwd::kMassP);
 	      daurec[1].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassK);
 	      daurec[2].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassPi);
+	      momPi=recProbe[2].GetTrack()->P();
+	      momK=recProbe[1].GetTrack()->P();
+	      momP=recProbe[0].GetTrack()->P();
+	      if(usePID && recProbe[0].GetMass()<0.2 && momP<3) continue; // rough PID (reject pions with p<2 FeV)
 	    }else{
 	      daurec[0].SetXYZM(pxyz0[0], pxyz0[1], pxyz0[2], KMCDetectorFwd::kMassPi);
 	      daurec[1].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassK);
 	      daurec[2].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassP);
+	      momPi=recProbe[0].GetTrack()->P();
+	      momK=recProbe[1].GetTrack()->P();
+	      momP=recProbe[2].GetTrack()->P();	      
+	      if(usePID && recProbe[2].GetMass()<0.2 && momP<3) continue; // rough PID (reject pions with p<2 FeV)
 	    }
 	    parent = daurec[0];
 	    parent += daurec[1];
@@ -737,6 +754,9 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 	    if(invMassD>2.0  && invMassD<2.5){
 	      // range to fill histos
 	      if(invMassD>2.225 && invMassD<2.345) countCandInPeak++;
+	      hMomPion->Fill(momPi);
+	      hMomKaon->Fill(momK);
+	      hMomProton->Fill(momP);
 	      // hDCA->Fill(dca01, ptD);
 	      // recProbe[0].PropagateToDCA(&recProbe[2]);
 	      // d1 = recProbe[2].GetX() - recProbe[0].GetX();
@@ -818,6 +838,9 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   hd0XY1->Write();
   hd0XY2->Write();
   hd0XY3->Write();
+  hMomPion->Write();
+  hMomKaon->Write();
+  hMomProton->Write();
   hsp->Write();
   fout->Close();
   if (ntD0cand){
@@ -903,7 +926,7 @@ THnSparseF* CreateSparse(){
 			"sigmaVert",
 			"p_{T}^{min} (GeV/c)",
 			"d_0^{D} (cm)"};
-  Int_t bins[nAxes] =   {100,  5,  30,  10,   30,  20,   6,    12,    8,   16}; 
+  Int_t bins[nAxes] =   {100,  5,  30,  10,   30,  20,   12,   12,    8,   8}; 
   Double_t min[nAxes] = {2.0,  0., 0.,  0.,   0.,  0.98, 0.,   0.0,   0.,  0.};
   Double_t max[nAxes] = {2.5,  5., 0.3, 0.05, 0.3, 1.,   0.03, 0.03,  4.,  0.04};  
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
