@@ -11,6 +11,7 @@
 #include "KMCProbeFwd.h"
 #include "KMCClusterFwd.h"
 #include "KMCLayerFwd.h"
+#include "NaMaterial.h"
 #include <Riostream.h>
 #include <TMaterial.h>
 #include <TSystem.h>
@@ -19,8 +20,6 @@
 
 
 class NaCardsInput;
-class NaMixture;
-class NaMaterial;
 
 
 class KMCDetectorFwd : public TNamed {
@@ -41,8 +40,8 @@ class KMCDetectorFwd : public TNamed {
   TObjArray*   GetMaterials() const {return (TObjArray*)&fMaterials;}
   NaMaterial*  GetMaterial(const char* name) const {return (NaMaterial*)fMaterials.FindObject(name);}
   //
-  KMCLayerFwd* AddLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density, Float_t thickness, Float_t xRes=999999, Float_t yRes=999999, Float_t eff=1);
-  void         AddBeamPipe(Float_t r, Float_t dr, Float_t radL, Float_t density);
+  KMCLayerFwd* AddLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density, Float_t thickness, Float_t xRes=999999, Float_t yRes=999999, Float_t eff=1,NaMaterial* mat=0);
+  void         AddBeamPipe(Float_t r, Float_t dr, Float_t radL, Float_t density, NaMaterial* mat=0);
   BeamPipe*    GetBeamPipe() const {return fBeamPipe;}
 
   void         ClassifyLayers();
@@ -285,52 +284,6 @@ class KMCDetectorFwd : public TNamed {
 //====================================================
 
 const double kVeryLarge = 1e16;
-
-//====================================================================
-class NaMaterial :public TMaterial {
-public:
-  enum {kNELossPar=3};
-  NaMaterial();
-  NaMaterial(const char* name, const char *title, 
-	     Float_t a, Float_t z, Float_t dens, Float_t radl=0, 
-	     Float_t absl=0, Float_t *elbuff=0);
-  virtual ~NaMaterial();
-  //
-  virtual void Dump() const;
-  virtual void Print(Option_t* option="") const;
-  //
-  virtual Float_t GetELoss(Float_t p) const;  
-  virtual Float_t *GetELossPars() {return fELossPar;}
-  virtual Float_t GetELossPar(int i) const 
-    {return (i<kNELossPar && i>=0) ? fELossPar[i]:0.;}
-  //
- protected:
-  Float_t fELossPar[kNELossPar];  // Params of dEdX=c0+c1*p+c2*log(p) (per GeV/cm)
-  //
-  ClassDef(NaMaterial,1) // Material Object
-};
-
-//==========================================================================
-class NaMixture :public NaMaterial {
-public:
-  NaMixture();
-  NaMixture(const char* name, const char *title,
-	    Float_t a, Float_t z, Float_t dens,
-	    Float_t radl=0, Float_t absl=0, Float_t *elbuff=0);
-  virtual void SetComponents(Int_t nmixt, Float_t* a,Float_t* z,Float_t* w);
-  virtual ~NaMixture();
-  //
-  virtual void Print(Option_t* option="") const;
-  //
- protected:
-  Int_t fNMix;    // number of components to mix (<>0 a la Geant3 mixture)
-  Float_t* fAMix; // [fNMix] A of components
-  Float_t* fZMix; // [fNMix] Z ..
-  Float_t* fWMix; // [fNMix] Weights ...
-  //
-  ClassDef(NaMixture,1) // Mixture Class
-};
-
 //==========================================================================
 
 class NaCardsInput {

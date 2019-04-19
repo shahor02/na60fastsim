@@ -5,6 +5,7 @@
 #include <TClonesArray.h>
 #include "KMCClusterFwd.h"
 #include "KMCProbeFwd.h"
+#include "NaMaterial.h"
 
 class KMCLayerFwd : public TNamed {
 public:
@@ -102,6 +103,9 @@ public:
   void   ResetMCTracks()   { fTrMC.Clear(); }
   virtual void  Print(Option_t* option = "") const;
   //
+  void SetMaterial(NaMaterial* m) { fMaterial = m; }
+  const NaMaterial* GetMaterial() const {return fMaterial;}
+  //
   static Double_t GetDefEff()   {return fgDefEff;}
   static void     SetDefEff(double eff=1) {fgDefEff = eff>1. ? 1.: (eff<0? 0:eff);}
   //
@@ -131,8 +135,10 @@ public:
   KMCProbeFwd     fTrCorr;     // ideal track
   TClonesArray    fTrMC;       // MC tracks
   //
+  NaMaterial*     fMaterial;
+  //
   static Double_t fgDefEff;
-  ClassDef(KMCLayerFwd,1);
+  ClassDef(KMCLayerFwd,2);
 };
 
 //_________________________________________________________________

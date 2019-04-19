@@ -1,6 +1,8 @@
 #include "KMCUtils.h"
 #include <TMath.h>
 //---------------------------------
+ClassImp(MagField)
+
 
 MagField::MagField(UInt_t id) {
   SetUniqueID(id);
