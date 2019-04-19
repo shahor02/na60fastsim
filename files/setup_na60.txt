@@ -1,0 +1,118 @@
+# keep this if slices are to be ordered in decreasing z
+define:zinverted
+
+# if not defined or -1 : Alice field, otherwise custom # ZMinDip ZMaxDip DipF ZMinTor ZMaxTor TorF TorRMin TorRMax 
+define:magfield  0   0. 40.  -30.     880. 1280.  500. 30.  300.
+
+#		r	dr	material
+#beampipe:	0.5	0.08    BERYLLIUM
+
+# dummy layer as a vertex	Zc	DZ		resX	resY
+vertex:		      		0.	0.		500e-4	500e-4
+
+# the parameters eff,RMin,RMax are optional (default is 1,0,1e9), but if one is there, preciding ones also should be set
+#		name		material	Zc	DZ		resX	resY	eff	RMin	RMax
+activelayer:vt	VT1		SILICON		6.638	760e-4 		30.e-4	130.e-4  0.999999	0.15 3.
+dummy:		VT1Plane	CARBON		6.726	1000e-4		
+activelayer:vt	VT2		SILICON		8.418	760e-4		130.e-4	30.e-4	0.999999	0.15 3.
+dummy:          VT2Plane        CARBON          8.506   1000e-4
+activelayer:vt	VT3		SILICON		9.958	760e-4		30.e-4	130.e-4	0.999999	0.15 3.
+dummy:          VT3Plane        CARBON          10.046   1000e-4
+activelayer:vt	VT4		SILICON		11.488	760e-4		30.e-4	130.e-4	0.999999	0.15 3.
+dummy:          VT4Plane        CARBON          11.576  1000e-4
+activelayer:vt	VT5		SILICON		13.089	760e-4		130.e-4	30.e-4	0.999999	0.15 3.
+dummy:          VT5Plane        CARBON          13.177  1000e-4
+activelayer:vt	VT6		SILICON		14.768	760e-4 		30.e-4	130.e-4  0.999999	0.5 3.
+dummy:		VT6Plane	CARBON		14.856	1000e-4		
+activelayer:vt	VT7		SILICON		16.349	760e-4		130.e-4	30.e-4	0.999999	0.5 3.
+dummy:          VT7Plane        CARBON          16.437  1000e-4
+#activelayer:vt	VT8		SILICON		17.91	760e-4		30.e-4	130.e-4	0.999999	0.5 5.
+#dummy:          VT8Plane        CARBON          17.986  1000e-4
+activelayer:vt	VT9		SILICON		19.598	760e-4		30.e-4	130.e-4	0.999999	0.5 5.
+dummy:          VT9Plane        CARBON          19.686  1000e-4
+activelayer:vt	VT10		SILICON		21.208	760e-4		30.e-4	130.e-4	0.999999	0.5 3.
+dummy:          VT10Plane       CARBON          21.296  1000e-4
+#activelayer:vt	VT11		SILICON		22.68	760e-4 		30.e-4	130.e-4  0.999999	0.5 5.
+#dummy:		VT11Plane	CARBON		22.756	1000e-4		
+activelayer:vt	VT12		SILICON		24.378	760e-4		30.e-4	130.e-4	0.999999	0.5 5.
+dummy:          VT12Plane       CARBON          24.466  1000e-4
+#activelayer:vt	VT13		SILICON		26.41	760e-4		30.e-4	130.e-4	0.999999	0.5 5.
+#dummy:          VT13Plane       CARBON          26.486  1000e-4
+activelayer:vt	VT14		SILICON		28.058	760e-4		30.e-4	130.e-4	0.999999	0.5 5.
+dummy:          VT14Plane       CARBON          28.146  1000e-4
+#activelayer:vt	VT15		SILICON		31.33	760e-4		30.e-4	130.e-4	0.999999	0.5 5.
+#dummy:          VT15Plane       CARBON          31.406  1000e-4
+activelayer:vt	VT16		SILICON		33.068	760e-4		30.e-4	130.e-4	0.999999	0.5 5.
+dummy:          VT16Plane       CARBON          33.156  1000e-4
+
+
+#
+#activelayer:ms	MS-CH0		SILICON		613.6	610e-4		1000e-4	1000e-4	0.95	6.5329 130.0
+#activelayer:ms	MS-CH1		SILICON		681.63	610e-4		1000e-4	1000e-4	0.95	8.0217 130.0
+#activelayer:ms	MS-CH2		SILICON		746.23	700e-4		1000e-4	1000e-4	0.95	12.2214 130.0
+#activelayer:ms	MS-CH3		SILICON		815.60	700e-4		1000e-4	1000e-4	0.95	16.6656 130.0
+#activelayer:ms	MS-CH4		SILICON		1344.7	330e-4		1000e-4	1000e-4	0.95	19.9987 300.0
+#activelayer:ms	MS-CH5		SILICON		1442.92	330e-4		1000e-4	1000e-4	0.95	20. 300.
+#activelayer:ms	MS-CH6		SILICON		1541.8 	330e-4		1000e-4	1000e-4	0.95	20. 300.
+#activelayer:ms	MS-CH7		SILICON		1639.9 	330e-4		1000e-4	1000e-4	0.95	20. 300.
+#
+activelayer:ms  MS-CH0          SILICON         613.6305   610e-4          1000e-4 1000e-4 0.95    21. 72.0
+activelayer:ms  MS-CH1          SILICON         681.6605   610e-4          1000e-4 1000e-4 0.95    25. 81.0
+activelayer:ms  MS-CH2          SILICON         746.2605   700e-4          1000e-4 1000e-4 0.95    28. 89.0
+activelayer:ms  MS-CH3          SILICON         815.6305   700e-4          1000e-4 1000e-4 0.95    31. 98.0
+activelayer:ms  MS-CH4          SILICON         1344.7305  330e-4          1000e-4 1000e-4 0.95    44. 205.0
+activelayer:ms  MS-CH5          SILICON         1442.9505  330e-4          1000e-4 1000e-4 0.95    44. 218.
+activelayer:ms  MS-CH6          SILICON         1541.8305  330e-4          1000e-4 1000e-4 0.95    44. 230.
+activelayer:ms  MS-CH7          SILICON         1639.9305  330e-4          1000e-4 1000e-4 0.95    44. 243.
+#
+#
+# trigger chambers
+activelayer:tr	MS-TR1		SILICON		1800.0665	1330e-4		1.0	1.0	0.95	35. 211.
+activelayer:tr	MS-TR2		SILICON		1850.0665  	1330e-4		1.0	1.0	0.95	35. 211.
+
+#		name		material	Zc	DZ
+absorber:	ABS_BEO_0	BEO		49.41	11.62
+absorber:	ABS_BEO_1	BEO		59.91	9.38
+absorber:	ABS_BEO_2	BEO		69.6	10.00
+absorber:	ABS_BEO_3	BEO		79.6	10.00
+absorber:	ABS_AL2O3_0	AL2O3		89.7	10.20
+absorber:	ABS_AL2O3_1	AL2O3		102.4	15.20
+#
+absorber:	ABSO_C_0	CARBONA		150.0	80.00
+absorber:	ABSO_C_1	CARBONA		200.0	20.00
+absorber:	ABSO_C_2	CARBONA		220.0	20.00
+absorber:	ABSO_C_3	CARBONA		240.0	20.00
+absorber:	ABSO_C_4	CARBONA		260.0	20.00
+absorber:	ABSO_C_5	CARBONA		290.0	40.00
+absorber:	ABSO_C_6	CARBONA		330.0	40.00
+absorber:	ABSO_C_7	CARBONA		370.0	40.00
+absorber:	ABSO_C_8	CARBONA		410.0	40.00
+absorber:	ABSO_C_9	CARBONA		450.0	40.00
+absorber:	ABSO_C_10	CARBONA		490.0	40.00
+#absorber:	ABSO_C_11	CARBONA		520.0	20.00
+#absorber:	ABSO_C_12	CARBONA		540.0	20.00
+absorber:	ABSO_FE_0	IRON		530.0	40.00
+absorber:	ABSO_FE_1	IRON		570.0	40.00
+#
+absorber:	ABSO_WALL_0	IRON		1706.3	60.00
+absorber:	ABSO_WALL_1	IRON		1766.3	60.00
+#
+############################################################
+######                                                ######
+######                   MATERIALS                    ######
+######                                                ######
+############################################################
+#           Name         A	Z	Density		RadL(g/cm2)	AbsL(g/cm2)	       I     PlasmaEnergy
+#	     
+material:   VACUUM      1.E-16  1.E-16	1.E-16		1.E16		1.E16                 1.E16	1.E16 
+material:   AIR         14.61   7.3   	1.205e-3  	36.6 		90.37                 85.7e-9    0.71e-9
+material:   BERYLLIUM   9.012   4.0    	1.848      	65.19    	56.30                 63.7e-9    26.10e-9
+material:   SILICON     28.09 	14.0	2.329         	21.82		70.2                 173.0e-9   31.05e-9
+
+material:   BEO        	13.482  6.559   2.810  		40.548		100.73               93.2e-9    34.63e-9
+material:   IRON        55.85   26.0   	7.87       	13.84		81.7                 286.0e-9   55.17e-9
+material:   CARBON      12.01   6.0   	2.00      	42.70		59.2                 78.0e-9    30.28e-9
+material:   CARBONA     12.01   6.0     1.93            42.6916         59.2                 78.0e-9    30.28e-9
+material:   CERAMICS   	22.313  10.855  3.600           27.54		114.84               145.2e-9  40.21e-9
+material:   AL2O3      	21.812  10.646  3.520  		27.87  		114.92               145.2e-9  40.21e-9
+
