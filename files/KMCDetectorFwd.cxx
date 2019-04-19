@@ -236,11 +236,6 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;  
   // end modification
   // -------------------------------------------------------------------
-
-
-  // flag for mag.field
-  if ( (narg=inp->FindEntry("define","magfield","d|",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
-
   //
   // beampipe
   if ( (narg=inp->FindEntry("beampipe","","ffa|",1,1))<0 ) printf("No BeamPipe found in the setup %s\n",setup);
@@ -629,19 +624,27 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
     //
     if (!lrFrom->IsDead()) { // active layers are thin, no need for step by step tracking. The track is always in the middle
       AliDebug(2,Form("Correcting for mat.in active layer: X/X0: %f X*rho:%f ", lrFrom->GetX2X0(), dir*lrFrom->GetXTimesRho()));
-      if (!trc->CorrectForMeanMaterial(lrFrom->GetX2X0(), -dir*lrFrom->GetXTimesRho(), modeMC)) return 0;
+      // note: for thin layer we ignore difference between the real BB and ETP eloss params
+      if (!trc->CorrectForMeanMaterial(lrFrom->GetX2X0(), -dir*lrFrom->GetXTimesRho(), modeMC)) return 0; 
     }
     else {
       //
       dstZ = lrFrom->GetZ()+0.5*dir*lrFrom->GetThickness(); // go till the end of starting layer applying corrections
       if (dir==1 && trc->GetZ()<=fZDecay && dstZ>fZDecay) { // need to perform or to apply decay
 	double frac = (fZDecay-trc->GetZ())/lrFrom->GetThickness();
-	if (!PropagateToZBxByBz(trc,fZDecay, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho(), modeMC)) return 0;
+	// account for the difference between real BB and ETP param eloss
+	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
+	if (!PropagateToZBxByBz(trc,fZDecay, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
 	PerformDecay(trc);
 	frac = 1.-frac;
-	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho(), modeMC)) return 0;
+	corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
+	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
       }
-      else if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, lrFrom->GetX2X0(), -dir*lrFrom->GetXTimesRho(), modeMC)) return 0;
+      else {
+	// account for the difference between real BB and ETP param eloss
+	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
+	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, lrFrom->GetX2X0(), -dir*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
+      }
     }
   }
   //

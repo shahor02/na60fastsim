@@ -1,4 +1,5 @@
 #include "NaMaterial.h"
+#include "AliExternalTrackParam.h"
 
 //==========================================================================
 
@@ -48,11 +49,52 @@ void NaMaterial::Print(Option_t* option) const
 }
 //----------------------------------------------------------------
 //
-/*inline*/ Float_t NaMaterial::GetELoss(Float_t p) const
+Float_t NaMaterial::GetELoss(Float_t p, float m) const
 {
-  // return energy lost (per cm) at momentum p
-  return 0;//fELossPar[0]+fELossPar[1]*p+fELossPar[2]*TMath::Log(p);
+  // return energy lost (in MeV cm^2/g) at momentum p for mass p
+  float bg = p/m;
+  if (!IsELossProvided()) {
+    return AliExternalTrackParam::BetheBlochSolid(bg);
+  }
+  // real Bethe-Bloch
+  float b2g2 = bg*bg, b2 = b2g2/(1.+b2g2), g = TMath::Sqrt(b2g2/b2);
+  const float me = 0.511e-3;
+  const float k = 0.307075e-3;
+  float me2m = me/m;
+  float T = (2*me*b2g2) / (1 + me2m*(2*g + me2m) );
+  float densEff = 0.f; // density effect
+  float plasmaE = GetELossPars()[1], meanExcitE = GetELossPars()[0];
+  if (plasmaE>0) { 
+    densEff = TMath::Log(plasmaE/meanExcitE) + 0.5*TMath::Log(b2g2) - 0.5;
+  }
+  float SP = ((k*GetZ())/(GetA()*b2))*(0.5*TMath::Log( (2*me*b2g2*T) / (meanExcitE*meanExcitE) ) - b2 - densEff);
+  return SP;
+  
 }
+//
+Float_t NaMaterial::GetELoss2ETP(Float_t p, float m) const
+{
+  // return ratio between real BB and AliExternalParam energy loss 
+  float bg = p/m;
+  if (!IsELossProvided()) {
+    return 1.;
+  }
+  // real Bethe-Bloch
+  float b2g2 = bg*bg, b2 = b2g2/(1.+b2g2), g = TMath::Sqrt(b2g2/b2);
+  const float me = 0.511e-3;
+  const float k = 0.307075e-3;
+  float me2m = me/m;
+  float T = (2*me*b2g2) / (1 + me2m*(2*g + me2m) );
+  float densEff = 0.f; // density effect
+  float plasmaE = GetELossPars()[1], meanExcitE = GetELossPars()[0];
+  if (plasmaE>0) { 
+    densEff = TMath::Log(plasmaE/meanExcitE) + 0.5*TMath::Log(b2g2) - 0.5;
+  }
+  float SP = ((k*GetZ())/(GetA()*b2))*(0.5*TMath::Log( (2*me*b2g2*T) / (meanExcitE*meanExcitE) ) - b2 - densEff);
+  return SP/AliExternalTrackParam::BetheBlochSolid(bg);
+  
+}
+
 //----------------------------------------------------------------
 //
 void NaMaterial::Dump() const 

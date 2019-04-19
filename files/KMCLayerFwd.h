@@ -105,6 +105,7 @@ public:
   //
   void SetMaterial(NaMaterial* m) { fMaterial = m; }
   const NaMaterial* GetMaterial() const {return fMaterial;}
+  float GetELoss2ETP(Float_t p, float m) const {return fMaterial ? fMaterial->GetELoss2ETP(p,m) : 1.0;}
   //
   static Double_t GetDefEff()   {return fgDefEff;}
   static void     SetDefEff(double eff=1) {fgDefEff = eff>1. ? 1.: (eff<0? 0:eff);}

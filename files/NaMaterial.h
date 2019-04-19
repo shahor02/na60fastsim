@@ -17,8 +17,10 @@ public:
   virtual void Print(Option_t* option="") const;
   //
   Bool_t IsELossProvided() const {return fELossPar[0]>0;}
-  Float_t GetELoss(Float_t p) const;  
-  Float_t *GetELossPars() {return fELossPar;}
+  Float_t GetELoss(Float_t p, float mass) const;
+  Float_t GetELoss2ETP(Float_t p, float mass) const;
+  
+  const Float_t *GetELossPars() const {return fELossPar;}
   Float_t GetELossPar(int i) const {return (i<kNELossPar && i>=0) ? fELossPar[i]:0.;}
   //
  protected:
