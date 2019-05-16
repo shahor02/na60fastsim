@@ -156,7 +156,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   
   // prepare decays
   TGenPhaseSpace decay;
-  TLorentzVector parentgen, daugen[2], parent, daurec[2]; //eli
+  TLorentzVector parentgen, daugen[2], parent, daurec[2], parentrefl, daurecswapmass[2]; 
   KMCProbeFwd recProbe[2];  
   AliDecayerEvtGen *fDecayer = new AliDecayerEvtGen();
   fDecayer->Init(); //read the default decay table DECAY.DEC and particle table
@@ -190,6 +190,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH1F* hPtAll = new TH1F("PTAll", "Pt all match", 40, ptminSG, ptmaxSG);  
   TH1F* hMassFake = new TH1F("MassFake", "Mass fake match", 200, 1., 3.5);
   TH1F* hMassAll = new TH1F("MassAll", "Mass all match", 200, 1., 3.5);
+  TH1F* hMassRefl = new TH1F("MassRefl", "Mass reflections", 200, 1., 3.5);
 
   TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDist = new TH2F("hDist", "", 300, 0, 10, 30, 0, 3);
@@ -205,6 +206,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hMassVsPt = new TH2F("hMassVsPt", "", 200, 1.5, 2.5, 6, 0, 3);
   TH2F *hMassVsY = new TH2F("hMassVsY", "", 200, 1.5, 2.5, 10, 0, 5);
+  TH2F *hMassReflVsPt = new TH2F("hMassReflVsPt", "", 200, 1.5, 2.5, 6, 0, 3);
+  TH2F *hMassReflVsY = new TH2F("hMassReflVsY", "", 200, 1.5, 2.5, 10, 0, 5);
   
   TH2F *hResVx = new TH2F("hResVx", "", 200, -1000., 1000., 30, 0, 3);
   TH2F *hResVy = new TH2F("hResVy", "", 200, -1000., 1000., 30, 0, 3);
@@ -254,7 +257,10 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     Double_t mt = TMath::Sqrt(ptGenD * ptGenD + mass * mass);
     Double_t pzGenD = mt * TMath::SinH(yGenD);
     Double_t en = mt * TMath::CosH(yGenD);
-    
+
+    Double_t massKaon = TDatabasePDG::Instance()->GetParticle(321)->Mass();
+    Double_t massPion = TDatabasePDG::Instance()->GetParticle(211)->Mass();
+
     mom->SetPxPyPzE(pxGenD, pyGenD, pzGenD, en);
     Int_t np;
     do{
@@ -314,6 +320,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	  secvertgenK[2] = iparticle1->Vz();
 	  daugen[0].SetXYZM(iparticle1->Px(), iparticle1->Py(), iparticle1->Pz(), iparticle1->GetMass());
 	  daurec[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2], iparticle1->GetMass());
+	  daurecswapmass[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2],massPion);
 	  recProbe[0] = *trw;
 	}else if (kf == 211){
 	  // Pion daughter
@@ -326,6 +333,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	  secvertgenPi[2] = iparticle1->Vz();
 	  daugen[1].SetXYZM(iparticle1->Px(), iparticle1->Py(), iparticle1->Pz(), iparticle1->GetMass());
 	  daurec[1].SetXYZM(pxyz[0], pxyz[1], pxyz[2],  iparticle1->GetMass());
+	  daurecswapmass[1].SetXYZM(pxyz[0], pxyz[1], pxyz[2],massKaon);
 	  recProbe[1] = *trw;
 	}
       }
@@ -339,13 +347,17 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     parent += daurec[1];
     parentgen = daugen[0];
     parentgen += daugen[1];
-
+    parentrefl = daurecswapmass[0];
+    parentrefl += daurecswapmass[1];
+      
     Double_t  ptRecD=parent.Pt();
     Double_t  massRecD=parent.M();
+    Double_t  massRecReflD=parentrefl.M();
     Double_t yRecD = 0.5 * TMath::Log((parent.E() + parent.Pz()) / (parent.E() - parent.Pz()));
     hYPtAll->Fill(yRecD, ptRecD);
     hPtAll->Fill(ptRecD);
     hMassAll->Fill(massRecD);
+    hMassRefl->Fill(massRecReflD);
     if (nfake > 0){
       hYPtFake->Fill(yRecD, ptRecD);
       hPtFake->Fill(ptRecD);
@@ -353,7 +365,9 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     }
     hMassVsPt->Fill(massRecD,ptRecD);
     hMassVsY->Fill(massRecD,yRecD);
-    
+    hMassReflVsPt->Fill(massRecReflD,ptRecD);
+    hMassReflVsY->Fill(massRecReflD,yRecD);
+   
     Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
     Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
     Float_t d3 = recProbe[1].GetZ() - recProbe[0].GetZ();
@@ -483,8 +497,11 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   fout->cd();  
   hMassAll->Write();
   hMassFake->Write();
+  hMassRefl->Write();
   hMassVsPt->Write();
   hMassVsY->Write();
+  hMassReflVsPt->Write();
+  hMassReflVsY->Write();
   hYPtGen->Write();
   hYPtAll->Write();
   hYPtFake->Write();
