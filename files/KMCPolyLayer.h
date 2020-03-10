@@ -41,18 +41,12 @@ struct KMCPolyLayer : public KMCLayerFwd
 {
   std::vector<KMCPolygon> pieces;
   
+  void setNSectorsPhiStart(int n, float phi);
+  
   KMCPolyLayer(const char *name) : KMCLayerFwd(name) {}
 
   // get ID of the polygon containing the point (if any)
-  inline int getPolygonID(float x,float y) const
-  {
-    for (int i=pieces.size();i--;) {
-      if (pieces[i].isInside(x,y)) {
-	return i;
-      }
-    }
-    return -1;
-  }
+  int getPolygonID(float x,float y) const;
 
   inline void getMatBudget(int pid, float &_x2x0, float &_xrho) const
   {
@@ -68,6 +62,13 @@ struct KMCPolyLayer : public KMCLayerFwd
     getMatBudget(getPolygonID(x,y), _x2x0, _xrho);
   }
 
+  ///////////////////////////
+ private :
+  float sectorCoverage = 0;
+  float sectorCoverageInv = 0;
+  int nSectors = 1;
+  float phiStart = 0.;
+  std::vector<std::pair<float,float>> sincosSec;
   ClassDef(KMCPolyLayer,1);
 };
 
