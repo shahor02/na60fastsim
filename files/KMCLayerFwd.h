@@ -23,7 +23,12 @@ public:
     if (n>kMaxAccReg) n = kMaxAccReg;
     fNAccReg = n;
   }
-  
+
+  virtual void getMatBudget(float x, float y, float &x2x0, float &xrho) const {
+    x2x0 = GetX2X0();
+    xrho = GetXTimesRho();
+  }
+
   Float_t GetX2X0()      const {return fx2X0;}
   Float_t GetXTimesRho() const {return fXRho;}
   int GetAccRegion(float r) const {
@@ -61,7 +66,7 @@ public:
 
   void    SetX2X0(Float_t v)      {fx2X0 = v;}
   void    SetXTimesRho(Float_t v) {fXRho = v;}
-
+  
   void    SetThickness(Float_t v) {fThickness = v;}
   void    SetActiveID(Int_t v)    {fActiveID = v;}
   void    SetDead(Bool_t v)       {fIsDead = v;}
