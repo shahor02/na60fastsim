@@ -33,6 +33,7 @@ struct KMCPolygon
     }
     return odd;
   }
+  ClassDef(KMCPolygon,1);
 };
 
 // set of polygonal projections 
@@ -67,6 +68,7 @@ struct KMCPolyLayer : public KMCLayerFwd
     getMatBudget(getPolygonID(x,y), _x2x0, _xrho);
   }
 
+  ClassDef(KMCPolyLayer,1);
 };
 
 #endif

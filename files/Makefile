@@ -7,8 +7,9 @@ TGT =	libKMCDetFwd.so
 DICT=	KMCDetFwdDict.cxx
 DICTO=	KMCDetFwdDict.o
 
-SRC = 	GenMUONLMR.cxx  KMCClusterFwd.cxx  KMCDetectorFwd.cxx  KMCFlukaParser.cxx\
-	KMCLayerFwd.cxx  KMCProbeFwd.cxx  KMCUtils.cxx NaMaterial.cxx KMCPolyLayer.cxx
+SRC = 	GenMUONLMR.cxx  KMCClusterFwd.cxx  KMCDetectorFwd.cxx  KMCFlukaParser.cxx \
+	KMCLayerFwd.cxx  KMCProbeFwd.cxx  KMCUtils.cxx NaMaterial.cxx KMCPolyLayer.cxx \
+	KMCMagnetBuilder.cxx
 
 HDR =	$(SRC:.cxx=.h) 
 
