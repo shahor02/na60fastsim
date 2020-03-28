@@ -64,6 +64,8 @@ struct KMCPolyLayer : public KMCLayerFwd
 
   ///////////////////////////
  private :
+  float sectorOffsX = 0;  // sector outlines in lab is obtained by shifting local outline by offsX, 
+  float sectorOffsY = 0;  // offsY and rotating by phiStart + n*sectorCoverage, n = 0 : nSectors - 1
   float sectorCoverage = 0;
   float sectorCoverageInv = 0;
   int nSectors = 1;
