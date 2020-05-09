@@ -401,6 +401,43 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
   return newLayer;
 }
 
+//__________________________________________________________________________
+KMCPolyLayer* KMCDetectorFwd::AddPolyLayer(const char* type, const char *name, Float_t zPos, Float_t radL, Float_t density, Float_t thickness)
+{
+  //
+  // Add additional layer to the list of layers (ordered by z position)
+  // 
+  if (!GetLayer(name)) {
+    TString types = type;
+    types.ToLower();
+    KMCPolyLayer *newLayer = new KMCPolyLayer(name);
+    newLayer->SetZ(zPos);
+    newLayer->SetThickness(thickness);
+    newLayer->SetX2X0( radL>0 ? thickness*density/radL : 0);
+    newLayer->SetXTimesRho(thickness*density);
+    newLayer->SetXRes(999999);
+    newLayer->SetYRes(999999);
+    newLayer->SetLayerEff(1);
+    if  (types=="mag")  newLayer->SetType(KMCLayerFwd::kMAG);
+    else newLayer->SetType(KMCLayerFwd::kDUMMY);
+    newLayer->SetDead(kTRUE);
+    //
+    if (fLayers.GetEntries()==0) fLayers.Add(newLayer);
+    else {      
+      for (Int_t i = 0; i<fLayers.GetEntries(); i++) {
+	KMCLayerFwd *l = GetLayer(i);
+	if (zPos<l->GetZ()) { fLayers.AddBefore(l,newLayer); break; }
+	if (zPos>l->GetZ() && (i+1)==fLayers.GetEntries() ) { fLayers.Add(newLayer); } // even bigger then last one
+      }      
+    }
+    //
+    newLayer->SetMaterial(0);
+    return newLayer;
+  }
+  printf("Layer with the name %s does already exist\n",name);
+  return 0;
+}
+
 //______________________________________________________________________________________
 void KMCDetectorFwd::AddBeamPipe(Float_t r, Float_t dr, Float_t radL, Float_t density, NaMaterial* mat) 
 {

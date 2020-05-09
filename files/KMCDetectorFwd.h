@@ -11,6 +11,7 @@
 #include "KMCProbeFwd.h"
 #include "KMCClusterFwd.h"
 #include "KMCLayerFwd.h"
+#include "KMCPolyLayer.h"
 #include "NaMaterial.h"
 #include <Riostream.h>
 #include <TMaterial.h>
@@ -40,6 +41,7 @@ class KMCDetectorFwd : public TNamed {
   TObjArray*   GetMaterials() const {return (TObjArray*)&fMaterials;}
   NaMaterial*  GetMaterial(const char* name) const {return (NaMaterial*)fMaterials.FindObject(name);}
   //
+  KMCPolyLayer* AddPolyLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density, Float_t thickness);
   KMCLayerFwd* AddLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density, Float_t thickness, Float_t xRes=999999, Float_t yRes=999999, Float_t eff=1,NaMaterial* mat=0);
   void         AddBeamPipe(Float_t r, Float_t dr, Float_t radL, Float_t density, NaMaterial* mat=0);
   BeamPipe*    GetBeamPipe() const {return fBeamPipe;}

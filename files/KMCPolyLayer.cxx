@@ -1,5 +1,11 @@
 #include "KMCPolyLayer.h"
 
+KMCPolygon& KMCPolyLayer::addPolygon(int nv, const float* x, const float* y)
+{
+  pieces.emplace_back(nv, x, y);
+  return pieces.back();
+}
+
 void KMCPolyLayer::setNSectorsPhiStart(int n, float phi)
 {
   phiStart = phi;
@@ -18,9 +24,9 @@ int KMCPolyLayer::getPolygonID(float x,float y) const {
   //
   // determine in which sector we are
   //  int pieceID = -1;
-  for (int isec=0;i<nSectors;i++) {
-    float xloc = sincosSec[sector].second*x + sincosSec[sector].first*y - sectorOffsX;
-    float yloc = -sincosSec[sector].first*x + sincosSec[sector].second*y - sectorOffsY;
+  for (int isec=0;isec<nSectors;isec++) {
+    float xloc = sincosSec[isec].second*x + sincosSec[isec].first*y - sectorOffsX;
+    float yloc = -sincosSec[isec].first*x + sincosSec[isec].second*y - sectorOffsY;
     // did this bring us to 1st sector (0:sectorCoverage)?
     float phi = TMath::ATan2(y,x); // in -pi:pi
     if (phi<0) phi += TMath::Pi()*2;

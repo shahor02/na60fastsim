@@ -18,6 +18,10 @@ struct KMCPolygon
 
   KMCPolygon() {}
 
+  KMCPolygon(int n, const float* x, const float* y) {
+    for (int i=0;i<n;i++) addVertex(x[i],y[i]);
+  }
+
   void addVertex(float x,float y) {
     poly.emplace_back(x,y);
   }
@@ -40,7 +44,8 @@ struct KMCPolygon
 struct KMCPolyLayer : public KMCLayerFwd
 {
   std::vector<KMCPolygon> pieces;
-  
+
+  KMCPolygon& addPolygon(int nv, const float* x, const float* y);
   void setNSectorsPhiStart(int n, float phi);
   
   KMCPolyLayer(const char *name) : KMCLayerFwd(name) {}
