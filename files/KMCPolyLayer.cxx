@@ -1,8 +1,8 @@
 #include "KMCPolyLayer.h"
 
-KMCPolygon& KMCPolyLayer::addPolygon(int nv, const float* x, const float* y)
+KMCPolygon& KMCPolyLayer::addPolygon(int nv, const float* x, const float* y, float _x2x0, float _xrho)
 {
-  pieces.emplace_back(nv, x, y);
+  pieces.emplace_back(nv, x, y, _x2x0, _xrho);
   return pieces.back();
 }
 
@@ -28,7 +28,7 @@ int KMCPolyLayer::getPolygonID(float x,float y) const {
     float xloc = sincosSec[isec].second*x + sincosSec[isec].first*y - sectorOffsX;
     float yloc = -sincosSec[isec].first*x + sincosSec[isec].second*y - sectorOffsY;
     // did this bring us to 1st sector (0:sectorCoverage)?
-    float phi = TMath::ATan2(y,x); // in -pi:pi
+    float phi = TMath::ATan2(yloc,xloc); // in -pi:pi
     if (phi<0) phi += TMath::Pi()*2;
     if (phi>sectorCoverage) continue;
 

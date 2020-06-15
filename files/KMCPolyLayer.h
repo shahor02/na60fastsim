@@ -2,6 +2,8 @@
 #define KMCPOLYLAYER_H
 
 #include "KMCLayerFwd.h"
+#include <vector>
+#include <utility>
 
 
 struct KMCPolyVertex {
@@ -17,9 +19,13 @@ struct KMCPolygon
   float xrho = 0.;
 
   KMCPolygon() {}
-
-  KMCPolygon(int n, const float* x, const float* y) {
+  virtual ~KMCPolygon() {}
+  
+  KMCPolygon(int n, const float* x, const float* y, float _x2x0, float _xrho) {
     for (int i=0;i<n;i++) addVertex(x[i],y[i]);
+    addVertex(x[0],y[0]);
+    x2x0 = _x2x0;
+    xrho = _xrho;
   }
 
   void addVertex(float x,float y) {
@@ -27,15 +33,11 @@ struct KMCPolygon
   }
   
   bool isInside(float x, float y) const {
-    int n = poly.size(), j = n-1;
-    bool odd = false;
-    for (int i=0;i<n;i++) {
-      if ( ( (poly[i].y<y && poly[j].y>=y) || (poly[j].y<y && poly[i].y>=y)) && (poly[i].x<=x && poly[j].x<=x)) {
-	odd ^= (poly[i].x+(y-poly[i].y)/(poly[j].y-poly[i].y)*(poly[j].x-poly[i].x)<x);
-      }
-      j=i;
+    int n = poly.size(), c = 0;
+    for (int i = 0, j = n-1; i < n; j = i++) {
+      if ( ((poly[i].y>y) != (poly[j].y>y)) && (x < (poly[j].x-poly[i].x) * (y-poly[i].y) / (poly[j].y-poly[i].y) + poly[i].x) ) c = !c;
     }
-    return odd;
+    return c;
   }
   ClassDef(KMCPolygon,1);
 };
@@ -45,11 +47,11 @@ struct KMCPolyLayer : public KMCLayerFwd
 {
   std::vector<KMCPolygon> pieces;
 
-  KMCPolygon& addPolygon(int nv, const float* x, const float* y);
+  KMCPolygon& addPolygon(int nv, const float* x, const float* y, float _x2x0=0., float _xdens=0.);
   void setNSectorsPhiStart(int n, float phi);
+  KMCPolyLayer(const char *name = "") : KMCLayerFwd(name) {}
+  virtual ~KMCPolyLayer() {}
   
-  KMCPolyLayer(const char *name) : KMCLayerFwd(name) {}
-
   // get ID of the polygon containing the point (if any)
   int getPolygonID(float x,float y) const;
 

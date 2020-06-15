@@ -10,6 +10,11 @@
 #pragma link C++ class KMCFlukaParser+;
 #pragma link C++ class KMCLayerFwd+;
 #pragma link C++ class KMCProbeFwd+;
+
+#pragma link C++ class KMCPolygon+;
+#pragma link C++ class KMCPolyLayer+;
+#pragma link C++ class KMCMagnetBuilder+;
+
 #pragma link C++ class NaCardsInput+;
 #pragma link C++ class NaMixture+;
 #pragma link C++ class NaMaterial+;

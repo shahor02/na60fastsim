@@ -3,6 +3,7 @@
 #include <TLorentzVector.h>
 #include <TGenPhaseSpace.h>
 #include "KMCDetectorFwd.h"
+#include "KMCMagnetBuilder.h"
 #include "AliMagF.h"
 #include "AliLog.h"
 
@@ -236,7 +237,23 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;  
   // end modification
   // -------------------------------------------------------------------
-  //
+  //====================================================================
+  if ( (narg=inp->FindEntry("define","toroidBody","dffff",1,1))>0 ) {
+    if (narg!=5) {
+      printf("toroidBody requested with %d arguments, need 5: type,zStart, Length, radL, dens\n",narg);
+      exit(1);
+    }
+    int torType = inp->GetArgD(0);
+    if (torType == 1) {
+      new KMCMagnetBuilder(this, inp->GetArgF(1), inp->GetArgF(2), inp->GetArgF(3), inp->GetArgF(4));
+    }
+    else {
+      printf("Unknown toroidBody type %d, alowed: 1\n",torType);
+      exit(1);
+    }
+  }
+
+  //====================================================================
   // beampipe
   if ( (narg=inp->FindEntry("beampipe","","ffa|",1,1))<0 ) printf("No BeamPipe found in the setup %s\n",setup);
   else {
