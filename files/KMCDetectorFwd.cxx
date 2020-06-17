@@ -687,17 +687,23 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
       if (dir==1 && trc->GetZ()<=fZDecay && dstZ>fZDecay) { // need to perform or to apply decay
 	double frac = (fZDecay-trc->GetZ())/lrFrom->GetThickness();
 	// account for the difference between real BB and ETP param eloss
+        
 	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
-	if (!PropagateToZBxByBz(trc,fZDecay, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
+        float x2x0=0,xrho=0;
+        lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
+	if (!PropagateToZBxByBz(trc,fZDecay, fDefStepMat, frac*x2x0, -frac*xrho*corrELoss, modeMC)) return 0;
 	PerformDecay(trc);
 	frac = 1.-frac;
 	corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
-	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, frac*lrFrom->GetX2X0(), -frac*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
+        lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
+	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, frac*x2x0, -frac*xrho*corrELoss, modeMC)) return 0;
       }
       else {
 	// account for the difference between real BB and ETP param eloss
 	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
-	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, lrFrom->GetX2X0(), -dir*lrFrom->GetXTimesRho()*corrELoss, modeMC)) return 0;
+        float x2x0=0,xrho=0;
+        lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
+	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, x2x0, -dir*xrho*corrELoss, modeMC)) return 0;
       }
     }
   }

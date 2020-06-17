@@ -46,6 +46,7 @@ struct KMCPolygon
 struct KMCPolyLayer : public KMCLayerFwd
 {
   std::vector<KMCPolygon> pieces;
+  float minX=9999, maxX=-9999, minY=9999, maxY=-9999, minR2=9999,maxR2=-9999;
 
   KMCPolygon& addPolygon(int nv, const float* x, const float* y, float _x2x0=0., float _xdens=0.);
   void setNSectorsPhiStart(int n, float phi);
@@ -60,8 +61,8 @@ struct KMCPolyLayer : public KMCLayerFwd
     _x2x0 = GetX2X0();
     _xrho = GetXTimesRho(); 
     if (pid<0) return;
-    _x2x0 = pieces[pid].x2x0;
-    _xrho = pieces[pid].xrho;
+    _x2x0 = pieces[pid%10].x2x0;
+    _xrho = pieces[pid%10].xrho;
   }
   
   inline virtual void getMatBudget(float x, float y, float &_x2x0, float &_xrho) const
@@ -71,8 +72,8 @@ struct KMCPolyLayer : public KMCLayerFwd
 
   ///////////////////////////
  private :
-  float sectorOffsX = 0;  // sector outlines in lab is obtained by shifting local outline by offsX, 
-  float sectorOffsY = 0;  // offsY and rotating by phiStart + n*sectorCoverage, n = 0 : nSectors - 1
+  float sectorOffsX = 8.28;  // sector outlines in lab is obtained by shifting local outline by offsX, 
+  float sectorOffsY = -15.72;  // offsY and rotating by phiStart + n*sectorCoverage, n = 0 : nSectors - 1
   float sectorCoverage = 0;
   float sectorCoverageInv = 0;
   int nSectors = 1;
