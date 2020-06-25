@@ -181,11 +181,11 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   // define mother particle
   Int_t pdgParticle = 421;
   
-  TH2F* hYPtGen = new TH2F("YPTGen", "Y-Pt corr match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH2F* hYPtGen = new TH2F("YPTGen", "Y-Pt corr match", 40, 1., 5., 40, ptminSG, ptmaxSG);
   TH1F* hPtGen = new TH1F("PTGen", "Pt gen", 40, ptminSG, ptmaxSG);
-  TH1F* hYGen = new TH1F("hYGen", "Y full phase space", 80., 1., 5.4);
-  TH2F* hYPtFake = new TH2F("YPTFake", "Y-Pt fake match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
-  TH2F* hYPtAll = new TH2F("YPTAll", "Y-Pt all match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH1F* hYGen = new TH1F("hYGen", "Y full phase space", 40, 1., 5.);
+  TH2F* hYPtFake = new TH2F("YPTFake", "Y-Pt fake match", 40, 1., 5., 40, ptminSG, ptmaxSG);
+  TH2F* hYPtAll = new TH2F("YPTAll", "Y-Pt all match", 40, 1., 5., 40, ptminSG, ptmaxSG);
   TH1F* hPtFake = new TH1F("PTFake", "Pt fake match", 40, ptminSG, ptmaxSG);
   TH1F* hPtAll = new TH1F("PTAll", "Pt all match", 40, ptminSG, ptmaxSG);  
   TH1F* hMassFake = new TH1F("MassFake", "Mass fake match", 200, 1., 3.5);
@@ -235,9 +235,9 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   if (writeNtuple)
     {
       fnt = new TFile("fntSig.root", "recreate");
-      ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
+      ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
     }
-  Float_t arrnt[10];
+  Float_t arrnt[11];
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -463,27 +463,29 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
       
     arrsp[0] = massRecD;
     arrsp[1] = ptRecD;
-    arrsp[2] = dist;
-    arrsp[3] = cosp;
-    arrsp[4] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
-    arrsp[5] = d0xy1 * d0xy2;
-    arrsp[6] = dca;
-    arrsp[7] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-    arrsp[8] = TMath::Abs(ipD);	    
-    arrsp[9] = cts;      
+    arrsp[2] = yRecD;
+    arrsp[3] = dist;
+    arrsp[4] = cosp;
+    arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
+    arrsp[6] = d0xy1 * d0xy2;
+    arrsp[7] = dca;
+    arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+    arrsp[9] = TMath::Abs(ipD);	    
+    arrsp[10] = cts;      
     hsp->Fill(arrsp);
     
     if (ntD0cand){
       arrnt[0] = massRecD;
       arrnt[1] = ptRecD;
-      arrnt[2] = dist;
-      arrnt[3] = cosp;
-      arrnt[4] = d0xy1;
-      arrnt[5] = d0xy2;
-      arrnt[6] = d0xy1 * d0xy2;
-      arrnt[7] = dca;
-      arrnt[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-      arrnt[9] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+      arrnt[2] = yRecD;
+      arrnt[3] = dist;
+      arrnt[4] = cosp;
+      arrnt[5] = d0xy1;
+      arrnt[6] = d0xy2;
+      arrnt[7] = d0xy1 * d0xy2;
+      arrnt[8] = dca;
+      arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+      arrnt[10] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
       ntD0cand->Fill(arrnt);
     }
   } //event loop
@@ -599,7 +601,7 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   
   TFile *fout = new TFile("D0-Bkg-histos.root", "recreate");
   TH1F* hPtAll = new TH1F("PTAll", "Pt all match", 50, 0., 5.);
-  TH2F* hYPtAll = new TH2F("YPTAll", "Y-Pt all match", 80, 1.0, 5.4, 50, 0., 5.);
+  TH2F* hYPtAll = new TH2F("YPTAll", "Y-Pt all match", 40, 1., 5., 50, 0., 5.);
   TH1F* hMassAll = new TH1F("MassAll", "Mass all match", 250, 0., 2.5);
 
   TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
@@ -637,10 +639,10 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 
   TFile *fnt = 0x0;
   TNtuple *ntD0cand = 0x0;
-  Float_t arrnt[10];
+  Float_t arrnt[11];
   if (writeNtuple){
     fnt = new TFile("fntBkg.root", "recreate");
-    ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
+    ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
   }
 
   KMCProbeFwd recProbe[2];
@@ -746,27 +748,29 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    hd0XY2->Fill(d0xy2, ptD);
 	    arrsp[0] = invMassD;
 	    arrsp[1] = ptD;
-	    arrsp[2] = dist;
-	    arrsp[3] = cosp;
-	    arrsp[4] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
-	    arrsp[5] = d0xy1 * d0xy2;
-	    arrsp[6] = dca;
-	    arrsp[7] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-	    arrsp[8] = TMath::Abs(ipD);	    
-	    arrsp[9] = cts;
+	    arrsp[2] = yD;
+	    arrsp[3] = dist;
+	    arrsp[4] = cosp;
+	    arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
+	    arrsp[6] = d0xy1 * d0xy2;
+	    arrsp[7] = dca;
+	    arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	    arrsp[9] = TMath::Abs(ipD);	    
+	    arrsp[10] = cts;
 	    hsp->Fill(arrsp);
 	    
 	    if (ntD0cand){
 	      arrnt[0] = invMassD;
 	      arrnt[1] = ptD;
-	      arrnt[2] = dist;
-	      arrnt[3] = cosp;
-	      arrnt[4] = d0xy1;
-	      arrnt[5] = d0xy2;
-	      arrnt[6] = d0xy1 * d0xy2;
-	      arrnt[7] = dca;
-	      arrnt[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-	      arrnt[9] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	      arrnt[2] = yD;
+	      arrnt[3] = dist;
+	      arrnt[4] = cosp;
+	      arrnt[5] = d0xy1;
+	      arrnt[6] = d0xy2;
+	      arrnt[7] = d0xy1 * d0xy2;
+	      arrnt[8] = dca;
+	      arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	      arrnt[10] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
 	      ntD0cand->Fill(arrnt);
 	    }
 	    
@@ -895,16 +899,16 @@ Double_t CosThetaStar(TLorentzVector &parent, TLorentzVector &dauk) {
 }
 
 THnSparseF* CreateSparse(){
-  const Int_t nAxes=10;
-  TString axTit[nAxes]={"Inv. mass (GeV/c^{2})","p_{T} (GeV/c)",
+  const Int_t nAxes=11;
+  TString axTit[nAxes]={"Inv. mass (GeV/c^{2})","p_{T} (GeV/c)","y",
 			"Dec Len (cm)","cos(#vartheta_{p})",
 			"d_0^{min} (cm)",
 			"d_0*d_0 (cm^{2})","DCA",
 			"p_{T}^{min} (GeV/c)",
 			"d_0^{D} (cm)","cos(#theta*)"};
-  Int_t bins[nAxes] =   {100,   5,  30,  20,   10,   10,      12,      8,  16,  10}; 
-  Double_t min[nAxes] = {1.65,  0., 0., 0.98, 0.,   -0.0006, 0.0,   0.,  0.,  -1.};
-  Double_t max[nAxes] = {2.15,  5., 0.3, 1.,   0.05, 0.,      0.03,  4.,  0.04, 1.};  
+  Int_t bins[nAxes] =   {100,   5,  40, 30,  20,   10,   10,      12,      8,  16,  10}; 
+  Double_t min[nAxes] = {1.65,  0., 1., 0., 0.98, 0.,   -0.0006, 0.0,   0.,  0.,  -1.};
+  Double_t max[nAxes] = {2.15,  5., 5., 0.3, 1.,   0.05, 0.,      0.03,  4.,  0.04, 1.};  
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
   for(Int_t iax=0; iax<nAxes; iax++) hsp->GetAxis(iax)->SetTitle(axTit[iax].Data());
   return hsp;
