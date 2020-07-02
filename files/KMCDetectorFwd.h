@@ -199,6 +199,9 @@ class KMCDetectorFwd : public TNamed {
   Int_t  fLastActiveLayerITS;    // id of last active ITS layer
   Int_t  fLastActiveLayer;       // id of last active layer
   Int_t  fLastActiveLayerTracked;    // id of last active layer really used for tracking of given pt
+  Bool_t  fIntegrateMSX2X0;
+  Int_t fMSLrMinID;
+  Int_t fMSLrMaxID;
   //-------------------------
   TList  fLayers;                // List of layer pointers
   TObjArray fLayersITS;          // vertex tracker layers

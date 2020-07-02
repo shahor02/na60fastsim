@@ -89,6 +89,9 @@ class KMCProbeFwd: public TObject {
   Double_t GetAlpha()                    const {return fTrack.GetAlpha();}
   Double_t GetCharge()                   const {return fTrack.Charge();}
 
+  Float_t getMSMaterialsSeen() const { return fMSX2X0Seen; }
+  void    setMSMaterialsSeen(float v) { fMSX2X0Seen = v; }
+  void    addMSMaterialsSeen(float v) { fMSX2X0Seen += v; }
   //
   static void   SetWBit(UInt_t &patt,UInt_t bit)               {patt |= 0x1<<bit;}
   static void   ResetWBit(UInt_t &patt,UInt_t bit)             {patt &= ~(0x1<<bit);}
@@ -113,6 +116,7 @@ class KMCProbeFwd: public TObject {
   Double_t fMass;   // particle mass
   Double_t fChi2;   // total chi2
   Double_t fChi2ITS;// total chi2 ITS
+  Float_t  fMSX2X0Seen; // materal X/X0 seen between MS chambers
   UInt_t   fHits;   // pattern on hits (max 32!)
   UInt_t   fFakes;  // pattern of fakes among hits
   Int_t    fNHits;    // total hits

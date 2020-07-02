@@ -27,6 +27,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   ,fLastActiveLayerITS(0)
   ,fLastActiveLayer(0)
   ,fLastActiveLayerTracked(0)
+  ,fMSLrMinID(-1),fMSLrMaxID(-1),fIntegrateMSX2X0(kFALSE)
   ,fLayers()
   ,fBeamPipe(0)
   ,fVtx(0)
@@ -494,6 +495,8 @@ void KMCDetectorFwd::ClassifyLayers()
 	fLayersITS.AddLast(lr);
       }
       if (lr->IsMS())   {
+        if (fMSLrMinID<0) fMSLrMinID = lr->GetID();
+        if (fMSLrMaxID<lr->GetID()) fMSLrMaxID = lr->GetID();
 	fNActiveLayersMS++;
 	fLayersMS.AddLast(lr);
       }
@@ -691,11 +694,13 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
 	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
         float x2x0=0,xrho=0;
         lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
+        if (fIntegrateMSX2X0) trc->addMSMaterialsSeen(x2x0);
 	if (!PropagateToZBxByBz(trc,fZDecay, fDefStepMat, frac*x2x0, -frac*xrho*corrELoss, modeMC)) return 0;
 	PerformDecay(trc);
 	frac = 1.-frac;
 	corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
         lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
+        if (fIntegrateMSX2X0) trc->addMSMaterialsSeen(x2x0);
 	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, frac*x2x0, -frac*xrho*corrELoss, modeMC)) return 0;
       }
       else {
@@ -703,6 +708,7 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
 	double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
         float x2x0=0,xrho=0;
         lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
+        if (fIntegrateMSX2X0) trc->addMSMaterialsSeen(x2x0);
 	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, x2x0, -dir*xrho*corrELoss, modeMC)) return 0;
       }
     }
@@ -936,6 +942,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     int ncnd=0,cndCorr=-1;
     KMCLayerFwd *lrP = lr;
     lr = GetLayer(j);
+    fIntegrateMSX2X0 = (j>fMSLrMinID && j<fMSLrMaxID);
     int ntPrev = lrP->GetNMCTracks();
     //
     //    printf("Lr:%d %s IsDead:%d\n",j, lrP->GetName(),lrP->IsDead());

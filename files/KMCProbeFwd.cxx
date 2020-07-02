@@ -14,6 +14,7 @@ KMCProbeFwd::KMCProbeFwd()
   ,fMass(0.10566)
   ,fChi2(0)
   ,fChi2ITS(0)
+  ,fMSX2X0Seen(0)
   ,fHits(0)
   ,fFakes(0)
   ,fNHits(0)
@@ -32,6 +33,7 @@ KMCProbeFwd::KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose)
   ,fMass(0.10566)
   ,fChi2(0)
   ,fChi2ITS(0)
+  ,fMSX2X0Seen(0)
   ,fHits(0)
   ,fFakes(0)
   ,fNHits(0)
@@ -58,6 +60,7 @@ KMCProbeFwd::KMCProbeFwd(const KMCProbeFwd& src)
   ,fMass(src.fMass)
   ,fChi2(src.fChi2)
   ,fChi2ITS(src.fChi2ITS)
+  ,fMSX2X0Seen(src.fMSX2X0Seen)
   ,fHits(src.fHits)
   ,fFakes(src.fFakes)
   ,fNHits(src.fNHits)
@@ -80,6 +83,7 @@ KMCProbeFwd& KMCProbeFwd::operator=(const KMCProbeFwd& src)
   fMass = src.fMass;
   fChi2 = src.fChi2;
   fChi2ITS = src.fChi2ITS;
+  fMSX2X0Seen = src.fMSX2X0Seen;
   fHits = src.fHits;
   fFakes = src.fFakes;
   fNHits = src.fNHits;
@@ -99,7 +103,8 @@ void KMCProbeFwd::Reset()
   fWeight = 1.;
   fMass=0.14; 
   fChi2=0; 
-  fChi2ITS=0; 
+  fChi2ITS=0;
+  fMSX2X0Seen = 0;
   fHits=fFakes=0;  
   fTrack.Reset();
   ResetCovariance();
