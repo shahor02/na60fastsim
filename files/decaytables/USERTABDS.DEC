@@ -1,0 +1,9 @@
+Decay D_s+
+1.000 phi   pi+   PHSP; 
+Enddecay
+Decay phi
+1.000 K+   K-   PHSP; 
+Enddecay
+
+End
+
