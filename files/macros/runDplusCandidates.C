@@ -184,15 +184,16 @@ void GenerateDplusSignalCandidates(Int_t nevents = 100000,
   // define mother particle
   Int_t pdgParticle = 411;
   
-  TH2F* hYPtGen = new TH2F("YPTGen", "Y-Pt corr match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
-  TH1D* hPtGen = new TH1D("PTGen", "Pt gen", 40, ptminSG, ptmaxSG);
+  TH2F* hYPtGen = new TH2F("hYPtGen", "Y-Pt corr match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH1D* hPtGen = new TH1D("hPtGen", "Pt gen", 40, ptminSG, ptmaxSG);
   TH1D* hYGen = new TH1D("hYGen", "Y full phase space", 80., 1., 5.4);
-  TH2F* hYPtFake = new TH2F("YPTFake", "Y-Pt fake match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
-  TH2F* hYPtAll = new TH2F("YPTAll", "Y-Pt all match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
-  TH1D* hPtFake = new TH1D("PTFake", "Pt fake match", 40, ptminSG, ptmaxSG);
-  TH1D* hPtAll = new TH1D("PTAll", "Pt all match", 40, ptminSG, ptmaxSG);  
-  TH1D* hMassFake = new TH1D("MassFake", "Mass fake match", 200, 1., 3.5);
-  TH1D* hMassAll = new TH1D("MassAll", "Mass all match", 200, 1., 3.5);
+  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Pt all match", 40, ptminSG, ptmaxSG);  
+  TH1D* hYRecoAll = new TH1D("hYRecoAll", "Y all match", 80., 1., 5.4);
+  TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 40, ptminSG, ptmaxSG);
+  TH1D* hMassAll = new TH1D("hMassAll", "Mass all match", 200, 1., 3.5);
+  TH1D* hMassFake = new TH1D("hMassFake", "Mass fake match", 200, 1., 3.5);
 
   TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistZ = new TH2F("hDistZ", "", 100, 0, 0.2, 30, 0, 3);
@@ -362,12 +363,13 @@ void GenerateDplusSignalCandidates(Int_t nevents = 100000,
     Double_t  ptRecD=parent.Pt();
     Double_t  massRecD=parent.M();
     Double_t yRecD = 0.5 * TMath::Log((parent.E() + parent.Pz()) / (parent.E() - parent.Pz()));
-    hYPtAll->Fill(yRecD, ptRecD);
-    hPtAll->Fill(ptRecD);
+    hYPtRecoAll->Fill(yRecD, ptRecD);
+    hPtRecoAll->Fill(ptRecD);
+    hYRecoAll->Fill(yRecD);
     hMassAll->Fill(massRecD);
     if (nfake > 0){
-      hYPtFake->Fill(yRecD, ptRecD);
-      hPtFake->Fill(ptRecD);
+      hYPtRecoFake->Fill(yRecD, ptRecD);
+      hPtRecoFake->Fill(ptRecD);
       hMassFake->Fill(massRecD);
     }
     hMassVsPt->Fill(massRecD,ptRecD);
@@ -445,8 +447,6 @@ void GenerateDplusSignalCandidates(Int_t nevents = 100000,
     
     //recProbe[0].PropagateToDCA(&recProbe[1]);
     
-    // hYPtAll->Fill(parent.Y(), ptRecD);
-    // hPtAll->Fill(ptRecD);
     hDistXY->Fill(distXY, ptRecD);
     hDistZ->Fill(vsec[2], ptRecD);
     hDist->Fill(dist, ptRecD);
@@ -521,12 +521,13 @@ void GenerateDplusSignalCandidates(Int_t nevents = 100000,
   hMassVsPt->Write();
   hMassVsY->Write();
   hYPtGen->Write();
-  hYPtAll->Write();
-  hYPtFake->Write();
-  hYGen->Write();
   hPtGen->Write();
-  hPtAll->Write();
-  hPtFake->Write();
+  hYGen->Write();
+  hYPtRecoAll->Write();
+  hYPtRecoFake->Write();
+  hPtRecoAll->Write();
+  hYRecoAll->Write();
+  hPtRecoFake->Write();
   hDistXY->Write();
   hDistZ->Write();
   hDist->Write();
@@ -611,9 +612,9 @@ void MakeDplusCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root"
   gRandom->SetSeed(seed);
 
   TFile *fout = new TFile("Dplus-Bkg-histos.root", "recreate");
-  TH1D* hPtAll = new TH1D("PTAll", "Pt all match", 50, 0., 5.);
-  TH2F* hYPtAll = new TH2F("YPTAll", "Y-Pt all match", 80, 1.0, 5.4, 50, 0., 5.);
-  TH1D* hMassAll = new TH1D("MassAll", "Mass all match", 250, 1., 3.5);
+  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Pt all match", 50, 0., 5.);
+  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 80, 1.0, 5.4, 50, 0., 5.);
+  TH1D* hMassAll = new TH1D("hMassAll", "Mass all match", 250, 1., 3.5);
 
   TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistZ = new TH2F("hDistZ", "", 100, 0, 0.2, 30, 0, 3);
@@ -625,9 +626,9 @@ void MakeDplusCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root"
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
 
-  TH1F* hMomPion = new TH1F("hMomPion","",200,0.,10.);
-  TH1F* hMomKaon = new TH1F("hMomKaon","",200,0.,10.);
-  
+  TH1D* hMomPion = new TH1D("hMomPion","",200,0.,10.);
+  TH1D* hMomKaon = new TH1D("hMomKaon","",200,0.,10.);
+
   TH2F *hResVx = new TH2F("hResVx", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hResVy = new TH2F("hResVy", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hResVz = new TH2F("hResVz", "", 100, -0.1, 0.1, 30, 0, 3);
@@ -735,8 +736,8 @@ void MakeDplusCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root"
 	  Float_t ptD=parent.Pt();
 	  Float_t invMassD=parent.M();
 	  Float_t yD = 0.5 * TMath::Log((parent.E() + parent.Pz()) / (parent.E() - parent.Pz()));
-	  hYPtAll->Fill(yD, ptD);
-	  hPtAll->Fill(ptD);
+	  hYPtRecoAll->Fill(yD, ptD);
+	  hPtRecoAll->Fill(ptD);
 	  hMassAll->Fill(invMassD);
 	  if(invMassD>1.6  && invMassD<2.1){
 	    // range to fill histos
@@ -801,8 +802,8 @@ void MakeDplusCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root"
   hcand->Write();
   hcandpeak->Write();  
   hMassAll->Write();
-  hYPtAll->Write();
-  hPtAll->Write();
+  hYPtRecoAll->Write();
+  hPtRecoAll->Write();
   hDistXY->Write();
   hDistZ->Write();
   hDist->Write();
