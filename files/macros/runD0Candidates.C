@@ -190,7 +190,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH2F* hPtRecoVsGenAll = new TH2F("hPtRecoVsGenAll"," ; Generated p_{T} ; Reconstructed p_{T}",40, ptminSG, ptmaxSG,40, ptminSG, ptmaxSG);
   TH2F* hDiffPtRecoGenAll = new TH2F("hDiffPtRecoGenAll"," ; Generated p_{T} ; Reco p_{T} - Gen p_{T}",40, ptminSG, ptmaxSG,100,-0.2,0.2);
 
-  TH1D* hYRecoAll = new TH1D("hYRecoAll", "Y all match", 80., 1., 5.4);
+  TH1D* hYRecoAll = new TH1D("hYRecoAll", "Reconstructed Y all match", 80., 1., 5.4);
+  TH1D* hYGenRecoAll = new TH1D("hYGenRecoAll", "Generated Y all match", 80., 1., 5.4);
   TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
   TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 40, ptminSG, ptmaxSG);
   TH1D* hMassAll = new TH1D("hMassAll", "Mass all match", 200, 1., 3.5);
@@ -365,6 +366,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hPtRecoVsGenAll->Fill(ptGenD,ptRecD);
     hDiffPtRecoGenAll->Fill(ptGenD,(ptRecD-ptGenD));
     hYRecoAll->Fill(yRecD);
+    hYGenRecoAll->Fill(yGenD);
     hMassAll->Fill(massRecD);
     hMassRefl->Fill(massRecReflD);
     if (nfake > 0){
@@ -523,6 +525,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hPtRecoVsGenAll->Write();
   hDiffPtRecoGenAll->Write();
   hYRecoAll->Write();
+  hYGenRecoAll->Write();
   hPtRecoFake->Write();
   hDistXY->Write();
   hDist->Write();
