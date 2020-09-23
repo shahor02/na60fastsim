@@ -185,7 +185,11 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH1D* hPtGen = new TH1D("hPtGen", "Pt gen", 40, ptminSG, ptmaxSG);
   TH1D* hYGen = new TH1D("hYGen", "Y full phase space", 80., 1., 5.4);
   TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
-  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Pt all match", 40, ptminSG, ptmaxSG);  
+  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Reconstructed Pt all match", 40, ptminSG, ptmaxSG);  
+  TH1D* hPtGenRecoAll = new TH1D("hPtGenRecoAll", "Generated Pt all match", 40, ptminSG, ptmaxSG);
+  TH2F* hPtRecoVsGenAll = new TH2F("hPtRecoVsGenAll"," ; Generated p_{T} ; Reconstructed p_{T}",40, ptminSG, ptmaxSG,40, ptminSG, ptmaxSG);
+  TH2F* hDiffPtRecoGenAll = new TH2F("hDiffPtRecoGenAll"," ; Generated p_{T} ; Reco p_{T} - Gen p_{T}",40, ptminSG, ptmaxSG,100,-0.2,0.2);
+
   TH1D* hYRecoAll = new TH1D("hYRecoAll", "Y all match", 80., 1., 5.4);
   TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
   TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 40, ptminSG, ptmaxSG);
@@ -357,6 +361,9 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     Double_t yRecD = 0.5 * TMath::Log((parent.E() + parent.Pz()) / (parent.E() - parent.Pz()));
     hYPtRecoAll->Fill(yRecD, ptRecD);
     hPtRecoAll->Fill(ptRecD);
+    hPtGenRecoAll->Fill(ptGenD);
+    hPtRecoVsGenAll->Fill(ptGenD,ptRecD);
+    hDiffPtRecoGenAll->Fill(ptGenD,(ptRecD-ptGenD));
     hYRecoAll->Fill(yRecD);
     hMassAll->Fill(massRecD);
     hMassRefl->Fill(massRecReflD);
@@ -509,9 +516,12 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hYPtGen->Write();
   hPtGen->Write();
   hYGen->Write();
-  hYPtRecoAll->Write();
+  hYPtRecoAll->Write();  
   hYPtRecoFake->Write();
   hPtRecoAll->Write();
+  hPtGenRecoAll->Write();
+  hPtRecoVsGenAll->Write();
+  hDiffPtRecoGenAll->Write();
   hYRecoAll->Write();
   hPtRecoFake->Write();
   hDistXY->Write();
