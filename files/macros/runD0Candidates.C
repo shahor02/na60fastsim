@@ -27,7 +27,7 @@
 #include "AliDecayer.h"
 #include "AliDecayerEvtGen.h"
 #include "TDatabasePDG.h"
-
+#include "./HFUtils.C"
 #endif
 
 // Track Chi2Tot cut
@@ -42,10 +42,7 @@ double ptmaxSG = 10; //Elena's change, it was 3 GeV/c
 double vX = 0, vY = 0, vZ = 0; // event vertex
 
 THnSparseF* CreateSparse();
-void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, Double_t &xV, Double_t &yV, Double_t &zV);
-Double_t CosPointingAngle(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent);
 TDatime dt;
-Double_t ImpParXY(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent);
 Double_t CosThetaStar(TLorentzVector &parent, TLorentzVector &dauk);
 
 void GenerateD0SignalCandidates(Int_t nevents = 100000, 
@@ -828,72 +825,6 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 }
 
 
-
-
-Double_t CosPointingAngle(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent)
-{
-
-    // /// XY
-    // /// Cosine of pointing angle in transverse plane assuming it is produced
-    // /// at "point"
-
-    // TVector3 momXY(parent.Px(), parent.Py(), 0.);
-    // TVector3 flineXY(vsec[0] - vprim[0],
-    //                  vsec[1] - vprim[1],
-    //                  0.);
-
-    // Double_t ptot2 = momXY.Mag2() * flineXY.Mag2();
-    // if (ptot2 <= 0)
-    // {
-    //     return 0.0;
-    // }
-    // else
-    // {
-    //     Double_t cos = momXY.Dot(flineXY) / TMath::Sqrt(ptot2);
-    //     if (cos > 1.0)
-    //         cos = 1.0;
-    //     if (cos < -1.0)
-    //         cos = -1.0;
-    //     return cos;
-    // }
-    /// Cosine of pointing angle in space assuming it is produced at "point"
-
-    TVector3 mom(parent.Px(), parent.Py(), parent.Pz());
-    TVector3 fline(vsec[0] - vprim[0],
-                   vsec[1] - vprim[1],
-                   vsec[2] - vprim[2]);
-
-    Double_t ptot2 = mom.Mag2() * fline.Mag2();
-    if (ptot2 <= 0)
-    {
-        return 0.0;
-    }
-    else
-    {
-        Double_t cos = mom.Dot(fline) / TMath::Sqrt(ptot2);
-        if (cos > 1.0)
-            cos = 1.0;
-        if (cos < -1.0)
-            cos = -1.0;
-        return cos;
-    }
-}
-
-Double_t ImpParXY(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent){
-
-  Double_t k = -(vsec[0]-vprim[0])*parent.Px()-(vsec[1]-vprim[1])*parent.Py();
-  k /= parent.Pt()*parent.Pt();
-  Double_t dx = vsec[0]-vprim[0]+k*parent.Px();
-  Double_t dy = vsec[1]-vprim[1]+k*parent.Py();
-  Double_t absImpPar = TMath::Sqrt(dx*dx+dy*dy);
-  TVector3 mom(parent.Px(), parent.Py(), parent.Pz());
-  TVector3 fline(vsec[0] - vprim[0],
-		 vsec[1] - vprim[1],
-		 vsec[2] - vprim[2]);
-  TVector3 cross = mom.Cross(fline);
-  return (cross.Z()>0. ? absImpPar : -absImpPar);
-}
-
 Double_t CosThetaStar(TLorentzVector &parent, TLorentzVector &dauk) {
 
   Double_t massMoth = TDatabasePDG::Instance()->GetParticle(421)->Mass();
@@ -931,24 +862,5 @@ THnSparseF* CreateSparse(){
 }
 
 
-void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, Double_t &xV, Double_t &yV, Double_t &zV){
-  // Based on AliESDv0
 
-  //Trivial estimation of the vertex parameters
-  Double_t tmp[3];
-  t0.GetXYZ(tmp);
-  Double_t  x1=tmp[0],  y1=tmp[1],  z1=tmp[2];
-  const Double_t ss=0.0005*0.0005;//a kind of a residual misalignment precision
-  Double_t sx1=t0.GetSigmaX2()+ss, sy1=t0.GetSigmaY2()+ss;
-  t1.GetXYZ(tmp);
-  Double_t  x2=tmp[0],  y2=tmp[1],  z2=tmp[2];
-  Double_t sx2=t1.GetSigmaX2()+ss, sy2=t1.GetSigmaY2()+ss; 
-    
-  Double_t wx1=sx2/(sx1+sx2), wx2=1.- wx1;
-  Double_t wy1=sy2/(sy1+sy2), wy2=1.- wy1;
-  Double_t wz1=0.5, wz2=1.- wz1;
-  xV=wx1*x1 + wx2*x2; 
-  yV=wy1*y1 + wy2*y2; 
-  zV=wz1*z1 + wz2*z2;
-  return;
-}
+
