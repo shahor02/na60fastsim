@@ -102,27 +102,10 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   TH1D *hyP = new TH1D("hyP", "y protons from Lc decays", 50, 0., 5.);
   TH2F *hyPiK = new TH2F("hyPiK", "y pions vs y Kaons from Lc decays", 50, 0., 5., 50, 0., 5.);
   
-  //Magnetic field and detector parameters
-  MagField *mag = new MagField(1);
-  int BNreg = mag->GetNReg();
-  const double *BzMin = mag->GetZMin();
-  const double *BzMax = mag->GetZMax();
-  const double *BVal;
-  printf("*************************************\n");
-  printf("number of magnetic field regions = %d\n", BNreg);
-  
   TFile *fout = new TFile("Lc-Signal-histos.root", "recreate");
   
-  for (int i = 0; i < BNreg; i++){
-    BVal = mag->GetBVals(i);
-    printf("*** Field region %d ***\n", i);
-    if (i == 0){
-      printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
-    }else if (i == 1){
-      printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
-    }
-  }
-  
+  //Magnetic field and detector parameters
+
   //int outN = nev/10;
   //if (outN<1) outN=1;
 
@@ -155,6 +138,25 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   det->BookControlHistos();
   //
   
+  TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
+  if (fld->IsA() == MagField::Class()) {
+    MagField* mag = (MagField*) fld;
+    int BNreg = mag->GetNReg();
+    const double *BzMin = mag->GetZMin();
+    const double *BzMax = mag->GetZMax();
+    const double *BVal;
+    printf("*************************************\n");
+    printf("number of magnetic field regions = %d\n", BNreg);
+    for (int i = 0; i < BNreg; i++){
+      BVal = mag->GetBVals(i);
+      printf("*** Field region %d ***\n", i);
+      if (i == 0){
+	printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }else if (i == 1){
+	printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }
+    }
+  }
   
   // prepare decays
   TGenPhaseSpace decay;
