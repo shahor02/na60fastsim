@@ -402,7 +402,7 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
     else if (types=="abs")  {newLayer->SetType(KMCLayerFwd::kABS); newLayer->SetDead(kTRUE); }
     else if (types=="dummy")  {newLayer->SetType(KMCLayerFwd::kDUMMY); newLayer->SetDead(kTRUE); }
     //
-    if (!newLayer->IsDead()) newLayer->SetDead( xRes==kVeryLarge && yRes==kVeryLarge);
+    if (!newLayer->IsDead()) newLayer->SetDead( xRes>=kVeryLarge && yRes>=kVeryLarge);
     //
     if (fLayers.GetEntries()==0) fLayers.Add(newLayer);
     else {      
@@ -1318,10 +1318,11 @@ Bool_t KMCDetectorFwd::NeedToKill(KMCProbeFwd* probe) const
   // check if the seed should be killed
   const Bool_t kModeKillMiss = kFALSE;
   Bool_t kill = kFALSE;
+  int decVtx = (fVtx && !fVtx->IsDead());
   while (1) {
     int il = probe->GetInnerLayerChecked();
     int nITS = probe->GetNITSHits();
-    int nITSMax = nITS + il; // maximum it can have
+    int nITSMax = nITS + il - decVtx; // maximum it can have
     if (nITSMax<fMinITSHits) {
       kill = kTRUE; 
       break;
@@ -1343,7 +1344,7 @@ Bool_t KMCDetectorFwd::NeedToKill(KMCProbeFwd* probe) const
     if (nITS>2) {  // check if smallest possible norm chi2/ndf is acceptable
       double chi2min = probe->GetChi2ITS();
       if (kModeKillMiss) {
-	int nMiss = fNActiveLayersITS - probe->GetInnerLayerChecked() - nITS; // layers already missed
+	int nMiss = fNActiveLayersITS - (probe->GetInnerLayerChecked() - decVtx) - nITS; // layers already missed
 	chi2min = nMiss*probe->GetMissingHitPenalty();
       }
       chi2min /= ((nITSMax<<1)-KMCProbeFwd::kNDOF);
