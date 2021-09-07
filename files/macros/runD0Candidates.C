@@ -51,6 +51,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 				const char *filNamPow="/home/prino/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root",
 				const char *privateDecayTable = "/home/prino/na60plus/decaytables/USERTABD0.DEC",
 				int optPartAntiPart=3,
+				int minITShits=4,
 				bool writeNtuple = kFALSE, 
 				bool simulateBg=kTRUE){
   
@@ -108,7 +109,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   det->InitBkg(Eint);
   det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VT
 
-  det->SetMinITSHits(det->GetNumberOfActiveLayersITS()); //NA60+
+  det->SetMinITSHits(TMath::Min(minITShits,det->GetNumberOfActiveLayersITS())); //NA60+
   //det->SetMinITSHits(det->GetNumberOfActiveLayersITS()-1); //NA60
   det->SetMinMSHits(0); //NA60+
   //det->SetMinMSHits(det->GetNumberOfActiveLayersMS()-1); //NA60
@@ -196,6 +197,11 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH1D* hMassFake = new TH1D("hMassFake", "Mass fake match", 200, 1., 3.5);
   TH1D* hMassRefl = new TH1D("hMassRefl", "Mass reflections", 200, 1., 3.5);
 
+  TH2D* hKaonDauClu = new TH2D("hKaonDauClu", "N hits kaon daughter ; N hits ; N fake hits", 11, -0.5, 10.5, 11, -0.5, 10.5);
+  TH2D* hPionDauClu = new TH2D("hPionDauClu", "N hits pion daughter ; N hits ; N fake hits", 11, -0.5, 10.5, 11, -0.5, 10.5);
+  TH1D* hPionDauHitPat = new TH1D("hPionDauHitPat", "Hits on layer ; Layer", 11, -0.5, 10.5);
+  TH1D* hKaonDauHitPat = new TH1D("hKaonDauHitPat", "Hits on layer ; Layer", 11, -0.5, 10.5);
+  
   TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDist = new TH2F("hDist", "", 300, 0, 10, 30, 0, 3);
   TH2F *hDistgenXY = new TH2F("hDistgenXY", "", 100, 0, 0.1, 30, 0, 3);
@@ -227,7 +233,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH2F *hResPzVsY = new TH2F("hResPzVsY", "", 100, -1, 1, 50, 0, 5);
   TH2F *hResDist = new TH2F("hResDist", "", 100, -0.5, 0.5, 30, 0, 3);
   TH2F *hResDistXY = new TH2F("hResDistXY", "", 100, -0.1, 0.1, 30, 0, 3);
-  TH1D *hNevents = new TH1D("hNevents", "", 1, 0, 1);
+  TH1D *hNevents = new TH1D("hNevents", "", 2, 0, 2);
   
   TH2F *hd0 = new TH2F("hd0", "", 100, 0, 0.1, 30, 0, 3);
   THnSparseF *hsp = CreateSparse();
@@ -239,9 +245,9 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   if (writeNtuple)
     {
       fnt = new TFile("fntSig.root", "recreate");
-      ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
+      ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax:d0D:costhst", 32000);
     }
-  Float_t arrnt[11];
+  Float_t arrnt[13];
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -344,6 +350,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     }
     if (ptK > 0 && ptPi > 0) hyPiK->Fill(yPi, yK);
     if (nrec < 2) continue;
+    hNevents->Fill(1.5);
     
     recProbe[0].PropagateToDCA(&recProbe[1]);
     
@@ -376,7 +383,15 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hMassVsY->Fill(massRecD,yRecD);
     hMassReflVsPt->Fill(massRecReflD,ptRecD);
     hMassReflVsY->Fill(massRecReflD,yRecD);
-   
+    
+    hKaonDauClu->Fill(recProbe[0].GetNHits(),recProbe[0].GetNFakeITSHits());
+    hPionDauClu->Fill(recProbe[1].GetNHits(),recProbe[1].GetNFakeITSHits());
+    UInt_t hmap0=recProbe[0].GetHitsPatt();
+    UInt_t hmap1=recProbe[1].GetHitsPatt();
+    for(Int_t jl=0; jl<=10; jl++){
+      if( hmap0 & (1<<jl) ) hKaonDauHitPat->Fill(jl);
+      if( hmap1 & (1<<jl) ) hPionDauHitPat->Fill(jl);
+    }
     Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
     Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
     Float_t d3 = recProbe[1].GetZ() - recProbe[0].GetZ();
@@ -495,6 +510,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
       arrnt[8] = dca;
       arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
       arrnt[10] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+      arrnt[11] = TMath::Abs(ipD);
+      arrnt[12] = cts;
       ntD0cand->Fill(arrnt);
     }
   } //event loop
@@ -525,6 +542,10 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hYRecoAll->Write();
   hYGenRecoAll->Write();
   hPtRecoFake->Write();
+  hKaonDauClu->Write();
+  hPionDauClu->Write();
+  hKaonDauHitPat->Write();
+  hPionDauHitPat->Write();
   hDistXY->Write();
   hDist->Write();
   hDistgenXY->Write();
@@ -590,7 +611,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 
 
 void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
-			       Int_t nevents = 999999, 
+			       Int_t nevents = 999999,
+			       int minITShits=4,
 			       Int_t writeNtuple = kFALSE){
 
   // Read the TTree of tracks produced with runBkgVT.C
@@ -653,10 +675,10 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 
   TFile *fnt = 0x0;
   TNtuple *ntD0cand = 0x0;
-  Float_t arrnt[11];
+  Float_t arrnt[13];
   if (writeNtuple){
     fnt = new TFile("fntBkg.root", "recreate");
-    ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
+    ntD0cand = new TNtuple("ntD0cand", "ntD0cand",  "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax:d0D:costhst", 32000);
   }
 
   KMCProbeFwd recProbe[2];
@@ -673,9 +695,11 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
     for (Int_t itr = 0; itr < arrentr; itr++){
       KMCProbeFwd *tr1 = (KMCProbeFwd *)arr->At(itr);
       // cout << "tr P=" << tr1->GetP() << endl;
+      if(tr1->GetNHits()<minITShits) continue;
       Float_t ch1 = tr1->GetCharge();
       for (Int_t itr2 = itr; itr2 < arrentr; itr2++){
 	KMCProbeFwd *tr2 = (KMCProbeFwd *)arr->At(itr2);
+	if(tr2->GetNHits()<minITShits) continue;
 	Float_t ch2 = tr2->GetCharge();
 	if (ch1 * ch2 > 0) continue;
 	if (ch1 < 0){ //convention: first track negative
@@ -785,6 +809,8 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	      arrnt[8] = dca;
 	      arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
 	      arrnt[10] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	      arrnt[11] = TMath::Abs(ipD);	    
+	      arrnt[12] = cts;
 	      ntD0cand->Fill(arrnt);
 	    }
 	    

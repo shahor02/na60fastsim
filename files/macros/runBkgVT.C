@@ -36,6 +36,7 @@ TDatime dt;
 void runBkgVT(Int_t nevents = 100, 
 	      double Eint = 160.,
 	      const char *setup = "setup-10um-itssa_Eff1.txt",
+	      int minITShits=4,
 	      bool simulateBg=kTRUE)
 {
 
@@ -94,7 +95,7 @@ void runBkgVT(Int_t nevents = 100,
   det->InitBkg(Eint);
   
   det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VT
-  det->SetMinITSHits(det->GetNumberOfActiveLayersITS()); //NA60+
+  det->SetMinITSHits(TMath::Min(minITShits,det->GetNumberOfActiveLayersITS())); //NA60+
   // we don't need MS part here, even if it is in the setup
   //det->SetMinITSHits(det->GetNumberOfActiveLayersITS()-1); //NA60
   det->SetMinMSHits(0); //NA60+
