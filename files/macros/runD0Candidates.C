@@ -784,20 +784,21 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    hd0XYprod->Fill(d0xy1 * d0xy2, ptD);
 	    hd0XY1->Fill(d0xy1, ptD);
 	    hd0XY2->Fill(d0xy2, ptD);
-	    arrsp[0] = invMassD;
-	    arrsp[1] = ptD;
-	    arrsp[2] = yD;
-	    arrsp[3] = dist;
-	    arrsp[4] = cosp;
-	    arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
-	    arrsp[6] = d0xy1 * d0xy2;
-	    arrsp[7] = dca;
-	    arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-	    arrsp[9] = TMath::Abs(ipD);	    
-	    arrsp[10] = cts;
-	    hsp->Fill(arrsp);
-	    
-	    if (ntD0cand){
+	    if(cosp>0.97 && (d0xy1*d0xy2)<0.0001){
+	      arrsp[0] = invMassD;
+	      arrsp[1] = ptD;
+	      arrsp[2] = yD;
+	      arrsp[3] = dist;
+	      arrsp[4] = cosp;
+	      arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
+	      arrsp[6] = d0xy1 * d0xy2;
+	      arrsp[7] = dca;
+	      arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	      arrsp[9] = TMath::Abs(ipD);	    
+	      arrsp[10] = cts;
+	      hsp->Fill(arrsp);
+	    }
+	    if (ntD0cand && cosp>0.97 && (d0xy1*d0xy2)<0.0001){
 	      arrnt[0] = invMassD;
 	      arrnt[1] = ptD;
 	      arrnt[2] = yD;
@@ -880,9 +881,9 @@ THnSparseF* CreateSparse(){
 			"d_0*d_0 (cm^{2})","DCA",
 			"p_{T}^{min} (GeV/c)",
 			"d_0^{D} (cm)","cos(#theta*)"};
-  Int_t bins[nAxes] =   {100,   5,  40, 30,  20,   10,   10,      12,      8,  16,  10}; 
-  Double_t min[nAxes] = {1.65,  0., 1., 0., 0.98, 0.,   -0.0006, 0.0,   0.,  0.,  -1.};
-  Double_t max[nAxes] = {2.15,  5., 5., 0.3, 1.,   0.05, 0.,      0.03,  4.,  0.04, 1.};  
+  Int_t bins[nAxes] =   {100,   10, 20, 30,  20,   10,   10,      12,    6,  16,  10}; 
+  Double_t min[nAxes] = {1.65,  0., 1., 0., 0.98, 0.,   -0.0006,  0.0,   0.,  0.,  -1.};
+  Double_t max[nAxes] = {2.15,  5., 5., 0.3, 1.,   0.05, 0.,      0.03,  3.,  0.04, 1.};  
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
   for(Int_t iax=0; iax<nAxes; iax++) hsp->GetAxis(iax)->SetTitle(axTit[iax].Data());
   return hsp;
