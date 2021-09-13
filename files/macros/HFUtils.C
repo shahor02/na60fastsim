@@ -98,32 +98,36 @@ Double_t ImpParXY(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent){
   return (cross.Z()>0. ? absImpPar : -absImpPar);
 }
 
+Double_t CosPointingAngleXY(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent)
+{
+
+  /// Cosine of pointing angle in transverse plane assuming it is produced
+  /// at "point"
+
+  TVector3 momXY(parent.Px(), parent.Py(), 0.);
+  TVector3 flineXY(vsec[0] - vprim[0],
+		   vsec[1] - vprim[1],
+		   0.);
+  
+  Double_t ptot2 = momXY.Mag2() * flineXY.Mag2();
+  if (ptot2 <= 0)
+    {
+      return 0.0;
+    }
+  else
+    {
+      Double_t cos = momXY.Dot(flineXY) / TMath::Sqrt(ptot2);
+      if (cos > 1.0)
+            cos = 1.0;
+      if (cos < -1.0)
+	cos = -1.0;
+      return cos;
+    }
+}
+
 Double_t CosPointingAngle(Double_t vprim[3], Double_t vsec[3], TLorentzVector &parent)
 {
 
-    // /// XY
-    // /// Cosine of pointing angle in transverse plane assuming it is produced
-    // /// at "point"
-
-    // TVector3 momXY(parent.Px(), parent.Py(), 0.);
-    // TVector3 flineXY(vsec[0] - vprim[0],
-    //                  vsec[1] - vprim[1],
-    //                  0.);
-
-    // Double_t ptot2 = momXY.Mag2() * flineXY.Mag2();
-    // if (ptot2 <= 0)
-    // {
-    //     return 0.0;
-    // }
-    // else
-    // {
-    //     Double_t cos = momXY.Dot(flineXY) / TMath::Sqrt(ptot2);
-    //     if (cos > 1.0)
-    //         cos = 1.0;
-    //     if (cos < -1.0)
-    //         cos = -1.0;
-    //     return cos;
-    // }
     /// Cosine of pointing angle in space assuming it is produced at "point"
 
     TVector3 mom(parent.Px(), parent.Py(), parent.Pz());

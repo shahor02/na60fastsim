@@ -652,15 +652,16 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   
-  TH2F *hResVx = new TH2F("hResVx", "", 100, -0.1, 0.1, 30, 0, 3);
-  TH2F *hResVy = new TH2F("hResVy", "", 100, -0.1, 0.1, 30, 0, 3);
-  TH2F *hResVz = new TH2F("hResVz", "", 100, -0.1, 0.1, 30, 0, 3);
+  TH1F *hVx = new TH1F("hVx", "", 200, -0.05, 0.05);
+  TH1F *hVy = new TH1F("hVy", "", 200, -0.05, 0.05);
+  TH1F *hVz = new TH1F("hVz", "", 200, -0.05, 0.05);
   TH2F *hResPx = new TH2F("hResPx", "", 100, -1, 1, 30, 0, 3); //for Kaons
   TH2F *hResPy = new TH2F("hResPy", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResPz = new TH2F("hResPz", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResDist = new TH2F("hResDist", "", 100, -0.5, 0.5, 30, 0, 3);
   TH2F *hResDistXY = new TH2F("hResDistXY", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hCosp = new TH2F("hCosp", "", 100, -1, 1, 30, 0, 3);
+  TH2F *hCospXY = new TH2F("hCospXY", "", 100, -1, 1, 30, 0, 3);
   TH2F *hCosThStVsMass = new TH2F("hCosThStVsMass", "", 50, 1.5, 2.5, 40, -1, 1);
   
   TH2F *hd0 = new TH2F("hd0", "", 100, 0, 0.1, 30, 0, 3);
@@ -716,6 +717,8 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	Double_t pxyz2[3];
 	recProbe[1].GetPXYZ(pxyz2);
 	
+	recProbe[0].PropagateToZBxByBz(0);
+	recProbe[1].PropagateToZBxByBz(0);
 	for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	  // mass hypothesis: Kpi, piK
 	  Int_t iKaon=-1;
@@ -740,6 +743,8 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	  if(invMassD>1.65  && invMassD<2.15){
 	    // range to fill histos
 	    if(invMassD>1.805 && invMassD<1.925) countCandInPeak++;
+
+	    recProbe[0].PropagateToDCA(&recProbe[1]);
 	    Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
 	    Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
 	    Float_t d3 = recProbe[1].GetZ() - recProbe[0].GetZ();
@@ -753,20 +758,27 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    // Float_t xP = (recProbe[1].GetX() + recProbe[0].GetX()) / 2.;
 	    // Float_t yP = (recProbe[1].GetY() + recProbe[0].GetY()) / 2.;
 	    // Float_t zP = (recProbe[1].GetZ() + recProbe[0].GetZ()) / 2.;
+
 	    Double_t xP, yP, zP;
 	    ComputeVertex(recProbe[0],recProbe[1],xP,yP,zP);
+	    hVx->Fill(xP);
+	    hVy->Fill(yP);
+	    hVz->Fill(zP);
 	    Float_t dist = TMath::Sqrt(xP * xP + yP * yP + zP * zP);
 	    Float_t distXY = TMath::Sqrt(xP * xP + yP * yP);
+
 	    Double_t vsec[3] = {xP, yP, zP};
 	    Double_t cosp = CosPointingAngle(vprim, vsec, parent);
+	    Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
 	    Double_t cts = CosThetaStar(parent,daurec[iKaon]);
 	    Double_t ipD = ImpParXY(vprim, vsec, parent);
 	    hCosp->Fill(cosp, ptD);
+	    hCospXY->Fill(cospxy, ptD);
 	    hCosThStVsMass->Fill(invMassD,cts);
-	    //printf(" ***** ***** cos point = %f \n", cosp);	    
+	    //	    printf(" ***** ***** cos point = %f vprim=%f %f %f  vsec=%f %f %f\n", cosp,vprim[0],vprim[1],vprim[2],vsec[0],vsec[1],vsec[2]);
 	    hDistXY->Fill(distXY, ptD);
 	    hDist->Fill(dist, ptD);
-	    
+    
 	    recProbe[0].PropagateToZBxByBz(0);
 	    Double_t d0x1 = recProbe[0].GetX();
 	    Double_t d0y1 = recProbe[0].GetY();
@@ -778,7 +790,7 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    Double_t d0y2 = recProbe[1].GetY();
 	    Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
 	    if (d0x2 < 0) d0xy2 *= -1;
-	      
+	  	      
 	    //printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
 	    
 	    hd0XYprod->Fill(d0xy1 * d0xy2, ptD);
@@ -838,7 +850,11 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   hDCAx->Write();
   hDCAy->Write();
   hDCAz->Write();
+  hVx->Write();
+  hVy->Write();
+  hVz->Write();
   hCosp->Write();
+  hCospXY->Write();
   hCosThStVsMass->Write();
   hd0XYprod->Write();
   hd0XY1->Write();
