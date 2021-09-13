@@ -72,22 +72,6 @@ void runBkgVT(Int_t nevents = 100,
   
   
   //Magnetic field and detector parameters
-  MagField *mag = new MagField(1);
-  int BNreg = mag->GetNReg();
-  const double *BzMin = mag->GetZMin();
-  const double *BzMax = mag->GetZMax();
-  const double *BVal;
-  printf("*************************************\n");
-  printf("number of magnetic field regions = %d\n", BNreg);
-  for (int i = 0; i < BNreg; i++){
-    BVal = mag->GetBVals(i);
-    printf("*** Field region %d ***\n", i);
-    if (i == 0){
-      printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
-    }else if (i == 1){
-      printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
-    }
-  }
 
   KMCDetectorFwd *det = new KMCDetectorFwd();
   printf("Setup file = %s\n",setup);
@@ -120,6 +104,26 @@ void runBkgVT(Int_t nevents = 100,
   det->ImposeVertex(0., 0., 0.);
   //
   det->BookControlHistos();
+
+  TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
+  if (fld->IsA() == MagField::Class()) {
+    MagField* mag = (MagField*) fld;
+    int BNreg = mag->GetNReg();
+    const double *BzMin = mag->GetZMin();
+    const double *BzMax = mag->GetZMax();
+    const double *BVal;
+    printf("*************************************\n");
+    printf("number of magnetic field regions = %d\n", BNreg);
+    for (int i = 0; i < BNreg; i++){
+      BVal = mag->GetBVals(i);
+      printf("*** Field region %d ***\n", i);
+      if (i == 0){
+	printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }else if (i == 1){
+	printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }
+    }
+  }
 
   // Get Pi, K, P spectral shapes
   TF1* fdNdYPi=det->GetdNdYPi();
