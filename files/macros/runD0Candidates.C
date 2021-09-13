@@ -610,7 +610,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 
 
 
-void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
+void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
+			       const char* trackTreeFile="treeBkgEvents.root",
 			       Int_t nevents = 999999,
 			       int minITShits=4,
 			       Int_t writeNtuple = kFALSE){
@@ -618,6 +619,29 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   // Read the TTree of tracks produced with runBkgVT.C
   // Create D0 combinatorial background candidates (= OS pairs of tracks)
   // Store in THnSparse and (optionally) TNtuple
+
+  KMCDetectorFwd *det = new KMCDetectorFwd();
+  det->ReadSetup(setup, setup);
+  
+  TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
+  if (fld->IsA() == MagField::Class()) {
+    MagField* mag = (MagField*) fld;
+    int BNreg = mag->GetNReg();
+    const double *BzMin = mag->GetZMin();
+    const double *BzMax = mag->GetZMax();
+    const double *BVal;
+    printf("*************************************\n");
+    printf("number of magnetic field regions = %d\n", BNreg);
+    for (int i = 0; i < BNreg; i++){
+      BVal = mag->GetBVals(i);
+      printf("*** Field region %d ***\n", i);
+      if (i == 0){
+	printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }else if (i == 1){
+	printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }
+    }
+  }
 
   TFile *filetree = new TFile(trackTreeFile);
   TTree *tree = (TTree *)filetree->Get("tree");
@@ -710,15 +734,23 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	  recProbe[0] = *tr2;
 	  recProbe[1] = *tr1;
 	}
-	recProbe[0].PropagateToDCA(&recProbe[1]);
+	Bool_t ok=recProbe[0].PropagateToDCA(&recProbe[1]);
 	Double_t pxyz[3];
 	recProbe[0].GetPXYZ(pxyz);
 	
 	Double_t pxyz2[3];
 	recProbe[1].GetPXYZ(pxyz2);
+
+	Double_t xP, yP, zP;
+	ComputeVertex(recProbe[0],recProbe[1],xP,yP,zP);
 	
+	Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
+	Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
+	Float_t d3 = recProbe[1].GetZ() - recProbe[0].GetZ();
+
 	recProbe[0].PropagateToZBxByBz(0);
 	recProbe[1].PropagateToZBxByBz(0);
+	
 	for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	  // mass hypothesis: Kpi, piK
 	  Int_t iKaon=-1;
@@ -744,10 +776,6 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    // range to fill histos
 	    if(invMassD>1.805 && invMassD<1.925) countCandInPeak++;
 
-	    recProbe[0].PropagateToDCA(&recProbe[1]);
-	    Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
-	    Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
-	    Float_t d3 = recProbe[1].GetZ() - recProbe[0].GetZ();
 	    Float_t dca = sqrt(d1 * d1 + d2 * d2 + d3 * d3);
 	    
 	    //printf(" DCA = %f\n", sqrt(d1 * d1 + d2 * d2 + d3 * d3));
@@ -759,14 +787,12 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    // Float_t yP = (recProbe[1].GetY() + recProbe[0].GetY()) / 2.;
 	    // Float_t zP = (recProbe[1].GetZ() + recProbe[0].GetZ()) / 2.;
 
-	    Double_t xP, yP, zP;
-	    ComputeVertex(recProbe[0],recProbe[1],xP,yP,zP);
 	    hVx->Fill(xP);
 	    hVy->Fill(yP);
 	    hVz->Fill(zP);
+
 	    Float_t dist = TMath::Sqrt(xP * xP + yP * yP + zP * zP);
 	    Float_t distXY = TMath::Sqrt(xP * xP + yP * yP);
-
 	    Double_t vsec[3] = {xP, yP, zP};
 	    Double_t cosp = CosPointingAngle(vprim, vsec, parent);
 	    Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
@@ -779,13 +805,11 @@ void MakeD0CombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    hDistXY->Fill(distXY, ptD);
 	    hDist->Fill(dist, ptD);
     
-	    recProbe[0].PropagateToZBxByBz(0);
 	    Double_t d0x1 = recProbe[0].GetX();
 	    Double_t d0y1 = recProbe[0].GetY();
 	    Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
 	    if (d0x1 < 0) d0xy1 *= -1;
 	    
-	    recProbe[1].PropagateToZBxByBz(0);
 	    Double_t d0x2 = recProbe[1].GetX();
 	    Double_t d0y2 = recProbe[1].GetY();
 	    Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
