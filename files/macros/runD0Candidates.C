@@ -676,9 +676,9 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   
-  TH1F *hVx = new TH1F("hVx", "", 200, -0.05, 0.05);
-  TH1F *hVy = new TH1F("hVy", "", 200, -0.05, 0.05);
-  TH1F *hVz = new TH1F("hVz", "", 200, -0.05, 0.05);
+  TH1D *hVx = new TH1D("hVx", "", 200, -0.05, 0.05);
+  TH1D *hVy = new TH1D("hVy", "", 200, -0.05, 0.05);
+  TH1D *hVz = new TH1D("hVz", "", 200, -0.05, 0.05);
   TH2F *hResPx = new TH2F("hResPx", "", 100, -1, 1, 30, 0, 3); //for Kaons
   TH2F *hResPy = new TH2F("hResPy", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResPz = new TH2F("hResPz", "", 100, -1, 1, 30, 0, 3);

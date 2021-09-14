@@ -53,6 +53,7 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
 				const char *filNamPow="/home/prino/cernbox/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root", 
 				const char *privateDecayTable = "../decaytables/USERTABDS.DEC",
 				int optPartAntiPart=3,
+				int minITShits=4,
 				bool writeNtuple = kFALSE, 
 				bool simulateBg=kTRUE){
   
@@ -111,7 +112,7 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   det->InitBkg(Eint);
   det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VT
 
-  det->SetMinITSHits(det->GetNumberOfActiveLayersITS()); //NA60+
+  det->SetMinITSHits(TMath::Min(minITShits,det->GetNumberOfActiveLayersITS())); //NA60+
   //det->SetMinITSHits(det->GetNumberOfActiveLayersITS()-1); //NA60
   det->SetMinMSHits(0); //NA60+
   //det->SetMinMSHits(det->GetNumberOfActiveLayersMS()-1); //NA60
@@ -195,13 +196,17 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   TH1D* hMassFake = new TH1D("hMassFake", "Mass fake match", 200, 1., 3.5);
   TH2F* hMassKK = new TH2F("hMassKK", "KK Inv Mass : Gener : Reco", 200, 0.9, 2.9, 200, 0.9, 2.9);
 
+  TH2D* hDauClu = new TH2D("hDauClu", "N hits kaon daughter ; N hits ; N fake hits", 11, -0.5, 10.5, 11, -0.5, 10.5);
+  TH1D* hDauHitPat = new TH1D("hDauHitPat", "Hits on layer ; Layer", 11, -0.5, 10.5);
+
   TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistZ = new TH2F("hDistZ", "", 100, 0, 0.2, 30, 0, 3);
   TH2F *hDist = new TH2F("hDist", "", 300, 0, 10, 30, 0, 3);
   TH2F *hDistgenXY = new TH2F("hDistgenXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistgen = new TH2F("hDistgen", "", 300, 0, 10, 30, 0, 3);
   TH2F *hCosp = new TH2F("hCosp", "", 300, -1, 1, 30, 0, 3);
-  TH2F *hDCA = new TH2F("hDCA", "", 100, 0, 0.1, 30, 0, 3);
+  TH2F *hCospXY = new TH2F("hCospXY", "", 100, -1, 1, 30, 0, 3);
+  TH2F *hSigVert = new TH2F("hSigVert", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
@@ -383,25 +388,17 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     }
     hMassVsPt->Fill(massRecD,ptRecD);
     hMassVsY->Fill(massRecD,yRecD);
-    
-    // recProbe[0].PropagateToDCA(&recProbe[1]);
-    // Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
-    // Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
-    // Float_t d3 = recProbe[1].GetZ() - recProbe[0].GetZ();
-    // Float_t dca01 = sqrt(d1 * d1 + d2 * d2 + d3 * d3);
-    // hDCA->Fill(dca01, ptRecD);
-    // recProbe[0].PropagateToDCA(&recProbe[2]);
-    // d1 = recProbe[2].GetX() - recProbe[0].GetX();
-    // d2 = recProbe[2].GetY() - recProbe[0].GetY();
-    // d3 = recProbe[2].GetZ() - recProbe[0].GetZ();
-    // Float_t dca02 = sqrt(d1 * d1 + d2 * d2 + d3 * d3);
-    // hDCA->Fill(dca02, ptRecD);
-    // recProbe[1].PropagateToDCA(&recProbe[2]);
-    // d1 = recProbe[2].GetX() - recProbe[1].GetX();
-    // d2 = recProbe[2].GetY() - recProbe[1].GetY();
-    // d3 = recProbe[2].GetZ() - recProbe[1].GetZ();
-    // Float_t dca12 = sqrt(d1 * d1 + d2 * d2 + d3 * d3);
-    // hDCA->Fill(dca12, ptRecD);
+    hDauClu->Fill(recProbe[0].GetNHits(),recProbe[0].GetNFakeITSHits());
+    hDauClu->Fill(recProbe[1].GetNHits(),recProbe[1].GetNFakeITSHits());
+    hDauClu->Fill(recProbe[2].GetNHits(),recProbe[2].GetNFakeITSHits());
+    UInt_t hmap0=recProbe[0].GetHitsPatt();
+    UInt_t hmap1=recProbe[1].GetHitsPatt();
+    UInt_t hmap2=recProbe[2].GetHitsPatt();
+    for(Int_t jl=0; jl<=10; jl++){
+      if( hmap0 & (1<<jl) ) hDauHitPat->Fill(jl);
+      if( hmap1 & (1<<jl) ) hDauHitPat->Fill(jl);
+      if( hmap2 & (1<<jl) ) hDauHitPat->Fill(jl);
+    }
 
     Double_t xV, yV, zV;
     Double_t sigmaVert;
@@ -415,6 +412,7 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     hResVxVsY->Fill(residVx, yRecD);
     hResVyVsY->Fill(residVy, yRecD);
     hResVzVsY->Fill(residVz, yRecD);
+    hSigVert->Fill(sigmaVert,ptRecD);
     
     hResPx->Fill(daurec[0].Px() - daugen[0].Px(), ptRecD);
     hResPy->Fill(daurec[0].Py() - daugen[0].Py(), ptRecD);
@@ -445,8 +443,10 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     
     Double_t vsec[3] = {xV, yV, zV};
     Double_t cosp = CosPointingAngle(vprim, vsec, parent);
+    Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
     Double_t ipD = ImpParXY(vprim, vsec, parent);
     hCosp->Fill(cosp, ptRecD);
+    hCospXY->Fill(cospxy, ptRecD);
     // printf(" ***** ***** cos point = %f \n", cosp);
     //if (cosp < -0.98)
     //    printf("SMALL COSPOINT");
@@ -542,13 +542,16 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   hPtRecoAll->Write();
   hYRecoAll->Write();
   hPtRecoFake->Write();
+  hDauClu->Write();
+  hDauHitPat->Write();
   hDistXY->Write();
   hDistZ->Write();
   hDist->Write();
   hDistgenXY->Write();
   hDistgen->Write();
   hCosp->Write();
-  hDCA->Write();
+  hCospXY->Write();
+  hSigVert->Write();
   hResVx->Write();
   hResVy->Write();
   hResVz->Write();
@@ -602,14 +605,39 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
 
 
 
-void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
+void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
+			       const char* trackTreeFile="treeBkgEvents.root",
 			       Int_t nevents = 999999, 
+			       int minITShits=4,
 			       Int_t writeNtuple = kFALSE,
 			       Bool_t usePID=kFALSE){
 
   // Read the TTree of tracks produced with runBkgVT.C
   // Create D0 combinatorial background candidates (= OS pairs of tracks)
   // Store in THnSparse and (optionally) TNtuple
+
+  KMCDetectorFwd *det = new KMCDetectorFwd();
+  det->ReadSetup(setup, setup);
+  
+  TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
+  if (fld->IsA() == MagField::Class()) {
+    MagField* mag = (MagField*) fld;
+    int BNreg = mag->GetNReg();
+    const double *BzMin = mag->GetZMin();
+    const double *BzMax = mag->GetZMax();
+    const double *BVal;
+    printf("*************************************\n");
+    printf("number of magnetic field regions = %d\n", BNreg);
+    for (int i = 0; i < BNreg; i++){
+      BVal = mag->GetBVals(i);
+      printf("*** Field region %d ***\n", i);
+      if (i == 0){
+	printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }else if (i == 1){
+	printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }
+    }
+  }
 
   TFile *filetree = new TFile(trackTreeFile);
   TTree *tree = (TTree *)filetree->Get("tree");
@@ -637,7 +665,7 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   TH2F *hDist = new TH2F("hDist", "", 300, 0, 10, 30, 0, 3);
   TH2F *hDistgenXY = new TH2F("hDistgenXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistgen = new TH2F("hDistgen", "", 300, 0, 10, 30, 0, 3);
-  TH2F *hDCA = new TH2F("hDCA", "", 100, 0, 0.1, 30, 0, 3);
+  TH2F *hSigVert = new TH2F("hSigVert", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
@@ -646,15 +674,16 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   TH1D* hMomKaon = new TH1D("hMomKaon","",200,0.,10.);
   TH1D* hMomProton = new TH1D("hMomProton","",200,0.,10.);
   
-  TH2F *hResVx = new TH2F("hResVx", "", 100, -0.1, 0.1, 30, 0, 3);
-  TH2F *hResVy = new TH2F("hResVy", "", 100, -0.1, 0.1, 30, 0, 3);
-  TH2F *hResVz = new TH2F("hResVz", "", 100, -0.1, 0.1, 30, 0, 3);
+  TH1D *hVx = new TH1D("hVx", "", 200, -0.05, 0.05);
+  TH1D *hVy = new TH1D("hVy", "", 200, -0.05, 0.05);
+  TH1D *hVz = new TH1D("hVz", "", 200, -0.05, 0.05);
   TH2F *hResPx = new TH2F("hResPx", "", 100, -1, 1, 30, 0, 3); //for Kaons
   TH2F *hResPy = new TH2F("hResPy", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResPz = new TH2F("hResPz", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResDist = new TH2F("hResDist", "", 100, -0.5, 0.5, 30, 0, 3);
   TH2F *hResDistXY = new TH2F("hResDistXY", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hCosp = new TH2F("hCosp", "", 100, -1, 1, 30, 0, 3);
+  TH2F *hCospXY = new TH2F("hCospXY", "", 100, -1, 1, 30, 0, 3);
   
   TH2F *hd0 = new TH2F("hd0", "", 100, 0, 0.1, 30, 0, 3);
   
@@ -675,7 +704,7 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   }
 
   // define mother particle
-  Int_t pdgParticle = 411;
+  Int_t pdgParticle = 431;
   Double_t mass = TDatabasePDG::Instance()->GetParticle(pdgParticle)->Mass();
 
   KMCProbeFwd recProbe[3];
@@ -693,6 +722,7 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
     for (Int_t itr = 0; itr < arrentr; itr++){
       KMCProbeFwd *tr1 = (KMCProbeFwd *)arr->At(itr);
       // cout << "tr P=" << tr1->GetP() << endl;
+      if(tr1->GetNHits()<minITShits) continue;
       Float_t ch1 = tr1->GetCharge();
       recProbe[0] = *tr1;
       recProbe[0].PropagateToZBxByBz(vprim[2]);
@@ -705,6 +735,7 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
       for (Int_t itr2 = 0; itr2 < arrentr; itr2++){
 	if(itr2==itr) continue;
 	KMCProbeFwd *tr2 = (KMCProbeFwd *)arr->At(itr2);
+	if(tr2->GetNHits()<minITShits) continue;
 	Float_t ch2 = tr2->GetCharge();
 	// convention: charge signs are ordered as +-+ or -+-
 	if (ch1 * ch2 > 0) continue;
@@ -726,6 +757,7 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	for (Int_t itr3 = itr2+1; itr3 < arrentr; itr3++){
 	  if(itr3==itr) continue;
 	  KMCProbeFwd *tr3 = (KMCProbeFwd *)arr->At(itr3);
+	  if(tr3->GetNHits()<minITShits) continue;
 	  Float_t ch3 = tr3->GetCharge();
 	  // convention: charge signs are ordered as +-+ or -+-
 	  if (ch3 * ch2 > 0) continue;
@@ -775,7 +807,7 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	    hPtRecoAll->Fill(ptD);
 	    hMassAll->Fill(invMassD);
 	    hMassKK->Fill(massRecKK);
-	    if(invMassD>1.6  && invMassD<2.1){
+	    if(invMassD>1.7  && invMassD<2.2){
 	      // range to fill histos
 	      if(TMath::Abs(invMassD-mass)<0.06) countCandInPeak++;
 	      hMomPion->Fill(momPi);
@@ -785,13 +817,21 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
 	      Double_t xV, yV, zV;
 	      Double_t sigmaVert;
 	      ComputeVertex(recProbe[0],recProbe[1],recProbe[2],vprim[2],xV,yV,zV,sigmaVert);
+	      
+	      hVx->Fill(xV);
+	      hVy->Fill(yV);
+	      hVz->Fill(zV);
+	      hSigVert->Fill(sigmaVert,ptD);
+	      
 	      Float_t dist = TMath::Sqrt(xV * xV + yV * yV + zV * zV);
 	      Float_t distXY = TMath::Sqrt(xV * xV + yV * yV);
 	      Float_t distZ = zV;
 	      Double_t vsec[3] = {xV, yV, zV};
 	      Double_t cosp = CosPointingAngle(vprim, vsec, parent);
+	      Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
 	      Double_t ipD = ImpParXY(vprim, vsec, parent);
 	      hCosp->Fill(cosp, ptD);
+	      hCospXY->Fill(cospxy, ptD);
 	      //printf(" ***** ***** cos point = %f \n", cosp);	    
 	      hDistXY->Fill(distXY, ptD);
 	      hDistZ->Fill(zV, ptD);
@@ -847,8 +887,12 @@ void MakeDsCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
   hDistXY->Write();
   hDistZ->Write();
   hDist->Write();
-  hDCA->Write();
+  hSigVert->Write();
+  hVx->Write();
+  hVy->Write();
+  hVz->Write();
   hCosp->Write();
+  hCospXY->Write();
   hd0XY1->Write();
   hd0XY2->Write();
   hd0XY3->Write();
@@ -877,8 +921,8 @@ THnSparseF* CreateSparse(){
 			"d_0^{D} (cm)",
 			"massKK (GeV/c2)"};
   Int_t bins[nAxes] =   {100,  5,  30,  10,   30,  20,   12,   12,    8,   8, 20}; 
-  Double_t min[nAxes] = {2.0,  0., 0.,  0.,   0.,  0.98, 0.,   0.0,   0.,  0., 0.95};
-  Double_t max[nAxes] = {2.5,  5., 0.3, 0.05, 0.3, 1.,   0.03, 0.03,  4.,  0.04, 1.15};  
+  Double_t min[nAxes] = {1.7,  0., 0.,  0.,   0.,  0.98, 0.,   0.0,   0.,  0., 0.95};
+  Double_t max[nAxes] = {2.2,  5., 0.3, 0.05, 0.3, 1.,   0.03, 0.03,  4.,  0.04, 1.15};  
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
   for(Int_t iax=0; iax<nAxes; iax++) hsp->GetAxis(iax)->SetTitle(axTit[iax].Data());
   return hsp;
