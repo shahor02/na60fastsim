@@ -1,0 +1,32 @@
+Track selection:
+  MinVThits: 4
+  MinImpParXY: 0.001
+Candidate selection:
+  CosPointCut: 0.985
+  MassKKCut: 1.1
+  ImpParProdCut: 0.;
+THnSparse axes:
+  NumOfDecLenBins: 20
+  MinDecLenForSparse: 0.
+  MaxDecLenForSparse: 0.1
+  NumOfCosPoiBins: 20
+  MinCosPoiForSparse: 0.99
+  MaxCosPoiForSparse: 1.
+  NumOfImpParDauBins: 10
+  MinImpParDauForSparse: 0.
+  MaxImpParDauForSparse 0.04
+  NumOfImpParProdBins: 40
+  MinImpParProdForSparse: -0.002
+  MaxImpParProdForSparse: 0.
+  NumOfSigVerBins: 12
+  MinSigVerForSparse: 0.
+  MaxSigVerForSparse: 0.03
+  NumOfPtMinDauBins: 1
+  MinPtMinDauForSparse: 0.
+  MaxPtMinDauForSparse: 999.
+  NumOfImpParDsBins: 1
+  MinImpParDsForSparse: 0.
+  MaxImpParDsForSparse: 999.
+  NumOfDeltaMkkBins: 25
+  MinDeltaMkkForSparse: -0.05
+  MaxDeltaMkkForSparse: 0.05

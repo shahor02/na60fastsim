@@ -33,8 +33,13 @@
 #include "./HFUtils.C"
 #endif
 
-// Track Chi2Tot cut
+// Track cuts
 double ChiTot = 1.5;
+int minITShits=4;
+double mind0xyDau=-9999;
+double cutCosPointCand=-1.01;
+double cutMassKK=999.;
+double cutImpParProd=99999.;
 
 // settings for signal generation
 double yminSG = -10.; // min y to generate
@@ -44,7 +49,37 @@ double ptmaxSG = 10; //Elena's change, it was 3 GeV/c
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
 
+
+// THnSparse axis config
+Int_t nBinsDecLen=20;
+Double_t minDecLen=0.;
+Double_t maxDecLen=0.1;
+Int_t nBinsCosPoi=20;
+Double_t minCosPoi=0.98;
+Double_t maxCosPoi=1.;
+Int_t nBinsImpDau=10;
+Double_t minImpDau=0.;
+Double_t maxImpDau=0.05;
+Int_t nBinsImpPro=20;
+Double_t minImpPro=-0.002;
+Double_t maxImpPro=0.0005;
+Int_t nBinsSigVer=12;
+Double_t minSigVer=0.;
+Double_t maxSigVer=0.03;
+Int_t nBinsPtmDau=6;
+Double_t minPtmDau=0.;
+Double_t maxPtmDau=3.;
+Int_t nBinsImpDs=12;
+Double_t minImpDs=0.;
+Double_t maxImpDs=0.03;
+Int_t nBinsDelMkk=25;
+Double_t minDelMkk=-0.05;
+Double_t maxDelMkk=0.05;
+
+
+
 THnSparseF* CreateSparse();
+void ConfigureSelectionsAndAxes(const char *selectionFile);
 TDatime dt;
 
 void GenerateDsSignalCandidates(Int_t nevents = 100000, 
@@ -53,7 +88,7 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
 				const char *filNamPow="/home/prino/cernbox/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root", 
 				const char *privateDecayTable = "../decaytables/USERTABDS.DEC",
 				int optPartAntiPart=3,
-				int minITShits=4,
+				const char *selectionFile="",
 				bool writeNtuple = kFALSE, 
 				bool simulateBg=kTRUE){
   
@@ -94,6 +129,8 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
       hDsy=hDsmy;
     }
   }
+
+  ConfigureSelectionsAndAxes(selectionFile);
 
   TH2F *hptK = new TH2F("hptK", "kaons from Ds decays", 50,0.,10.,50, 0., 10.);
   TH2F *hptPi = new TH2F("hptPi", "pions from Ds decays", 50, 0.,10.,50,0., 10.);
@@ -238,10 +275,10 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   TFile *fnt = 0x0;
   TNtuple *ntDscand = 0x0;
   if (writeNtuple){
-    fnt = new TFile("fntSig.root", "recreate");
-    ntDscand = new TNtuple("ntDscand", "ntDscand", "mass:pt:y:dist:cosp:d0min:sigvert:ptMin:d0D:massKK", 32000);
+    fnt = new TFile("Ds-Signal-ntuple.root", "recreate");
+    ntDscand = new TNtuple("ntDscand", "ntDscand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:ptMin:d0D:massKK", 32000);
   }
-  Float_t arrnt[10];
+  Float_t arrnt[12];
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -260,6 +297,7 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     Double_t pyGenD = ptGenD * TMath::Sin(phi);
     
     Double_t mass = TDatabasePDG::Instance()->GetParticle(pdgParticle)->Mass();
+    Double_t massPhi = TDatabasePDG::Instance()->GetParticle(333)->Mass();
     Double_t mt = TMath::Sqrt(ptGenD * ptGenD + mass * mass);
     Double_t pzGenD = mt * TMath::SinH(yGenD);
     Double_t en = mt * TMath::CosH(yGenD);
@@ -388,7 +426,8 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     if (d0x3 < 0)
       d0xy3 *= -1;
 
-    
+    if(TMath::Abs(d0xy1)<mind0xyDau || TMath::Abs(d0xy2)<mind0xyDau || TMath::Abs(d0xy3)<mind0xyDau) continue;
+ 
     Double_t xV, yV, zV;
     Double_t sigmaVert;
     ComputeVertex(recProbe[0],recProbe[1],recProbe[2],vprim[2],xV,yV,zV,sigmaVert);
@@ -500,31 +539,34 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     hd0XY1->Fill(d0xy1, ptRecD);
     hd0XY2->Fill(d0xy2, ptRecD);
     hd0XY3->Fill(d0xy3, ptRecD);
-      
-    arrsp[0] = massRecD;
-    arrsp[1] = ptRecD;
-    arrsp[2] = yRecD;
-    arrsp[3] = dist;
-    arrsp[4] = cosp;
-    arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-    arrsp[6] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-    arrsp[7] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
-    arrsp[8] = TMath::Abs(ipD);	    
-    arrsp[9] = massRecKK;
-    hsp->Fill(arrsp);
-    
-    if (ntDscand){
-      arrnt[0] = massRecD;
-      arrnt[1] = ptRecD;
-      arrnt[2] = yRecD;
-      arrnt[3] = dist;
-      arrnt[4] = cosp;
-      arrnt[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-      arrnt[6] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-      arrnt[7] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
-      arrnt[8] = TMath::Abs(ipD);	    
-      arrnt[9] = massRecKK;
-      ntDscand->Fill(arrnt);
+    if(cosp>cutCosPointCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd){
+      arrsp[0] = massRecD;
+      arrsp[1] = ptRecD;
+      arrsp[2] = yRecD;
+      arrsp[3] = dist;
+      arrsp[4] = cosp;
+      arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
+      arrsp[6] = d0xy1*d0xy3; // same sign daughters
+      arrsp[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+      arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+      arrsp[9] = TMath::Abs(ipD);	    
+      arrsp[10] = massRecKK-massPhi;
+      hsp->Fill(arrsp);
+      if (ntDscand){
+	arrnt[0] = massRecD;
+	arrnt[1] = ptRecD;
+	arrnt[2] = yRecD;
+	arrnt[3] = dist;
+	arrnt[4] = cosp;
+	arrnt[5] = d0xy1;
+	arrnt[6] = d0xy2;
+	arrnt[7] = d0xy3;
+	arrnt[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+	arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+	arrnt[10] = TMath::Abs(ipD);	    
+	arrnt[11] = massRecKK;
+	ntDscand->Fill(arrnt);
+      }
     }
   } //event loop
   
@@ -614,10 +656,9 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
 
 void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 			       const char* trackTreeFile="treeBkgEvents.root",
+			       const char *selectionFile="",
 			       Int_t nevents = 999999, 
-			       int minITShits=4,
-			       Int_t writeNtuple = kFALSE,
-			       Bool_t usePID=kFALSE){
+			       Int_t writeNtuple = kFALSE){
 
   // Read the TTree of tracks produced with runBkgVT.C
   // Create D0 combinatorial background candidates (= OS pairs of tracks)
@@ -646,6 +687,8 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
     }
   }
 
+  ConfigureSelectionsAndAxes(selectionFile);
+  
   TFile *filetree = new TFile(trackTreeFile);
   TTree *tree = (TTree *)filetree->Get("tree");
   TClonesArray *arr = 0;
@@ -654,7 +697,6 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   printf("Number of events in tree = %d\n",entries);
   if(nevents>entries) nevents=entries;
   else printf(" --> Analysis performed on first %d events\n",nevents);
-  if(usePID) printf("Rough PID cuts will be used\n");
   
   TDatime dt;
   static UInt_t seed = dt.Get();
@@ -704,15 +746,16 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 
   TFile *fnt = 0x0;
   TNtuple *ntDscand = 0x0;
-  Float_t arrnt[10];
+  Float_t arrnt[12];
   if (writeNtuple){
-    fnt = new TFile("fntBkg.root", "recreate");
-    ntDscand = new TNtuple("ntDscand", "ntDscand", "mass:pt:y:dist:cosp:d0min:sigvert:ptMin:d0D:massKK", 32000);
+    fnt = new TFile("Ds-Bkg-ntuple.root", "recreate");
+    ntDscand = new TNtuple("ntDscand", "ntDscand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:ptMin:d0D:massKK", 32000);
   }
 
   // define mother particle
   Int_t pdgParticle = 431;
   Double_t mass = TDatabasePDG::Instance()->GetParticle(pdgParticle)->Mass();
+  Double_t massPhi = TDatabasePDG::Instance()->GetParticle(333)->Mass();
 
   KMCProbeFwd recProbe[3];
   TLorentzVector parent, kkpair, daurec[3];
@@ -738,7 +781,8 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
       Double_t d0y1 = recProbe[0].GetY();
       Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
       if (d0x1 < 0) d0xy1 *= -1;
-
+      if(TMath::Abs(d0xy1)<mind0xyDau) continue;
+	 
       for (Int_t itr2 = 0; itr2 < arrentr; itr2++){
 	if(itr2==itr) continue;
 	KMCProbeFwd *tr2 = (KMCProbeFwd *)arr->At(itr2);
@@ -753,6 +797,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	Double_t d0y2 = recProbe[1].GetY();
 	Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
 	if (d0x2 < 0) d0xy2 *= -1;
+	if(TMath::Abs(d0xy2)<mind0xyDau) continue;
 	// recProbe[0].PropagateToDCA(&recProbe[1]);
 	// Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
 	// Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
@@ -776,6 +821,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	  Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
 	  if (d0x3 < 0) d0xy3 *= -1;
 	  //printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
+	  if(TMath::Abs(d0xy3)<mind0xyDau) continue;
 
 	  for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	    // mass hypothesis: KKpi, piKK
@@ -814,7 +860,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	    hPtRecoAll->Fill(ptD);
 	    hMassAll->Fill(invMassD);
 	    hMassKK->Fill(massRecKK);
-	    if(invMassD>1.7  && invMassD<2.2){
+	    if(invMassD>1.8  && invMassD<2.1){
 	      // range to fill histos
 	      if(TMath::Abs(invMassD-mass)<0.06) countCandInPeak++;
 	      hMomPion->Fill(momPi);
@@ -846,30 +892,34 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	      hd0XY1->Fill(d0xy1, ptD);
 	      hd0XY2->Fill(d0xy2, ptD);
 	      hd0XY3->Fill(d0xy3, ptD);
-	      arrsp[0] = invMassD;
-	      arrsp[1] = ptD;
-	      arrsp[2] = yD;
-	      arrsp[3] = dist;
-	      arrsp[4] = cosp;
-	      arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-	      arrsp[6] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-	      arrsp[7] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
-	      arrsp[8] = TMath::Abs(ipD);	    
-	      arrsp[9] = massRecKK;
-	      hsp->Fill(arrsp);
-	      
-	      if (ntDscand){
-		arrnt[0] = invMassD;
-		arrnt[1] = ptD;
-		arrnt[2] = yD;
-		arrnt[3] = dist;
-		arrnt[4] = cosp;
-		arrnt[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-		arrnt[6] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-		arrnt[7] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
-		arrnt[8] = TMath::Abs(ipD);	    
-		arrnt[9] = massRecKK;
-		ntDscand->Fill(arrnt);
+	      if(cosp>cutCosPointCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd){
+		arrsp[0] = invMassD;
+		arrsp[1] = ptD;
+		arrsp[2] = yD;
+		arrsp[3] = dist;
+		arrsp[4] = cosp;
+		arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
+		arrsp[6] = d0xy1*d0xy3; // same sign daughters
+		arrsp[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+		arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+		arrsp[9] = TMath::Abs(ipD);	    
+		arrsp[10] = massRecKK-massPhi;
+		hsp->Fill(arrsp);
+		if (ntDscand){
+		  arrnt[0] = invMassD;
+		  arrnt[1] = ptD;
+		  arrnt[2] = yD;
+		  arrnt[3] = dist;
+		  arrnt[4] = cosp;
+		  arrnt[5] = d0xy1;
+		  arrnt[6] = d0xy2;
+		  arrnt[7] = d0xy3;
+		  arrnt[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+		  arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+		  arrnt[10] = TMath::Abs(ipD);	    
+		  arrnt[11] = massRecKK;
+		  ntDscand->Fill(arrnt);
+		}
 	      }
 	    } // check on inv mass
 	  } // loop on mass hypothesis
@@ -905,33 +955,170 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   hMomKaon->Write();
   hMomProton->Write();
   hsp->Write();
-  fout->Close();
   if (ntDscand){
     fnt->cd();
-    ntDscand->Write();
+    hNevents->Write();
+    hcand->Write();
+    hcandpeak->Write();  
+    ntDscand->Write("",TObject::kOverwrite);
     fnt->Close();
   }
+  fout->Close();
 }
 
 
 
+
 THnSparseF* CreateSparse(){
-  const Int_t nAxes=10;
+  const Int_t nAxes=11;
   TString axTit[nAxes]={"Inv. mass (GeV/c^{2})",
 			"p_{T} (GeV/c)",
 			"y",
 			"Dec Len (cm)",
 			"cos(#vartheta_{p})",
 			"d_0^{min} (cm)",
+			"d01xd03 (cm2)",
 			"sigmaVert (cm)",
 			"p_{T}^{min} (GeV/c)",
 			"d_0^{D} (cm)",
-			"massKK (GeV/c2)"};
-  Int_t bins[nAxes] =   {100,   10, 20, 30,  20,   10,   12,    6,   16,   20}; 
-  Double_t min[nAxes] = {1.7,   0., 1., 0.,  0.98, 0.,   0.0,   0.,  0.,   0.95};
-  Double_t max[nAxes] = {2.2,   5., 5., 0.3, 1.,   0.05, 0.04,  3.,  0.04, 1.15};  
+			"deltamKK (GeV/c2)"};
+  Int_t bins[nAxes] =   {60,    10, 20, nBinsDecLen, nBinsCosPoi, nBinsImpDau, nBinsImpPro, nBinsSigVer, nBinsPtmDau, nBinsImpDs, nBinsDelMkk};
+  Double_t min[nAxes] = {1.8,   0., 1., minDecLen, minCosPoi, minImpDau, minImpPro, minSigVer, minPtmDau, minImpDs, minDelMkk};
+  Double_t max[nAxes] = {2.1,   5., 5., maxDecLen, maxCosPoi, maxImpDau, maxImpPro, maxSigVer, maxPtmDau, maxImpDs, maxDelMkk};
 
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
   for(Int_t iax=0; iax<nAxes; iax++) hsp->GetAxis(iax)->SetTitle(axTit[iax].Data());
   return hsp;
+}
+
+void ConfigureSelectionsAndAxes(const char *selectionFile){
+  if(strlen(selectionFile)==0) return;
+  if(gSystem->Exec(Form("ls -l %s",selectionFile)) !=0 ){
+    printf("File %s with configuration of selections not found\n",selectionFile);
+    return;
+  }
+  FILE* confFil=fopen(selectionFile,"r");
+  char line[50];
+  int n;
+  float x;
+  bool readok;
+  while(!feof(confFil)){
+    readok=fscanf(confFil,"%s:",line);
+    if(strstr(line,"MinVThits")){
+      readok=fscanf(confFil,"%d",&n);
+      minITShits=n;
+    }
+    if(strstr(line,"MinImpParXY")){
+      readok=fscanf(confFil,"%f",&x);
+      mind0xyDau=x;
+    }
+    if(strstr(line,"CosPointCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutCosPointCand=x;
+    }
+    if(strstr(line,"MassKKCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutMassKK=x;
+    }
+    if(strstr(line,"ImpParProdCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutImpParProd=x;
+    }
+    else if(strstr(line,"NumOfDecLenBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsDecLen=n;
+    }
+    else if(strstr(line,"MinDecLenForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minDecLen=x;
+    }
+    else if(strstr(line,"MaxDecLenForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxDecLen=x;
+    }
+    else if(strstr(line,"NumOfCosPoiBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsCosPoi=n;
+    }
+    else if(strstr(line,"MinCosPoiForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minCosPoi=x;
+    }
+    else if(strstr(line,"MaxCosPoiForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxCosPoi=x;
+    }
+    else if(strstr(line,"NumOfImpParDauBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsImpDau=n;
+    }
+    else if(strstr(line,"MinImpParDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minImpDau=x;
+    }
+    else if(strstr(line,"MaxImpParDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxImpDau=x;
+    }
+    else if(strstr(line,"NumOfImpParProdBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsImpPro=n;
+    }
+    else if(strstr(line,"MinImpParProdForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minImpPro=x;
+    }
+    else if(strstr(line,"MaxImpParProdForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxImpPro=x;
+    }
+    else if(strstr(line,"NumOfSigVerBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsSigVer=n;
+    }
+    else if(strstr(line,"MinSigVerForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minSigVer=x;
+    }
+    else if(strstr(line,"MaxSigVerForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxSigVer=x;
+    }
+    else if(strstr(line,"NumOfPtMinDauBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsPtmDau=n;
+    }
+    else if(strstr(line,"MinPtMinDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minPtmDau=x;
+    }
+    else if(strstr(line,"MaxPtMinDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxPtmDau=x;
+    }
+    else if(strstr(line,"NumOfImpParDsBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsImpDs=n;
+    }
+    else if(strstr(line,"MinImpParDsForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minImpDs=x;
+    }
+    else if(strstr(line,"MaxImpParDsForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxImpDs=x;
+    }
+    else if(strstr(line,"NumOfDeltaMkkBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsDelMkk=n;
+    }
+    else if(strstr(line,"MinDeltaMkkForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minDelMkk=x;
+    }
+    else if(strstr(line,"MaxDeltaMkkForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxDelMkk=x;
+    }
+  }
 }
