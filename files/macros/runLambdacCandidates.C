@@ -33,8 +33,11 @@
 #include "./HFUtils.C"
 #endif
 
-// Track Chi2Tot cut
+// Track cuts
 double ChiTot = 1.5;
+int minITShits=4;
+double mind0xyDau=-9999;
+double cutCosPointCand=-1.01;
 
 // settings for signal generation
 double yminSG = -10.; // min y to generate
@@ -44,7 +47,28 @@ double ptmaxSG = 10; //Elena's change, it was 3 GeV/c
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
 
+// THnSparse axis config
+Int_t nBinsDecLen=20;
+Double_t minDecLen=0.;
+Double_t maxDecLen=0.1;
+Int_t nBinsCosPoi=20;
+Double_t minCosPoi=0.98;
+Double_t maxCosPoi=1.;
+Int_t nBinsImpDau=10;
+Double_t minImpDau=0.;
+Double_t maxImpDau=0.05;
+Int_t nBinsSigVer=12;
+Double_t minSigVer=0.;
+Double_t maxSigVer=0.03;
+Int_t nBinsPtmDau=6;
+Double_t minPtmDau=0.;
+Double_t maxPtmDau=3.;
+Int_t nBinsImpLc=12;
+Double_t minImpLc=0.;
+Double_t maxImpLc=0.03;
+
 THnSparseF* CreateSparse();
+void ConfigureSelectionsAndAxes(const char *selectionFile);
 TDatime dt;
 
 void GenerateLambdacSignalCandidates(Int_t nevents = 100000, 
@@ -53,6 +77,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 				     const char *filNamPow="/home/prino/cernbox/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root", 
 				     const char *privateDecayTable = "../decaytables/USERTABLC.DEC",
 				     int optPartAntiPart=3,
+				     const char *selectionFile="",
 				     bool writeNtuple = kFALSE, 
 				     bool simulateBg=kTRUE){
   
@@ -94,6 +119,8 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     }
   }
 
+  ConfigureSelectionsAndAxes(selectionFile);
+
   TH2F *hptK = new TH2F("hptK", "kaons from Lc decays", 50,0.,10.,50, 0., 10.);
   TH2F *hptPi = new TH2F("hptPi", "pions from Lc decays", 50, 0.,10.,50,0., 10.);
   TH2F *hptP = new TH2F("hptP", "protons from Lc decays", 50, 0.,10.,50,0., 10.);
@@ -114,7 +141,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   det->InitBkg(Eint);
   det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VT
 
-  det->SetMinITSHits(det->GetNumberOfActiveLayersITS()); //NA60+
+  det->SetMinITSHits(TMath::Min(minITShits,det->GetNumberOfActiveLayersITS())); //NA60+
   //det->SetMinITSHits(det->GetNumberOfActiveLayersITS()-1); //NA60
   det->SetMinMSHits(0); //NA60+
   //det->SetMinMSHits(det->GetNumberOfActiveLayersMS()-1); //NA60
@@ -161,6 +188,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   // prepare decays
   TGenPhaseSpace decay;
   TLorentzVector parentgen, daugen[3], parent, daurec[3]; 
+  Double_t daumass[3];
   KMCProbeFwd recProbe[3];  
   AliDecayerEvtGen *fDecayer = new AliDecayerEvtGen();
   fDecayer->Init(); //read the default decay table DECAY.DEC and particle table
@@ -196,13 +224,17 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   TH1D* hMassAll = new TH1D("hMassAll", "Mass all match", 200, 1., 3.5);
   TH1D* hMassFake = new TH1D("hMassFake", "Mass fake match", 200, 1., 3.5);
 
+  TH2D* hDauClu = new TH2D("hDauClu", "N hits kaon daughter ; N hits ; N fake hits", 11, -0.5, 10.5, 11, -0.5, 10.5);
+  TH1D* hDauHitPat = new TH1D("hDauHitPat", "Hits on layer ; Layer", 11, -0.5, 10.5);
+
   TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistZ = new TH2F("hDistZ", "", 100, 0, 0.2, 30, 0, 3);
   TH2F *hDist = new TH2F("hDist", "", 300, 0, 10, 30, 0, 3);
   TH2F *hDistgenXY = new TH2F("hDistgenXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistgen = new TH2F("hDistgen", "", 300, 0, 10, 30, 0, 3);
   TH2F *hCosp = new TH2F("hCosp", "", 300, -1, 1, 30, 0, 3);
-  TH2F *hDCA = new TH2F("hDCA", "", 100, 0, 0.1, 30, 0, 3);
+  TH2F *hCospXY = new TH2F("hCospXY", "", 100, -1, 1, 30, 0, 3);
+  TH2F *hSigVert = new TH2F("hSigVert", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
@@ -233,10 +265,10 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   TFile *fnt = 0x0;
   TNtuple *ntLccand = 0x0;
   if (writeNtuple){
-    fnt = new TFile("fntSig.root", "recreate");
-    ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
+    fnt = new TFile("Lc-Signal-ntuple.root", "recreate");
+    ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:ptMin:d0Lc", 32000);
   }
-  Float_t arrnt[10];
+  Float_t arrnt[11];
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -246,7 +278,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     double pxyz[3];
     
     if (simulateBg && (iev%refreshBg)==0) det->GenBgEvent(0.,0.,0.);
-    Double_t ptGenD = hLcpt->GetRandom(); // get D0 distribution from file
+    Double_t ptGenD = hLcpt->GetRandom(); // get Lc distribution from file
     Double_t yGenD = hLcy->GetRandom();
     Double_t phi = gRandom->Rndm() * 2 * TMath::Pi();
     Double_t pxGenD = ptGenD * TMath::Cos(phi);
@@ -307,7 +339,6 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	nrec++;
 	    
 	nfake += trw->GetNFakeITSHits();
-	trw->GetPXYZ(pxyz);
 	if (kf == 2212){
 	  // Proton daughter
 	  ptP = iparticle1->Pt();
@@ -318,7 +349,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	  secvertgenP[1] = iparticle1->Vy();
 	  secvertgenP[2] = iparticle1->Vz();
 	  daugen[0].SetXYZM(iparticle1->Px(), iparticle1->Py(), iparticle1->Pz(), iparticle1->GetMass());
-	  daurec[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2], iparticle1->GetMass());
+	  daumass[0] = iparticle1->GetMass();
 	  recProbe[0] = *trw;
 	}else if (kf == 321){
 	  // Kaon daughter
@@ -330,7 +361,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	  secvertgenK[1] = iparticle1->Vy();
 	  secvertgenK[2] = iparticle1->Vz();
 	  daugen[1].SetXYZM(iparticle1->Px(), iparticle1->Py(), iparticle1->Pz(), iparticle1->GetMass());
-	  daurec[1].SetXYZM(pxyz[0], pxyz[1], pxyz[2], iparticle1->GetMass());
+	  daumass[1] = iparticle1->GetMass();
 	  recProbe[1] = *trw;
 	}else if (kf == 211){
 	  // Pion daughter
@@ -342,7 +373,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	  secvertgenPi[1] = iparticle1->Vy();
 	  secvertgenPi[2] = iparticle1->Vz();
 	  daugen[2].SetXYZM(iparticle1->Px(), iparticle1->Py(), iparticle1->Pz(), iparticle1->GetMass());
-	  daurec[2].SetXYZM(pxyz[0], pxyz[1], pxyz[2],  iparticle1->GetMass());
+	  daumass[2] = iparticle1->GetMass();
 	  recProbe[2] = *trw;
 	}
       }
@@ -350,6 +381,52 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     if (ptK > 0 && ptPi > 0) hyPiK->Fill(yPi, yK);
     if (nrec < 3) continue;
     
+    hDauClu->Fill(recProbe[0].GetNHits(),recProbe[0].GetNFakeITSHits());
+    hDauClu->Fill(recProbe[1].GetNHits(),recProbe[1].GetNFakeITSHits());
+    hDauClu->Fill(recProbe[2].GetNHits(),recProbe[2].GetNFakeITSHits());
+    UInt_t hmap0=recProbe[0].GetHitsPatt();
+    UInt_t hmap1=recProbe[1].GetHitsPatt();
+    UInt_t hmap2=recProbe[2].GetHitsPatt();
+    for(Int_t jl=0; jl<=10; jl++){
+      if( hmap0 & (1<<jl) ) hDauHitPat->Fill(jl);
+      if( hmap1 & (1<<jl) ) hDauHitPat->Fill(jl);
+      if( hmap2 & (1<<jl) ) hDauHitPat->Fill(jl);
+    }
+
+    Double_t d0x1 = recProbe[0].GetX();
+    Double_t d0y1 = recProbe[0].GetY();
+    Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
+    if (d0x1 < 0)
+      d0xy1 *= -1;
+    
+    Double_t d0x2 = recProbe[1].GetX();
+    Double_t d0y2 = recProbe[1].GetY();
+    Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
+    if (d0x2 < 0)
+      d0xy2 *= -1;
+
+    Double_t d0x3 = recProbe[2].GetX();
+    Double_t d0y3 = recProbe[2].GetY();
+    Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
+    if (d0x3 < 0)
+      d0xy3 *= -1;
+
+    if(TMath::Abs(d0xy1)<mind0xyDau || TMath::Abs(d0xy2)<mind0xyDau || TMath::Abs(d0xy3)<mind0xyDau) continue;
+
+    Double_t xV, yV, zV;
+    Double_t sigmaVert;
+    ComputeVertex(recProbe[0],recProbe[1],recProbe[2],vprim[2],xV,yV,zV,sigmaVert);
+    Double_t residVx=10000.*(xV - secvertgenK[0]);
+    Double_t residVy=10000.*(yV - secvertgenK[1]);
+    Double_t residVz=10000.*(zV - secvertgenK[2]);
+
+   // Get daughter track momentum at decay vertex
+    for(int idau=0; idau<3; idau++){
+      recProbe[idau].PropagateToZBxByBz(zV);
+      recProbe[idau].GetPXYZ(pxyz);
+      daurec[idau].SetXYZM(pxyz[0], pxyz[1], pxyz[2], daumass[idau]);
+    }
+
     parent = daurec[0];
     parent += daurec[1];
     parent += daurec[2];
@@ -391,18 +468,13 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     // Float_t dca12 = sqrt(d1 * d1 + d2 * d2 + d3 * d3);
     // hDCA->Fill(dca12, ptRecD);
 
-    Double_t xV, yV, zV;
-    Double_t sigmaVert;
-    ComputeVertex(recProbe[0],recProbe[1],recProbe[2],vprim[2],xV,yV,zV,sigmaVert);
-    Double_t residVx=10000.*(xV - secvertgenK[0]);
-    Double_t residVy=10000.*(yV - secvertgenK[1]);
-    Double_t residVz=10000.*(zV - secvertgenK[2]);
     hResVx->Fill(residVx, ptRecD);
     hResVy->Fill(residVy, ptRecD);
     hResVz->Fill(residVz, ptRecD);
     hResVxVsY->Fill(residVx, yRecD);
     hResVyVsY->Fill(residVy, yRecD);
     hResVzVsY->Fill(residVz, yRecD);
+    hSigVert->Fill(sigmaVert,ptRecD);
     
     hResPx->Fill(daurec[0].Px() - daugen[0].Px(), ptRecD);
     hResPy->Fill(daurec[0].Py() - daugen[0].Py(), ptRecD);
@@ -433,16 +505,13 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     
     Double_t vsec[3] = {xV, yV, zV};
     Double_t cosp = CosPointingAngle(vprim, vsec, parent);
+    Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
     Double_t ipD = ImpParXY(vprim, vsec, parent);
     hCosp->Fill(cosp, ptRecD);
-    // printf(" ***** ***** cos point = %f \n", cosp);
-    //if (cosp < -0.98)
-    //    printf("SMALL COSPOINT");
+    hCospXY->Fill(cospxy, ptRecD);
     
     hResDist->Fill(dist - distgen, ptRecD);
     hResDistXY->Fill(distXY - distgenXY, ptRecD);
-    
-    //recProbe[0].PropagateToDCA(&recProbe[1]);
     
     hDistXY->Fill(distXY, ptRecD);
     hDistZ->Fill(vsec[2], ptRecD);
@@ -452,57 +521,39 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
       
     //AliExternalTrackParam *track1 = (AliExternalTrackParam *)recProbe[0].GetTrack();
     //AliExternalTrackParam *track2 = (AliExternalTrackParam *)recProbe[1].GetTrack();
-    recProbe[0].PropagateToZBxByBz(0);
-    Double_t d0x1 = recProbe[0].GetX();
-    Double_t d0y1 = recProbe[0].GetY();
-    Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
-    if (d0x1 < 0)
-      d0xy1 *= -1;
-    
-    recProbe[1].PropagateToZBxByBz(0);
-    Double_t d0x2 = recProbe[1].GetX();
-    Double_t d0y2 = recProbe[1].GetY();
-    Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
-    if (d0x2 < 0)
-      d0xy2 *= -1;
-
-    recProbe[2].PropagateToZBxByBz(0);
-    Double_t d0x3 = recProbe[2].GetX();
-    Double_t d0y3 = recProbe[2].GetY();
-    Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
-    if (d0x3 < 0)
-      d0xy3 *= -1;
-    
-    // printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
     
     hd0XY1->Fill(d0xy1, ptRecD);
     hd0XY2->Fill(d0xy2, ptRecD);
     hd0XY3->Fill(d0xy3, ptRecD);
       
-    arrsp[0] = massRecD;
-    arrsp[1] = ptRecD;
-    arrsp[2] = dist;
-    arrsp[3] = distXY;
-    arrsp[4] = distZ;
-    arrsp[5] = cosp;
-    arrsp[6] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-    arrsp[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-    arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-    arrsp[9] = TMath::Abs(ipD);	    
-    hsp->Fill(arrsp);
-    
-    if (ntLccand){
-      arrnt[0] = massRecD;
-      arrnt[1] = ptRecD;
-      arrnt[2] = dist;
-      arrnt[3] = cosp;
-      arrnt[4] = d0xy1;
-      arrnt[5] = d0xy2;
-      arrnt[6] = d0xy1 * d0xy2;
-      arrnt[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-      arrnt[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-      arrnt[9] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-      ntLccand->Fill(arrnt);
+    if(cosp>cutCosPointCand){
+      arrsp[0] = massRecD;
+      arrsp[1] = ptRecD;
+      arrsp[2] = yRecD;
+      arrsp[3] = dist;
+      arrsp[4] = distXY;
+      arrsp[5] = cosp;
+      arrsp[6] = cospxy;
+      arrsp[7] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
+      arrsp[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+      arrsp[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+      arrsp[10] = TMath::Abs(ipD);	    
+      hsp->Fill(arrsp);
+      
+      if (ntLccand){
+	arrnt[0] = massRecD;
+	arrnt[1] = ptRecD;
+	arrnt[2] = yRecD;
+	arrnt[3] = dist;
+	arrnt[4] = cosp;
+	arrnt[5] = d0xy1;
+	arrnt[6] = d0xy2;
+	arrnt[7] = d0xy3;
+	arrnt[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+	arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+	arrnt[10] = TMath::Abs(ipD);	    
+	ntLccand->Fill(arrnt);
+      }
     }
   } //event loop
   
@@ -525,13 +576,16 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   hPtRecoAll->Write();
   hYRecoAll->Write();
   hPtRecoFake->Write();
+  hDauClu->Write();
+  hDauHitPat->Write();
   hDistXY->Write();
   hDistZ->Write();
   hDist->Write();
   hDistgenXY->Write();
   hDistgen->Write();
   hCosp->Write();
-  hDCA->Write();
+  hCospXY->Write();
+  hSigVert->Write();
   hResVx->Write();
   hResVy->Write();
   hResVz->Write();
@@ -548,6 +602,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   hResDistXY->Write();
   hd0XY1->Write();
   hd0XY2->Write();
+  hd0XY3->Write();
   hNevents->Write();
   hsp->Write();
   if (ntLccand){
@@ -588,7 +643,9 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 
 
 
-void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.root",
+void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
+				    const char* trackTreeFile="treeBkgEvents.root",
+				    const char *selectionFile="",
 				    Int_t nevents = 999999, 
 				    Int_t writeNtuple = kFALSE,
 				    Bool_t usePID=kFALSE){
@@ -596,6 +653,31 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   // Read the TTree of tracks produced with runBkgVT.C
   // Create D0 combinatorial background candidates (= OS pairs of tracks)
   // Store in THnSparse and (optionally) TNtuple
+
+  KMCDetectorFwd *det = new KMCDetectorFwd();
+  det->ReadSetup(setup, setup);
+  
+  TVirtualMagField* fld = TGeoGlobalMagField::Instance()->GetField();
+  if (fld->IsA() == MagField::Class()) {
+    MagField* mag = (MagField*) fld;
+    int BNreg = mag->GetNReg();
+    const double *BzMin = mag->GetZMin();
+    const double *BzMax = mag->GetZMax();
+    const double *BVal;
+    printf("*************************************\n");
+    printf("number of magnetic field regions = %d\n", BNreg);
+    for (int i = 0; i < BNreg; i++){
+      BVal = mag->GetBVals(i);
+      printf("*** Field region %d ***\n", i);
+      if (i == 0){
+	printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }else if (i == 1){
+	printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      }
+    }
+  }
+
+  ConfigureSelectionsAndAxes(selectionFile);
 
   TFile *filetree = new TFile(trackTreeFile);
   TTree *tree = (TTree *)filetree->Get("tree");
@@ -621,7 +703,7 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   TH2F *hDist = new TH2F("hDist", "", 300, 0, 10, 30, 0, 3);
   TH2F *hDistgenXY = new TH2F("hDistgenXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistgen = new TH2F("hDistgen", "", 300, 0, 10, 30, 0, 3);
-  TH2F *hDCA = new TH2F("hDCA", "", 100, 0, 0.1, 30, 0, 3);
+  TH2F *hSigVert = new TH2F("hSigVert", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
@@ -630,15 +712,16 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   TH1D* hMomKaon = new TH1D("hMomKaon","",200,0.,10.);
   TH1D* hMomProton = new TH1D("hMomProton","",200,0.,10.);
   
-  TH2F *hResVx = new TH2F("hResVx", "", 100, -0.1, 0.1, 30, 0, 3);
-  TH2F *hResVy = new TH2F("hResVy", "", 100, -0.1, 0.1, 30, 0, 3);
-  TH2F *hResVz = new TH2F("hResVz", "", 100, -0.1, 0.1, 30, 0, 3);
+  TH1D *hVx = new TH1D("hVx", "", 200, -0.05, 0.05);
+  TH1D *hVy = new TH1D("hVy", "", 200, -0.05, 0.05);
+  TH1D *hVz = new TH1D("hVz", "", 200, -0.05, 0.05);
   TH2F *hResPx = new TH2F("hResPx", "", 100, -1, 1, 30, 0, 3); //for Kaons
   TH2F *hResPy = new TH2F("hResPy", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResPz = new TH2F("hResPz", "", 100, -1, 1, 30, 0, 3);
   TH2F *hResDist = new TH2F("hResDist", "", 100, -0.5, 0.5, 30, 0, 3);
   TH2F *hResDistXY = new TH2F("hResDistXY", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hCosp = new TH2F("hCosp", "", 100, -1, 1, 30, 0, 3);
+  TH2F *hCospXY = new TH2F("hCospXY", "", 100, -1, 1, 30, 0, 3);
   
   TH2F *hd0 = new TH2F("hd0", "", 100, 0, 0.1, 30, 0, 3);
   
@@ -651,12 +734,16 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   Double_t arrsp[nDim];
 
   TFile *fnt = 0x0;
-  TNtuple *ntD0cand = 0x0;
-  Float_t arrnt[10];
+  TNtuple *ntLccand = 0x0;
+  Float_t arrnt[11];
   if (writeNtuple){
-    fnt = new TFile("fntBkg.root", "recreate");
-    ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax", 32000);
+    fnt = new TFile("Lc-Bkg-ntuple.root", "recreate");
+    ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:ptMin:d0Lc", 32000);
   }
+
+  // define mother particle
+  Int_t pdgParticle = 4122;
+  Double_t mass = TDatabasePDG::Instance()->GetParticle(pdgParticle)->Mass();
 
   KMCProbeFwd recProbe[3];
   TLorentzVector parent, daurec[3];
@@ -673,6 +760,7 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
     for (Int_t itr = 0; itr < arrentr; itr++){
       KMCProbeFwd *tr1 = (KMCProbeFwd *)arr->At(itr);
       // cout << "tr P=" << tr1->GetP() << endl;
+      if(tr1->GetNHits()<minITShits) continue;
       Float_t ch1 = tr1->GetCharge();
       recProbe[0] = *tr1;
       recProbe[0].PropagateToZBxByBz(vprim[2]);
@@ -681,10 +769,12 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
       Double_t d0y1 = recProbe[0].GetY();
       Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
       if (d0x1 < 0) d0xy1 *= -1;
+      if(TMath::Abs(d0xy1)<mind0xyDau) continue;
 
       for (Int_t itr2 = 0; itr2 < arrentr; itr2++){
 	if(itr2==itr) continue;
 	KMCProbeFwd *tr2 = (KMCProbeFwd *)arr->At(itr2);
+	if(tr2->GetNHits()<minITShits) continue;
 	Float_t ch2 = tr2->GetCharge();
 	// convention: charge signs are ordered as +-+ or -+-
 	if (ch1 * ch2 > 0) continue;
@@ -695,6 +785,7 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 	Double_t d0y2 = recProbe[1].GetY();
 	Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
 	if (d0x2 < 0) d0xy2 *= -1;
+	if(TMath::Abs(d0xy2)<mind0xyDau) continue;
 	// recProbe[0].PropagateToDCA(&recProbe[1]);
 	// Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
 	// Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
@@ -706,6 +797,7 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 	for (Int_t itr3 = itr2+1; itr3 < arrentr; itr3++){
 	  if(itr3==itr) continue;
 	  KMCProbeFwd *tr3 = (KMCProbeFwd *)arr->At(itr3);
+	  if(tr3->GetNHits()<minITShits) continue;
 	  Float_t ch3 = tr3->GetCharge();
 	  // convention: charge signs are ordered as +-+ or -+-
 	  if (ch3 * ch2 > 0) continue;
@@ -717,6 +809,7 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 	  Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
 	  if (d0x3 < 0) d0xy3 *= -1;
 	  //printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
+	  if(TMath::Abs(d0xy3)<mind0xyDau) continue;
 
 	  for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	    // mass hypothesis: pKpi, piKp
@@ -752,7 +845,7 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 	    hMassAll->Fill(invMassD);
 	    if(invMassD>2.0  && invMassD<2.5){
 	      // range to fill histos
-	      if(invMassD>2.225 && invMassD<2.345) countCandInPeak++;
+	      if(TMath::Abs(invMassD-mass)<0.06) countCandInPeak++;
 	      hMomPion->Fill(momPi);
 	      hMomKaon->Fill(momK);
 	      hMomProton->Fill(momP);
@@ -773,13 +866,20 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 	      Double_t xV, yV, zV;
 	      Double_t sigmaVert;
 	      ComputeVertex(recProbe[0],recProbe[1],recProbe[2],vprim[2],xV,yV,zV,sigmaVert);
+	      hVx->Fill(xV);
+	      hVy->Fill(yV);
+	      hVz->Fill(zV);
+	      hSigVert->Fill(sigmaVert,ptD);
+
 	      Float_t dist = TMath::Sqrt(xV * xV + yV * yV + zV * zV);
 	      Float_t distXY = TMath::Sqrt(xV * xV + yV * yV);
 	      Float_t distZ = zV;
 	      Double_t vsec[3] = {xV, yV, zV};
 	      Double_t cosp = CosPointingAngle(vprim, vsec, parent);
+	      Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
 	      Double_t ipD = ImpParXY(vprim, vsec, parent);
 	      hCosp->Fill(cosp, ptD);
+	      hCospXY->Fill(cospxy, ptD);
 	      //printf(" ***** ***** cos point = %f \n", cosp);	    
 	      hDistXY->Fill(distXY, ptD);
 	      hDistZ->Fill(zV, ptD);
@@ -787,30 +887,34 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
 	      hd0XY1->Fill(d0xy1, ptD);
 	      hd0XY2->Fill(d0xy2, ptD);
 	      hd0XY3->Fill(d0xy3, ptD);
-	      arrsp[0] = invMassD;
-	      arrsp[1] = ptD;
-	      arrsp[2] = dist;
-	      arrsp[3] = distXY;
-	      arrsp[4] = distZ;
-	      arrsp[5] = cosp;
-	      arrsp[6] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-	      arrsp[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-	      arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-	      arrsp[9] = TMath::Abs(ipD);	    
-	      hsp->Fill(arrsp);
-	      
-	      if (ntD0cand){
-		arrnt[0] = invMassD;
-		arrnt[1] = ptD;
-		arrnt[2] = dist;
-		arrnt[3] = cosp;
-		arrnt[4] = d0xy1;
-		arrnt[5] = d0xy2;
-		arrnt[6] = d0xy1 * d0xy2;
-		arrnt[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-		arrnt[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-		arrnt[9] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-		ntD0cand->Fill(arrnt);
+	      if(cosp>cutCosPointCand){
+		arrsp[0] = invMassD;
+		arrsp[1] = ptD;
+		arrsp[2] = yD;
+		arrsp[3] = dist;
+		arrsp[4] = distXY;
+		arrsp[5] = cosp;
+		arrsp[6] = cospxy;
+		arrsp[7] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
+		arrsp[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+		arrsp[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+		arrsp[10] = TMath::Abs(ipD);	    
+		hsp->Fill(arrsp);
+		
+		if (ntLccand){
+		  arrnt[0] = invMassD;
+		  arrnt[1] = ptD;
+		  arrnt[2] = yD;
+		  arrnt[3] = dist;
+		  arrnt[4] = cosp;
+		  arrnt[5] = d0xy1;
+		  arrnt[6] = d0xy2;
+		  arrnt[7] = d0xy3;
+		  arrnt[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+		  arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+		  arrnt[10] = TMath::Abs(ipD);
+		  ntLccand->Fill(arrnt);
+		}
 	      }
 	    } // check on inv mass
 	  } // loop on mass hypothesis
@@ -832,8 +936,12 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   hDistXY->Write();
   hDistZ->Write();
   hDist->Write();
-  hDCA->Write();
+  hSigVert->Write();
+  hVx->Write();
+  hVy->Write();
+  hVz->Write();
   hCosp->Write();
+  hCospXY->Write();
   hd0XY1->Write();
   hd0XY2->Write();
   hd0XY3->Write();
@@ -841,29 +949,135 @@ void MakeLambdacCombinBkgCandidates(const char* trackTreeFile="treeBkgEvents.roo
   hMomKaon->Write();
   hMomProton->Write();
   hsp->Write();
-  fout->Close();
-  if (ntD0cand){
+  if (ntLccand){
     fnt->cd();
-    ntD0cand->Write();
+    hNevents->Write();
+    hcand->Write();
+    hcandpeak->Write();  
+    ntLccand->Write("",TObject::kOverwrite);
     fnt->Close();
   }
+  fout->Close();
 }
 
 THnSparseF* CreateSparse(){
-  const Int_t nAxes=10;
-  TString axTit[nAxes]={"Inv. mass (GeV/c^{2})","p_{T} (GeV/c)",
-			"Dec Len (cm)","DecLenXY (cm)","DecLenZ (cm)",
+  const Int_t nAxes=11;
+  TString axTit[nAxes]={"Inv. mass (GeV/c^{2})",
+			"p_{T} (GeV/c)",
+			"y",
+			"Dec Len (cm)",
+			"DecLenXY (cm)",
 			"cos(#vartheta_{p})",
+			"cos(#vartheta_{p}^{XY})",
 			"d_0^{min} (cm)",
 			"sigmaVert",
 			"p_{T}^{min} (GeV/c)",
-			"d_0^{D} (cm)"};
-  Int_t bins[nAxes] =   {100,  5,  30,  10,   30,  20,   12,   12,    8,   8}; 
-  Double_t min[nAxes] = {2.0,  0., 0.,  0.,   0.,  0.98, 0.,   0.0,   0.,  0.};
-  Double_t max[nAxes] = {2.5,  5., 0.3, 0.05, 0.3, 1.,   0.03, 0.03,  4.,  0.04};  
+			"d_0^{Lc} (cm)"};
+  Int_t bins[nAxes] =   {100,  5,  20, nBinsDecLen, nBinsDecLen, nBinsCosPoi, nBinsCosPoi, nBinsImpDau, nBinsSigVer, nBinsPtmDau, nBinsImpLc};
+  Double_t min[nAxes] = {2.0,  0., 1., minDecLen,   minDecLen,   minCosPoi,   minCosPoi,   minImpDau,   minSigVer,   minPtmDau,   minImpLc};
+  Double_t max[nAxes] = {2.5,  5., 5., maxDecLen,   maxDecLen,   maxCosPoi,   maxCosPoi,   maxImpDau,   maxSigVer,   maxPtmDau,   maxImpLc};
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
   for(Int_t iax=0; iax<nAxes; iax++) hsp->GetAxis(iax)->SetTitle(axTit[iax].Data());
   return hsp;
 }
 
 
+void ConfigureSelectionsAndAxes(const char *selectionFile){
+  if(strlen(selectionFile)==0) return;
+  if(gSystem->Exec(Form("ls -l %s",selectionFile)) !=0 ){
+    printf("File %s with configuration of selections not found\n",selectionFile);
+    return;
+  }
+  FILE* confFil=fopen(selectionFile,"r");
+  char line[50];
+  int n;
+  float x;
+  bool readok;
+  while(!feof(confFil)){
+    readok=fscanf(confFil,"%s:",line);
+    if(strstr(line,"MinVThits")){
+      readok=fscanf(confFil,"%d",&n);
+      minITShits=n;
+    }
+    if(strstr(line,"MinImpParXY")){
+      readok=fscanf(confFil,"%f",&x);
+      mind0xyDau=x;
+    }
+    if(strstr(line,"CosPointCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutCosPointCand=x;
+    }
+    else if(strstr(line,"NumOfDecLenBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsDecLen=n;
+    }
+    else if(strstr(line,"MinDecLenForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minDecLen=x;
+    }
+    else if(strstr(line,"MaxDecLenForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxDecLen=x;
+    }
+    else if(strstr(line,"NumOfCosPoiBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsCosPoi=n;
+    }
+    else if(strstr(line,"MinCosPoiForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minCosPoi=x;
+    }
+    else if(strstr(line,"MaxCosPoiForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxCosPoi=x;
+    }
+    else if(strstr(line,"NumOfImpParDauBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsImpDau=n;
+    }
+    else if(strstr(line,"MinImpParDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minImpDau=x;
+    }
+    else if(strstr(line,"MaxImpParDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxImpDau=x;
+    }
+    else if(strstr(line,"NumOfSigVerBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsSigVer=n;
+    }
+    else if(strstr(line,"MinSigVerForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minSigVer=x;
+    }
+    else if(strstr(line,"MaxSigVerForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxSigVer=x;
+    }
+    else if(strstr(line,"NumOfPtMinDauBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsPtmDau=n;
+    }
+    else if(strstr(line,"MinPtMinDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minPtmDau=x;
+    }
+    else if(strstr(line,"MaxPtMinDauForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxPtmDau=x;
+    }
+    else if(strstr(line,"NumOfImpParLcBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsImpLc=n;
+    }
+    else if(strstr(line,"MinImpParLcForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minImpLc=x;
+    }
+    else if(strstr(line,"MaxImpParLcForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxImpLc=x;
+    }
+  }
+}

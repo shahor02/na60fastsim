@@ -1,0 +1,25 @@
+Track selection:
+  MinVThits: 4
+  MinImpParXY: 0.001
+Candidate selection:
+  CosPointCut: 0.98
+THnSparse axes:
+  NumOfDecLenBins: 20
+  MinDecLenForSparse: 0.
+  MaxDecLenForSparse: 0.1
+  NumOfCosPoiBins: 20
+  MinCosPoiForSparse: 0.98
+  MaxCosPoiForSparse: 1.
+  NumOfImpParDauBins: 10
+  MinImpParDauForSparse: 0.
+  MaxImpParDauForSparse 0.05
+  NumOfSigVerBins: 12
+  MinSigVerForSparse: 0.
+  MaxSigVerForSparse: 0.03
+  NumOfPtMinDauBins: 6
+  MinPtMinDauForSparse: 0.
+  MaxPtMinDauForSparse: 3.
+  NumOfImpParLcBins: 12
+  MinImpParLcForSparse: 0.
+  MaxImpParLcForSparse: 0.03
+

@@ -198,7 +198,7 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   TLorentzVector parentgen, daugen[3], parent, daurec[3];
   Double_t daumass[3];
   TLorentzVector kkpairgen, kkpair;
-  KMCProbeFwd recProbe[3];  
+  KMCProbeFwd recProbe[3];
   AliDecayerEvtGen *fDecayer = new AliDecayerEvtGen();
   fDecayer->Init(); //read the default decay table DECAY.DEC and particle table
   bool privTab=kFALSE;
@@ -206,7 +206,7 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     if(gSystem->Exec(Form("ls -l %s",privateDecayTable))==0){
       fDecayer->SetDecayTablePath((char*)privateDecayTable);
       fDecayer->ReadDecayTable();
-      printf("-- Use Lc decay table from file %s\n",privateDecayTable);
+      printf("-- Use Ds decay table from file %s\n",privateDecayTable);
       privTab=kTRUE;
     }
   }
@@ -514,17 +514,10 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     Double_t ipD = ImpParXY(vprim, vsec, parent);
     hCosp->Fill(cosp, ptRecD);
     hCospXY->Fill(cospxy, ptRecD);
-    // printf(" ***** ***** cos point = %f \n", cosp);
-    //if (cosp < -0.98)
-    //    printf("SMALL COSPOINT");
     
     hResDist->Fill(dist - distgen, ptRecD);
     hResDistXY->Fill(distXY - distgenXY, ptRecD);
     
-    //recProbe[0].PropagateToDCA(&recProbe[1]);
-    
-    // hYPtAll->Fill(parent.Y(), ptRecD);
-    // hPtAll->Fill(ptRecD);
     hDistXY->Fill(distXY, ptRecD);
     hDistZ->Fill(vsec[2], ptRecD);
     hDist->Fill(dist, ptRecD);
