@@ -11,7 +11,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TParticle.h"
-#include "TTreeStream.h"
+#include "TLocTreeStream.h"
 
 #endif
 
@@ -65,7 +65,7 @@ TH1F *hNormChi2;
 
 TH1F *hFlMuZAll=0, *hFlMuZFake=0;
 
-TTreeSRedirector* fDebugStreamer = 0;
+TLocTreeSRedirector* fDebugStreamer = 0;
 
 //====================================================================
 //
@@ -120,7 +120,7 @@ void runMuFlukaFl(double Eint=40., // Elab energy
   //  gROOT->Macro("LoadLibs.C");
   CalcBkgPar(Eint);
 
-  fDebugStreamer = new TTreeSRedirector("flk_debug.root","recreate");
+  fDebugStreamer = new TLocTreeSRedirector("flk_debug.root","recreate");
   
   double mass = KMCDetectorFwd::kMassMu;  // particle to generate
   //

@@ -21,4 +21,11 @@
 #pragma link C++ class BeamPipe+;
 #pragma link C++ class MagField+;
 
+// for installation w/o aliroot
+#pragma link C++ enum  LocLog::EType_t;
+#pragma link C++ class TrackPar+;
+#pragma link C++ class LocLog+;
+#pragma link C++ class TLocTreeDataElement+;
+#pragma link C++ class TLocTreeStream+;
+#pragma link C++ class TLocTreeSRedirector+;
 #endif

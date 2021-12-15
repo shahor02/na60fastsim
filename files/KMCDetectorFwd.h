@@ -31,7 +31,6 @@ class KMCDetectorFwd : public TNamed {
   static const Double_t kMassMu;
   static const Double_t kMassE;
  public:
-  enum {kMagAlice=-1};
   enum {kNoDecay,kDoRealDecay,kApplyDecay};
   KMCDetectorFwd(const char *name="test_detector", const char *title="detector");
   virtual ~KMCDetectorFwd();

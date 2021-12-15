@@ -4,8 +4,6 @@
 #include <TGenPhaseSpace.h>
 #include "KMCDetectorFwd.h"
 #include "KMCMagnetBuilder.h"
-#include "AliMagF.h"
-#include "AliLog.h"
 
 ClassImp(KMCDetectorFwd)
 
@@ -27,12 +25,14 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   ,fLastActiveLayerITS(0)
   ,fLastActiveLayer(0)
   ,fLastActiveLayerTracked(0)
-  ,fMSLrMinID(-1),fMSLrMaxID(-1),fIntegrateMSX2X0(kFALSE)
+  ,fIntegrateMSX2X0(kFALSE)
+  ,fMSLrMinID(-1),
+   fMSLrMaxID(-1)
   ,fLayers()
   ,fBeamPipe(0)
   ,fVtx(0)
   ,fMaterials()
-  ,fMagFieldID(kMagAlice)
+  ,fMagFieldID(-1)
   ,fProbe()
   ,fExternalInput(kFALSE)
   ,fIncludeVertex(kTRUE)
@@ -227,7 +227,6 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   //  original line commented here; new lines follow 
   //  if ( (narg=inp->FindEntry("define","magfield","d|",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
   if ( (narg=inp->FindEntry("define","magfield","d?f?f?f?f?f?f?f?f",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
-  printf("Magnetic Field: %s\n",fMagFieldID==kMagAlice ? "ALICE":Form("Custom%d",fMagFieldID));
   Double_t zminDipole  = narg > 1 ? inp->GetArgF(1) : -9999;  
   Double_t zmaxDipole  = narg > 2 ? inp->GetArgF(2) : -9999;  
   Double_t dipoleField = narg > 3 ? inp->GetArgF(3) : -9999;  
@@ -347,25 +346,20 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   if (TGeoGlobalMagField::Instance()->GetField()) printf("Magnetic Field is already initialized\n");
   else {
     TVirtualMagField* fld = 0;
-    if (fMagFieldID==kMagAlice) {
-      fld = new AliMagF("map","map");
-    }
-    else { // custom field
-      // -------------------------------------------------------------------
-      // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
-      // with optional data  
-      fld = new MagField(TMath::Abs(fMagFieldID));
-      if (zminDipole>-9999) ((MagField *) fld)->SetZMin(0,zminDipole);
-      if (zmaxDipole>-9999) ((MagField *) fld)->SetZMax(0,zmaxDipole);
-      if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
-      if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
-      if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,0,dipoleField);
-      if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
-      if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
-      if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
-      // end modification
-      // -------------------------------------------------------------------
-    }
+    // -------------------------------------------------------------------
+    // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
+    // with optional data  
+    fld = new MagField(TMath::Abs(fMagFieldID));
+    if (zminDipole>-9999) ((MagField *) fld)->SetZMin(0,zminDipole);
+    if (zmaxDipole>-9999) ((MagField *) fld)->SetZMax(0,zmaxDipole);
+    if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
+    if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
+    if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,0,dipoleField);
+    if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
+    if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
+    if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
+    // end modification
+    // -------------------------------------------------------------------
     TGeoGlobalMagField::Instance()->SetField( fld );
     TGeoGlobalMagField::Instance()->Lock();
   }
@@ -1111,7 +1105,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	meas[1] = clv->GetZ();
       }
       double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; //  Ylab<->Ytracking, Xlab<->Ztracking
-      double chi2v = currTr->GetPredictedChi2(meas,measErr2);
+      //double chi2v = currTr->GetPredictedChi2(meas,measErr2);
       if (!currTr->Update(meas,measErr2)) continue;
       //currTr->AddHit(fVtx->GetActiveID(), chi2v, -1);
       currTr->SetInnerLrChecked(fVtx->GetActiveID());

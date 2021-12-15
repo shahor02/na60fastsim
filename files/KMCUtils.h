@@ -2,6 +2,7 @@
 #define KMCUTILS_H
 
 #include <TGeoGlobalMagField.h>
+#include "TVirtualMagField.h"
 
 //==========================================================================
 class MagField: public TVirtualMagField

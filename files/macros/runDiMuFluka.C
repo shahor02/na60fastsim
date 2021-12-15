@@ -11,7 +11,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TParticle.h"
-#include "TTreeStream.h"
+#include "TLocTreeStream.h"
 #endif
 
 // Track Chi2Tot cut
@@ -73,7 +73,7 @@ void runDiMuFluka(double Eint=40., // Elab energy
 		)
 {
   //  gROOT->Macro("LoadLibs.C");
-  TTreeSRedirector outStream("dimuFluka.root"); // the output stream trees will go here
+  TLocTreeSRedirector outStream("dimuFluka.root"); // the output stream trees will go here
   
   CalcBkgPar(Eint);
 

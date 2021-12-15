@@ -1,8 +1,16 @@
 #ifndef KMCPROBEFWD_H
 #define KMCPROBEFWD_H
 
+#ifndef _NOALIROOT_
 #include "AliExternalTrackParam.h"
 #include "AliLog.h"
+#else
+#include "TrackPar.h"
+#include "LocLog.h"
+using AliExternalTrackParam = TrackPar;
+using AliLog = LocLog;
+#endif
+
 class KMCLayerFwd;
 
 class KMCProbeFwd: public TObject {
