@@ -115,6 +115,8 @@ public:
   static Double_t GetDefEff()   {return fgDefEff;}
   static void     SetDefEff(double eff=1) {fgDefEff = eff>1. ? 1.: (eff<0? 0:eff);}
   //
+  Bool_t IsRPhiError() const { return fIsRPhiErr; }
+  void SetRPhiError(bool v) { fIsRPhiErr = v; }
   //
  protected:
   //
@@ -133,6 +135,7 @@ public:
   Int_t   fActiveID;   // active layer id
   Float_t fSig2EstX;
   Float_t fSig2EstY;
+  Bool_t  fIsRPhiErr; // are errors defined in R/Phi?
   //
   KMCClusterFwd   fClCorr;     // ideal cluster
   KMCClusterFwd   fClMC;       // MC cluster (from MS scattered track)
@@ -144,7 +147,7 @@ public:
   NaMaterial*     fMaterial;
   //
   static Double_t fgDefEff;
-  ClassDef(KMCLayerFwd,2);
+  ClassDef(KMCLayerFwd,3);
 };
 
 //_________________________________________________________________

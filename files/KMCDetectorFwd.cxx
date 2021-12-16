@@ -78,6 +78,10 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   //
   //  fLayers = new TObjArray();
   fRefVtx[0] = fRefVtx[1] = fRefVtx[2] = 0;
+  //
+  for (int i=0;i<7;i++) {
+    fUseRPhiErr[i] = false;
+  }
 }
 
 KMCDetectorFwd::~KMCDetectorFwd() { // 
@@ -395,6 +399,9 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
     else if (types=="vtx")  {newLayer->SetType(KMCLayerFwd::kVTX); }
     else if (types=="abs")  {newLayer->SetType(KMCLayerFwd::kABS); newLayer->SetDead(kTRUE); }
     else if (types=="dummy")  {newLayer->SetType(KMCLayerFwd::kDUMMY); newLayer->SetDead(kTRUE); }
+    if (newLayer->GetType()>=0) {
+      newLayer->SetRPhiError( fUseRPhiErr[ newLayer->GetType() ] );
+    }
     //
     if (!newLayer->IsDead()) newLayer->SetDead( xRes>=kVeryLarge && yRes>=kVeryLarge);
     //
@@ -411,6 +418,16 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
   newLayer->SetMaterial(mat);
   //
   return newLayer;
+}
+
+//__________________________________________________________________________
+void KMCDetectorFwd::SetUseRPhiError(bool v, int lrType)
+{
+  fUseRPhiErr[ lrType ] = v;
+  for (int i=0;i<fLayers.GetEntries(); i++) {
+    KMCLayerFwd *l = GetLayer(i);
+    if (l->GetType() == lrType) l->SetRPhiError(v);
+  }
 }
 
 //__________________________________________________________________________
@@ -799,13 +816,23 @@ Bool_t KMCDetectorFwd::UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, cons
   if (cl->IsKilled()) return kTRUE;
   double meas[2] = {cl->GetY(),cl->GetZ()}; // ideal cluster coordinate, tracking (AliExtTrParam frame)
   double rcl = TMath::Sqrt(cl->GetY()*cl->GetY()+cl->GetZ()*cl->GetZ());
-  double sgY = lr->GetYRes(rcl), sgX = lr->GetXRes(rcl);
-  double measErr2[3] = {sgY*sgY,0,sgX*sgX}; // !!! Ylab<->Ytracking, Xlab<->Ztracking
+  double sgY = lr->GetYRes(rcl), sgX = lr->GetXRes(rcl), sgY2 = sgY*sgY, sgX2 = sgX*sgX;
+  double measErr2[3] = {};
+  if (lr->IsRPhiError()) { // rotate error to angle phi
+    double phi = TMath::ATan2(cl->GetY(),cl->GetZ()), cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
+    measErr2[0] = sgX2*cs2+sgY2*sn2;
+    measErr2[2] = sgX2*sn2+sgY2*cs2;
+    measErr2[1] = (sgY2-sgX2)*cssn;
+    
+  } else { // !!! Ylab<->Ytracking, Xlab<->Ztracking
+    measErr2[0] = sgY2;
+    measErr2[2] = sgX2;
+  }  
   //
   double chi2 = trc->GetTrack()->GetPredictedChi2(meas,measErr2);
-  //    printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
-  //    printf("cluster was :"); cl->Print("lc");
-  //    printf("track   was :"); trc->Print("etp");  
+  //      printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
+  //      printf("cluster was [%e %e / %e %e %e]: ", meas[0],meas[1], measErr2[0], measErr2[1], measErr2[2]); cl->Print("lc");
+  //      printf("track   was :"); trc->Print("etp");  
     if (chi2>fMaxChi2Cl) return kTRUE; // chi2 is too large
     
   if (!trc->Update(meas,measErr2)) {
@@ -1158,10 +1185,23 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     lr->GetMCCluster()->Set(clxyzL[0],clxyzL[1],clxyzL[2]);
     */
     // cluster is stored in local frame
-    if (bg) {
-      lr->AddBgCluster(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
+    double xerr = rx*lr->GetXRes(r), yerr = ry*lr->GetYRes(r);
+    float y = probTr->GetYLoc(), x = probTr->GetZLoc();
+    if (lr->IsRPhiError()) { // rotate track position to R,phi
+      double phi = TMath::ATan2(y,x);
+      r += yerr;
+      double rphi = xerr;
+      double cs = TMath::Cos(phi), sn = TMath::Sin(phi);
+      x = r*cs - rphi*sn;
+      y = r*sn + rphi*cs;
+    } else {
+      x += xerr;
+      y += yerr;
     }
-    else lr->GetMCCluster()->Set(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
+    if (bg) {
+      lr->AddBgCluster(probTr->GetXLoc(), y, x, probTr->GetTrID());
+    }
+    else lr->GetMCCluster()->Set(probTr->GetXLoc(), y, x, probTr->GetTrID());
     //
   }
   //
