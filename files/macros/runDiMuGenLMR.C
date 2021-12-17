@@ -1,4 +1,5 @@
 #if !defined(__CINT__) || defined(__MAKECINT__)
+#define _NOALIROOT_
 #include "KMCDetectorFwd.h"
 #include "KMCProbeFwd.h"
 #include "TLorentzVector.h"
@@ -12,7 +13,7 @@
 #include "GenMUONLMR.h"
 #include "TStopwatch.h"
 #include "TTree.h"
-#include "TTreeStream.h"
+#include "TLocTreeStream.h"
 #endif
 
 //TRandom *rnd;
@@ -118,7 +119,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   gRandom->SetSeed(Seed);
 
   CalcBkgPar(Eint);
-  TTreeSRedirector outStream("dimuGenLMR.root"); // the output stream trees will go here
+  TLocTreeSRedirector outStream("dimuGenLMR.root"); // the output stream trees will go here
   
 
   MagField *mag = new MagField(1);
@@ -144,10 +145,11 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   //
   //
   det = new KMCDetectorFwd();
+  //det->SetUseRPhiErrorMS(true);
   det->ReadSetup(setup,setup);
   //  det->InitBgGeneration(dndyBG,y0BG,sigyBG,yminBG,ymaxBG,TBG,ptminBG,ptmaxBG);
   det->InitBgGenerationPart(NBGPi,NBGKplus,NBGKminus,NBGP,Piratio,y0BG,y0BGPi,y0BGKplus,y0BGKminus,y0BGP,sigyBGPi,sigyBGKplus,sigyBGKminus,sigyBGP,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
-  //  det->InitBgGenerationPart(0.,dndyBGK,0.,y0BG,sigyBG,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
+  // det->InitBgGenerationPart(0.,dndyBGK,0.,y0BG,sigyBG,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
 
   printf("pion   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChPi());
   printf("kaon   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChK());
@@ -284,7 +286,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
       TLorentzVector* pDecMu = new TLorentzVector(0.,0.,0.,0.);
       pDecMu->SetXYZM(fMu[imu]->Px(),fMu[imu]->Py(),fMu[imu]->Pz(),fMu[imu]->GetMass());
       //      printf("iev=%d\n",iev);
-      //      printf("px=%f py=%f pz=%f e=%f m=%f\n",pDecMu->Px(),pDecMu->Py(),pDecMu->Pz(),pDecMu->Energy(),pDecMu->M());
+      //      printf("px=%f py=%f pz=%f e=%f m=%f | phi=%e\n",pDecMu->Px(),pDecMu->Py(),pDecMu->Pz(),pDecMu->Energy(),pDecMu->M(), pDecMu->Phi());
 
       int crg = crgOrd*crgMu[imu];
       if (!det->SolveSingleTrack(pDecMu->Pt(),pDecMu->Rapidity(),pDecMu->Phi(),prodM[imu],crg,vX,vY,vZ, 0,1,99)) continue;  

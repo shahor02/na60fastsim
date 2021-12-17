@@ -1,6 +1,22 @@
 # for C++ define  CC = g++
+
+#to compile w/o aliroot support call with `make DOPTS=-D_NOALIROOT_`
+#additionally, to compile it under root6 use `make DOPTS=-D_NOALIROOT_ C17=1`
+
 CC = g++
-CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++14
+
+ifdef C17
+$(info compiling with c++17 support )
+CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++17 $(DOPTS)
+else
+$(info compiling with c++14 support )
+CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++14 $(DOPTS)
+endif
+
+ifdef DOPTS
+$(info additional options:  $(DOPTS) )
+endif
+
 LFLAGS = -L$(ROOTSYS)/lib 
 INC =	-I$(ROOTSYS)/include -I$(ALICE_ROOT)/include -I./
 TGT =	libKMCDetFwd.so
@@ -9,7 +25,8 @@ DICTO=	KMCDetFwdDict.o
 
 SRC = 	GenMUONLMR.cxx  KMCClusterFwd.cxx  KMCDetectorFwd.cxx  KMCFlukaParser.cxx \
 	KMCLayerFwd.cxx  KMCProbeFwd.cxx  KMCUtils.cxx NaMaterial.cxx \
-        KMCPolyLayer.cxx KMCMagnetBuilder.cxx
+        KMCPolyLayer.cxx KMCMagnetBuilder.cxx \
+        LocLog.cxx TrackPar.cxx TLocTreeStream.cxx
 
 HDR =	$(SRC:.cxx=.h) 
 
@@ -39,7 +56,7 @@ clean:
 	rm -f *.o *~ *.so *.pcm *.d *Dict.{h,cxx}
 
 $(DICT): $(HDR) KMCDetFwfLinkDef.h
-	rootcint -f $@ -c $(INC) $(HDR) $^
+	rootcint $(DOPTS) -f $@ -c $(INC) $(HDR) $^
 
 
 depend: $(SRC)

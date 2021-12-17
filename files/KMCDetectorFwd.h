@@ -31,7 +31,6 @@ class KMCDetectorFwd : public TNamed {
   static const Double_t kMassMu;
   static const Double_t kMassE;
  public:
-  enum {kMagAlice=-1};
   enum {kNoDecay,kDoRealDecay,kApplyDecay};
   KMCDetectorFwd(const char *name="test_detector", const char *title="detector");
   virtual ~KMCDetectorFwd();
@@ -72,6 +71,11 @@ class KMCDetectorFwd : public TNamed {
   KMCLayerFwd* GetLayerMS(int i)           const {return (KMCLayerFwd*)fLayersMS[i];}
   KMCLayerFwd* GetLayerTR(int i)           const {return (KMCLayerFwd*)fLayersTR[i];}
   //
+  void         SetUseRPhiErrorITS(bool v) { SetUseRPhiError(v, KMCLayerFwd::kITS); }
+  void         SetUseRPhiErrorMS(bool v)  { SetUseRPhiError(v, KMCLayerFwd::kMS); } 
+  void         SetUseRPhiErrorTRIG(bool v)  { SetUseRPhiError(v, KMCLayerFwd::kTRIG); }
+  void         SetUseRPhiError(bool v, int lrType);
+  
   void         SetDefStepAir(Double_t v=1) {fDefStepAir = v;}
   void         SetDefStepMat(Double_t v=1) {fDefStepMat = v;}
   //
@@ -251,6 +255,7 @@ class KMCDetectorFwd : public TNamed {
   Double_t  fDefStepMat;    // default step size in material
   Double_t  fGenPnt[3];     // particle generation point
   Double_t  fRefVtx[3];     // reference vertex
+  Bool_t fUseRPhiErr[7];
   Bool_t fImposeVertexPosition; // impose vertex position externally
   //
   TArrayI  fPattITS;                     // bit pattern of each group of active layers where hit is required

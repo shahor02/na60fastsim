@@ -65,7 +65,7 @@ class KMCFlukaParser {
 
   TObjArray fInpFileList;
   Int_t     fCurFileID;
-  ifstream  fInpFile;
+  std::ifstream  fInpFile;
   std::vector<FlukaPart> fParts;
   FlukaStat fStat;
   static const TString fgEndEvRecord;

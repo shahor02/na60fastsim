@@ -1,5 +1,5 @@
 #include "NaMaterial.h"
-#include "AliExternalTrackParam.h"
+#include "KMCProbeFwd.h"
 
 //==========================================================================
 

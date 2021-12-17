@@ -4,8 +4,6 @@
 #include <TGenPhaseSpace.h>
 #include "KMCDetectorFwd.h"
 #include "KMCMagnetBuilder.h"
-#include "AliMagF.h"
-#include "AliLog.h"
 
 ClassImp(KMCDetectorFwd)
 
@@ -27,12 +25,14 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   ,fLastActiveLayerITS(0)
   ,fLastActiveLayer(0)
   ,fLastActiveLayerTracked(0)
-  ,fMSLrMinID(-1),fMSLrMaxID(-1),fIntegrateMSX2X0(kFALSE)
+  ,fIntegrateMSX2X0(kFALSE)
+  ,fMSLrMinID(-1),
+   fMSLrMaxID(-1)
   ,fLayers()
   ,fBeamPipe(0)
   ,fVtx(0)
   ,fMaterials()
-  ,fMagFieldID(kMagAlice)
+  ,fMagFieldID(-1)
   ,fProbe()
   ,fExternalInput(kFALSE)
   ,fIncludeVertex(kTRUE)
@@ -78,6 +78,10 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   //
   //  fLayers = new TObjArray();
   fRefVtx[0] = fRefVtx[1] = fRefVtx[2] = 0;
+  //
+  for (int i=0;i<7;i++) {
+    fUseRPhiErr[i] = false;
+  }
 }
 
 KMCDetectorFwd::~KMCDetectorFwd() { // 
@@ -227,7 +231,6 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   //  original line commented here; new lines follow 
   //  if ( (narg=inp->FindEntry("define","magfield","d|",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
   if ( (narg=inp->FindEntry("define","magfield","d?f?f?f?f?f?f?f?f",1,1))>0 ) fMagFieldID = inp->GetArgD(0);
-  printf("Magnetic Field: %s\n",fMagFieldID==kMagAlice ? "ALICE":Form("Custom%d",fMagFieldID));
   Double_t zminDipole  = narg > 1 ? inp->GetArgF(1) : -9999;  
   Double_t zmaxDipole  = narg > 2 ? inp->GetArgF(2) : -9999;  
   Double_t dipoleField = narg > 3 ? inp->GetArgF(3) : -9999;  
@@ -347,25 +350,20 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   if (TGeoGlobalMagField::Instance()->GetField()) printf("Magnetic Field is already initialized\n");
   else {
     TVirtualMagField* fld = 0;
-    if (fMagFieldID==kMagAlice) {
-      fld = new AliMagF("map","map");
-    }
-    else { // custom field
-      // -------------------------------------------------------------------
-      // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
-      // with optional data  
-      fld = new MagField(TMath::Abs(fMagFieldID));
-      if (zminDipole>-9999) ((MagField *) fld)->SetZMin(0,zminDipole);
-      if (zmaxDipole>-9999) ((MagField *) fld)->SetZMax(0,zmaxDipole);
-      if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
-      if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
-      if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,0,dipoleField);
-      if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
-      if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
-      if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
-      // end modification
-      // -------------------------------------------------------------------
-    }
+    // -------------------------------------------------------------------
+    // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
+    // with optional data  
+    fld = new MagField(TMath::Abs(fMagFieldID));
+    if (zminDipole>-9999) ((MagField *) fld)->SetZMin(0,zminDipole);
+    if (zmaxDipole>-9999) ((MagField *) fld)->SetZMax(0,zmaxDipole);
+    if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
+    if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
+    if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,0,dipoleField);
+    if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
+    if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
+    if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
+    // end modification
+    // -------------------------------------------------------------------
     TGeoGlobalMagField::Instance()->SetField( fld );
     TGeoGlobalMagField::Instance()->Lock();
   }
@@ -401,6 +399,9 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
     else if (types=="vtx")  {newLayer->SetType(KMCLayerFwd::kVTX); }
     else if (types=="abs")  {newLayer->SetType(KMCLayerFwd::kABS); newLayer->SetDead(kTRUE); }
     else if (types=="dummy")  {newLayer->SetType(KMCLayerFwd::kDUMMY); newLayer->SetDead(kTRUE); }
+    if (newLayer->GetType()>=0) {
+      newLayer->SetRPhiError( fUseRPhiErr[ newLayer->GetType() ] );
+    }
     //
     if (!newLayer->IsDead()) newLayer->SetDead( xRes>=kVeryLarge && yRes>=kVeryLarge);
     //
@@ -417,6 +418,16 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
   newLayer->SetMaterial(mat);
   //
   return newLayer;
+}
+
+//__________________________________________________________________________
+void KMCDetectorFwd::SetUseRPhiError(bool v, int lrType)
+{
+  fUseRPhiErr[ lrType ] = v;
+  for (int i=0;i<fLayers.GetEntries(); i++) {
+    KMCLayerFwd *l = GetLayer(i);
+    if (l->GetType() == lrType) l->SetRPhiError(v);
+  }
 }
 
 //__________________________________________________________________________
@@ -805,13 +816,23 @@ Bool_t KMCDetectorFwd::UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, cons
   if (cl->IsKilled()) return kTRUE;
   double meas[2] = {cl->GetY(),cl->GetZ()}; // ideal cluster coordinate, tracking (AliExtTrParam frame)
   double rcl = TMath::Sqrt(cl->GetY()*cl->GetY()+cl->GetZ()*cl->GetZ());
-  double sgY = lr->GetYRes(rcl), sgX = lr->GetXRes(rcl);
-  double measErr2[3] = {sgY*sgY,0,sgX*sgX}; // !!! Ylab<->Ytracking, Xlab<->Ztracking
+  double sgY = lr->GetYRes(rcl), sgX = lr->GetXRes(rcl), sgY2 = sgY*sgY, sgX2 = sgX*sgX;
+  double measErr2[3] = {};
+  if (lr->IsRPhiError()) { // rotate error to angle phi
+    double phi = TMath::ATan2(cl->GetY(),cl->GetZ()), cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
+    measErr2[0] = sgX2*cs2+sgY2*sn2;
+    measErr2[2] = sgX2*sn2+sgY2*cs2;
+    measErr2[1] = (sgY2-sgX2)*cssn;
+    
+  } else { // !!! Ylab<->Ytracking, Xlab<->Ztracking
+    measErr2[0] = sgY2;
+    measErr2[2] = sgX2;
+  }  
   //
   double chi2 = trc->GetTrack()->GetPredictedChi2(meas,measErr2);
-  //    printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
-  //    printf("cluster was :"); cl->Print("lc");
-  //    printf("track   was :"); trc->Print("etp");  
+  //      printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
+  //      printf("cluster was [%e %e / %e %e %e]: ", meas[0],meas[1], measErr2[0], measErr2[1], measErr2[2]); cl->Print("lc");
+  //      printf("track   was :"); trc->Print("etp");  
     if (chi2>fMaxChi2Cl) return kTRUE; // chi2 is too large
     
   if (!trc->Update(meas,measErr2)) {
@@ -1111,7 +1132,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	meas[1] = clv->GetZ();
       }
       double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; //  Ylab<->Ytracking, Xlab<->Ztracking
-      double chi2v = currTr->GetPredictedChi2(meas,measErr2);
+      //double chi2v = currTr->GetPredictedChi2(meas,measErr2);
       if (!currTr->Update(meas,measErr2)) continue;
       //currTr->AddHit(fVtx->GetActiveID(), chi2v, -1);
       currTr->SetInnerLrChecked(fVtx->GetActiveID());
@@ -1164,10 +1185,23 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     lr->GetMCCluster()->Set(clxyzL[0],clxyzL[1],clxyzL[2]);
     */
     // cluster is stored in local frame
-    if (bg) {
-      lr->AddBgCluster(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
+    double xerr = rx*lr->GetXRes(r), yerr = ry*lr->GetYRes(r);
+    float y = probTr->GetYLoc(), x = probTr->GetZLoc();
+    if (lr->IsRPhiError()) { // rotate track position to R,phi
+      double phi = TMath::ATan2(y,x);
+      r += yerr;
+      double rphi = xerr;
+      double cs = TMath::Cos(phi), sn = TMath::Sin(phi);
+      x = r*cs - rphi*sn;
+      y = r*sn + rphi*cs;
+    } else {
+      x += xerr;
+      y += yerr;
     }
-    else lr->GetMCCluster()->Set(probTr->GetXLoc(), probTr->GetYLoc()+ry*lr->GetYRes(r), probTr->GetZLoc()-rx*lr->GetXRes(r),probTr->GetTrID());
+    if (bg) {
+      lr->AddBgCluster(probTr->GetXLoc(), y, x, probTr->GetTrID());
+    }
+    else lr->GetMCCluster()->Set(probTr->GetXLoc(), y, x, probTr->GetTrID());
     //
   }
   //
