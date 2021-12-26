@@ -11,7 +11,7 @@ class KMCLayerFwd : public TNamed {
 public:
   enum {kTypeNA=-1,kVTX,kITS,kMS,kTRIG,kABS,kDUMMY,kMAG,kBitVertex=BIT(15)};
   enum {kMaxAccReg = 5};
-  KMCLayerFwd(const char *name);
+  KMCLayerFwd(const char *name = "");
   Float_t GetZ()         const {return fZ;}
   Float_t GetRMin()      const {return fRMin[0];}
   Float_t GetRMax()      const {return fRMax[fNAccReg-1];}

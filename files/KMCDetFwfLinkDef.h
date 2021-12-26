@@ -21,6 +21,11 @@
 #pragma link C++ class BeamPipe+;
 #pragma link C++ class MagField+;
 
+#pragma link C++ class RotAngle+;
+#pragma link C++ class Sector+;
+#pragma link C++ class MeasPlane1D+;
+#pragma link C++ class KMCMSSector+;
+
 // for installation w/o aliroot
 #pragma link C++ enum  LocLog::EType_t;
 #pragma link C++ class TrackPar+;

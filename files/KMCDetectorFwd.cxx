@@ -597,7 +597,7 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     double r = probe->GetR();
     //    printf("L%2d %f %f %f\n",j,r, lr->GetRMin(),lr->GetRMax());
     if (r<lr->GetRMax() && r>lr->GetRMin()) {
-      if (resp>0) cl->Set(probe->GetXLoc(),probe->GetYLoc(), probe->GetZLoc(),probe->GetTrID());
+      if (resp>0) cl->Set(probe->GetX(), probe->GetY(), probe->GetZ(),probe->GetTrID());
       else cl->Kill();
     }
     else cl->Kill();
@@ -814,12 +814,13 @@ Bool_t KMCDetectorFwd::UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, cons
   // update track with measured cluster
   // propagate to cluster
   if (cl->IsKilled()) return kTRUE;
-  double meas[2] = {cl->GetY(),cl->GetZ()}; // ideal cluster coordinate, tracking (AliExtTrParam frame)
-  double rcl = TMath::Sqrt(cl->GetY()*cl->GetY()+cl->GetZ()*cl->GetZ());
+  // Note: we are working in the tracking frame: Lab X,Y,Z  <->  Tracking -Z,Y,X
+  double meas[2] = {cl->GetYTF(), cl->GetZTF()}; // ideal cluster coordinate, tracking (AliExtTrParam frame)
+  double rcl = TMath::Sqrt(cl->GetYTF()*cl->GetYTF()+cl->GetZTF()*cl->GetZTF());
   double sgY = lr->GetYRes(rcl), sgX = lr->GetXRes(rcl), sgY2 = sgY*sgY, sgX2 = sgX*sgX;
   double measErr2[3] = {};
   if (lr->IsRPhiError()) { // rotate error to angle phi
-    double phi = TMath::ATan2(cl->GetY(),cl->GetZ()), cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
+    double phi = TMath::ATan2(cl->GetYTF(),cl->GetZTF()), cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
     measErr2[0] = sgX2*cs2+sgY2*sn2;
     measErr2[2] = sgX2*sn2+sgY2*cs2;
     measErr2[1] = (sgY2-sgX2)*cssn;
@@ -830,10 +831,10 @@ Bool_t KMCDetectorFwd::UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, cons
   }  
   //
   double chi2 = trc->GetTrack()->GetPredictedChi2(meas,measErr2);
-  //      printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
-  //      printf("cluster was [%e %e / %e %e %e]: ", meas[0],meas[1], measErr2[0], measErr2[1], measErr2[2]); cl->Print("lc");
-  //      printf("track   was :"); trc->Print("etp");  
-    if (chi2>fMaxChi2Cl) return kTRUE; // chi2 is too large
+  //  printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
+  //  printf("cluster at Lr:%s was [%e %e / %e %e %e]: ", lr->GetName(), meas[0],meas[1], measErr2[0], measErr2[1], measErr2[2]); cl->Print("lc");
+  //  printf("track   was : %e %e\n", trc->GetY(), trc->GetZ()); trc->Print("etp");
+  if (chi2>fMaxChi2Cl) return kTRUE; // chi2 is too large
     
   if (!trc->Update(meas,measErr2)) {
     AliDebug(2,Form("layer %s: Failed to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e}",
@@ -928,13 +929,13 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   if (fExternalInput) maxLr = fLastActiveLayerTracked;
   if (maxLr<0) return kFALSE;
   if (fVtx && !fImposeVertexPosition) {
-    fVtx->GetMCCluster()->Set(fProbe.GetTrack()->GetX(),fProbe.GetTrack()->GetY(),fProbe.GetTrack()->GetZ());
-    fRefVtx[0] = fProbe.GetTrack()->GetY();
-    fRefVtx[1] = fProbe.GetTrack()->GetZ();
-    fRefVtx[2] = fProbe.GetTrack()->GetX();
+    fVtx->GetMCCluster()->Set(fProbe.GetX(),fProbe.GetY(), fProbe.GetZ());
+    fRefVtx[0] = fProbe.GetX();
+    fRefVtx[1] = fProbe.GetY();
+    fRefVtx[2] = fProbe.GetZ();
   }
   //
-  //printf("MaxLr: %d\n",maxLr);
+  //  printf("MaxLr: %d\n",maxLr);
   ResetMCTracks(maxLr);
   KMCLayerFwd* lr = GetLayer(maxLr);
   currTr = lr->AddMCTrack(&fProbe); // start with original track at vertex
@@ -1037,10 +1038,10 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	// update with vertex point + eventual additional error
 	float origErrX = fVtx->GetYRes(), origErrY = fVtx->GetXRes(); // !!! Ylab<->Ytracking, Xlab<->Ztracking
 	KMCClusterFwd* clv = fVtx->GetMCCluster();
-	double measCV[2] = {clv->GetY(),clv->GetZ()}, errCV[3] = {
-	  origErrX*origErrX+fApplyBransonPCorrection*fApplyBransonPCorrection,
-	  0.,
-	  origErrY*origErrY+fApplyBransonPCorrection*fApplyBransonPCorrection
+	double measCV[2] = {clv->GetYTF(), -clv->GetZTF()}, errCV[3] = {
+          origErrY*origErrY+fApplyBransonPCorrection*fApplyBransonPCorrection,
+          0.,
+	  origErrX*origErrX+fApplyBransonPCorrection*fApplyBransonPCorrection
 	};
 	fChi2MuVtx = trcConstr.GetPredictedChi2(measCV,errCV);
 	if (fHChi2Branson) fHChi2Branson->Fill(fChi2MuVtx);
@@ -1123,15 +1124,15 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       if (currTr->IsKilled()) continue;
       double meas[2] = {0.,0.};
       if (fImposeVertexPosition) {
-	meas[0] = fRefVtx[0];
-	meas[1] = fRefVtx[1];	
+	meas[0] = fRefVtx[1];
+	meas[1] =-fRefVtx[0];
       }
       else {
 	KMCClusterFwd* clv = fVtx->GetMCCluster();
-	meas[0] = clv->GetY();
-	meas[1] = clv->GetZ();
+	meas[0] = clv->GetYTF();
+	meas[1] = clv->GetZTF();
       }
-      double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; //  Ylab<->Ytracking, Xlab<->Ztracking
+      double measErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(), 0, fVtx->GetXRes()*fVtx->GetXRes()};
       //double chi2v = currTr->GetPredictedChi2(meas,measErr2);
       if (!currTr->Update(meas,measErr2)) continue;
       //currTr->AddHit(fVtx->GetActiveID(), chi2v, -1);
@@ -1186,7 +1187,7 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     */
     // cluster is stored in local frame
     double xerr = rx*lr->GetXRes(r), yerr = ry*lr->GetYRes(r);
-    float y = probTr->GetYLoc(), x = probTr->GetZLoc();
+    float y = probTr->GetY(), x = probTr->GetX();
     if (lr->IsRPhiError()) { // rotate track position to R,phi
       double phi = TMath::ATan2(y,x);
       r += yerr;
@@ -1199,9 +1200,9 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
       y += yerr;
     }
     if (bg) {
-      lr->AddBgCluster(probTr->GetXLoc(), y, x, probTr->GetTrID());
+      lr->AddBgCluster(x, y, probTr->GetZ(), probTr->GetTrID());
     }
-    else lr->GetMCCluster()->Set(probTr->GetXLoc(), y, x, probTr->GetTrID());
+    else lr->GetMCCluster()->Set(x, y, probTr->GetZ(), probTr->GetTrID());
     //
   }
   //
@@ -1232,16 +1233,16 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   int nCl = lrP->GetNBgClusters();
   double rad = probe->GetR();
   double sgy = lrP->GetYRes(rad), sgx = lrP->GetXRes(rad); 
-  double measErr2[3] = { sgy*sgy, 0, sgx*sgx}; // we work in tracking frame here!
+  double measErr2[3] = { sgy*sgy, 0, sgx*sgx}; 
   double meas[2] = {0,0};
   double tolerY = probe->GetTrack()->GetSigmaY2() + measErr2[0];
-  double tolerZ = probe->GetTrack()->GetSigmaZ2() + measErr2[2];
+  double tolerX = probe->GetTrack()->GetSigmaZ2() + measErr2[2]; // Xlab = -Zloc
   tolerY = TMath::Sqrt(fMaxChi2Cl*tolerY);
-  tolerZ = TMath::Sqrt(fMaxChi2Cl*tolerZ);
-  double yMin = probe->GetTrack()->GetY() - tolerY;
-  double yMax = yMin + tolerY+tolerY;    
-  double zMin = probe->GetTrack()->GetZ() - tolerZ;
-  double zMax = zMin + tolerZ + tolerZ;
+  tolerX = TMath::Sqrt(fMaxChi2Cl*tolerX);
+  double yMin = probe->GetY() - tolerY;
+  double yMax = probe->GetY() + tolerY;    
+  double xMin = probe->GetX() - tolerX;
+  double xMax = probe->GetX() + tolerX;
   //probe->GetTrack()->Print();
   //
   probe->SetInnerLrChecked(lrP->GetActiveID());
@@ -1257,16 +1258,16 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
       continue;
     }
     double y = cl->GetY(); // ! tracking frame coordinates: Ylab
-    double z = cl->GetZ(); //                              -XLab, sorted in decreasing order
-   //
-    AliDebug(2,Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)",
-		    icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetTrack()->GetY(),y,yMin,yMax,probe->GetTrack()->GetZ(),z,zMin,zMax));
+    double x = cl->GetX(); //                               XLab, sorted in decreasing order
     //
-    if (z>zMax) {if (icl==-1) continue; else break;} // all other z will be even smaller, no chance to match
-    if (z<zMin) continue;
+    //AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)",
+    //		    icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetY(),y,yMin,yMax,probe->GetX(),x,xMin,xMax));
+    //
+    if (x>xMax) {if (icl==-1) continue; else break;} // all other x will be even smaller, no chance to match
+    if (x<xMin) continue;
     if (y<yMin || y>yMax) continue; 
     //
-    meas[0] = y; meas[1] = z;
+    meas[0] = y; meas[1] = -x;
     double chi2 = probe->GetPredictedChi2(meas,measErr2);
     //
     //    AliInfo(Form("Seed-to-cluster chi2 = Chi2=%.2f for cl:",chi2));
@@ -1276,7 +1277,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     if (chi2>fMaxChi2Cl) continue;
     // 
     //    printf("Lr%d | cl%d, chi:%.3f X:%+.4f Y:%+.4f | x:%+.4f y:%+.4f |Sg: %.4f %.4f\n",
-    //	   lrP->GetActiveID(),icl,chi2, (zMin+zMax)/2,(yMin+yMax)/2, z,y, tolerZ/TMath::Sqrt(fMaxChi2Cl),tolerY/TMath::Sqrt(fMaxChi2Cl));
+    //	   lrP->GetActiveID(),icl,chi2, (zMin+zMax)/2,(yMin+yMax)/2, z,y, tolerX/TMath::Sqrt(fMaxChi2Cl),tolerY/TMath::Sqrt(fMaxChi2Cl));
     // update track copy
     KMCProbeFwd* newTr = lr->AddMCTrack( probe );
     if (!newTr->Update(meas,measErr2)) {
@@ -1309,8 +1310,8 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
 	else                  fHChi2VtxFake->Fill(newTr->GetNITSHits(),chi2V);
       }
       AliDebug(2,Form("Chi2 to vertex: %f | y: Tr:%+8.4f Cl:%+8.4f  z: Tr:%+8.4f Cl: %+8.4f",chi2V,
-		      propVtx.GetTrack()->GetY(),fRefVtx[0],
-		      propVtx.GetTrack()->GetZ(),fRefVtx[1]));
+		      propVtx.GetY(),fRefVtx[0],
+		      propVtx.GetX(),fRefVtx[1]));
 
       if (chi2V>fMaxChi2Vtx) {
 	newTr->Kill();

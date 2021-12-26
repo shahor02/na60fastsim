@@ -203,7 +203,7 @@ inline Bool_t KMCProbeFwd::Update(Double_t cov[3])
 {
   // dummy update with measurement errors in the plane normal to Z axis (in Lab X,Y axis) 
   //  printf("Before update %f %f %f\n",cov[0],cov[1],cov[2]); fTrack.Print();
-  double p[2] = {fTrack.GetY(), fTrack.GetZ()};
+  double p[2] = {GetX(), fTrack.GetY()};
   if (!fTrack.Update(p,cov)) return kFALSE;
   //  printf("After update: \n"); fTrack.Print();
   return kTRUE;  
