@@ -55,7 +55,8 @@ struct MeasPlane1D : public Sector
 
 struct KMCMSSector : public Sector
 {
-  KMCMSSector(float phiSector=0, float dphih=TMath::Pi(), float rmin=0., float rmax=999., float phiUV=0., float pitchUV=0.1, float phiW=TMath::Pi()/2, float pitchW=0.1);
+  KMCMSSector(float phiSector=0, float dphih=TMath::Pi(), float rmin=0., float rmax=999., float phiUV=0., float pitchUV=0.1,
+	      float phiW=TMath::Pi()/2, float pitchW=0.1, float _sigR=0.03, float _sigRPhi=0.03);
 
   static KMCMSSector* createSectorDef(float phiSector, float dphih, float rmin, float rmax, float stereoAngle, float pitchUV, float pitchW)
   {
@@ -66,6 +67,8 @@ struct KMCMSSector : public Sector
   MeasPlane1D stripPlaneU;
   MeasPlane1D stripPlaneV;
   MeasPlane1D wirePlaneW;
+  float sigR;
+  float sigRPhi;
   
   ClassDefNV(KMCMSSector, 1);
 };
@@ -74,7 +77,8 @@ struct KMCMSStation : public KMCLayerFwd
 {
   KMCMSStation(const char *name = "") : KMCLayerFwd(name), nSectors(0), nRadSegments(0), dPhi(0) {}
   void init(int nsect, const std::vector<float>& r, const std::vector<float>& _phiUV, const std::vector<float>& _pitchUV,
-	    const std::vector<float>& _phiW, const std::vector<float>& _pitchW);
+	    const std::vector<float>& _phiW, const std::vector<float>& _pitchW,
+	    const std::vector<float>& _sigR, const std::vector<float>& _sigRPhi);
   int getSectorID(float x, float y) const;
   KMCMSSector* getSector(int id) { return id<int(sectors.size()) ? &sectors[id] : 0; }
   KMCMSSector* getSector(float x, float y) { return getSector( getSectorID(x,y) ); }

@@ -12,12 +12,13 @@ MeasPlane1D::MeasPlane1D(float phiSector, float dphih, float rmin, float rmax, f
 }
 
 KMCMSSector::KMCMSSector(float phiSector, float dphih, float rmin, float rmax,
-		     float phiUV, float pitchUV,
-		     float phiW, float pitchW)
+			 float phiUV, float pitchUV,
+			 float phiW, float pitchW, float _sigR, float _sigRPhi)
   : Sector(phiSector, dphih, rmin, rmax),
     stripPlaneU(phiSector, dphih, rmin, rmax, phiUV, pitchUV),
     stripPlaneV(phiSector, dphih, rmin, rmax, -phiUV, pitchUV),
-    wirePlaneW(phiSector, dphih, rmin, rmax, phiW, pitchW)
+    wirePlaneW(phiSector, dphih, rmin, rmax, phiW, pitchW),
+    sigR(_sigR), sigRPhi(_sigRPhi)
 {}
     
 bool KMCMSSector::getUVW(float x, float y, float& U, float& V, float& W) const
@@ -32,14 +33,15 @@ bool KMCMSSector::getUVW(float x, float y, float& U, float& V, float& W) const
 
 
 void KMCMSStation::init(int nsect, const std::vector<float>& r, const std::vector<float>& _phiUV, const std::vector<float>& _pitchUV,
-	    const std::vector<float>& _phiW, const std::vector<float>& _pitchW)
+	    const std::vector<float>& _phiW, const std::vector<float>& _pitchW,
+	    const std::vector<float>& _sigR, const std::vector<float>& _sigRPhi)
 {
   dPhi = TMath::Pi()*2./nsect;
   nRadSegments = r.size()-1;
   for (int ip=0;ip<nsect;ip++) {
     float phiSect = (ip+0.5)*dPhi;
     for (int ir=0;ir<nRadSegments;ir++) {
-      sectors.emplace_back(phiSect, 0.5*dPhi, r[ir], r[ir+1], _phiUV[ir], _pitchUV[ir], _phiW[ir], _pitchW[ir]);
+      sectors.emplace_back(phiSect, 0.5*dPhi, r[ir], r[ir+1], _phiUV[ir], _pitchUV[ir], _phiW[ir], _pitchW[ir], _sigR[ir], _sigRPhi[ir]);
     }
   }
 }

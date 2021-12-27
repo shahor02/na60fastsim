@@ -374,6 +374,54 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
 }
 
 //__________________________________________________________________________
+void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
+{
+  //
+  inp->Rewind();
+  TString fmtAct = "aaffff*fff";
+  for (int i=0;i<KMCLayerFwd::kMaxAccReg-1;i++) fmtAct += "fff";
+  int narg = 0;
+  while ( (narg=inp->FindEntry("active3x1D",0,fmtAct.Data(),0,1))>0 ) {
+    // expect format "active3x1D:type	NAME MATERIAL Z	DZ eff NSectors NSegments RMin NSegments*[RMax sigmaR sigmaRPhi phiUV pitchUV phiW pitchW]
+    // the sector description is: RMax of radial segment, its sigmaR sigmaRPhi, phiUV of strip planes of pitchUV, phiW pitchW of wire chamber.
+    // maximum KMCLayerFwd::kMaxAccReg-1 segments per sector is allowed, at least 1 should be provided 
+    NaMaterial* mat = GetMaterial(inp->GetArg(1,"U"));
+    double eff = inp->GetArgF(3);
+    int nSectors = inp->GetArgD(5);
+    int nSegments = inp->GetArgD(6);
+    if (nSegments<1) {
+      printf("Add3x1DMSStations: at least 1 segment per sector must be defined\n");
+      printf("%s\n",inp->GetLastBuffer());
+      exit(1);
+    }
+    if (narg!=8+nSegments*7) {
+      printf("Add3x1DMSStations: %d segments per sector require %d parameters\n", nSegments, 7+nSegments*8);
+      printf("%s\n",inp->GetLastBuffer());
+      exit(1);
+    }
+    KMCMSStation* lr = (KMCMSStation*)AddLayer(inp->GetModifier(), inp->GetArg(0,"U"), inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), 
+					       inp->GetArgF(3), 0.1, 0.1, eff);
+    std::vector<float> rsegm, phiUV, pitchUV, phiW, pitchW, sigR, sigRPhi;
+    float rMin=inp->GetArgF(7), rMax = 0.;
+    rsegm.push_back(rMin);
+    for (int is=0;is<nSegments;is++) {
+      rMax = inp->GetArgF(8+is*7+0);
+      rsegm.push_back(rMax);
+      sigR.push_back( inp->GetArgF(8+is*7+1) );
+      sigRPhi.push_back( inp->GetArgF(8+is*7+2) );
+      phiUV.push_back( inp->GetArgF(8+is*7+3) );
+      pitchUV.push_back( inp->GetArgF(8+is*7+4) );
+      phiW.push_back( inp->GetArgF(8+is*7+5) );
+      pitchW.push_back( inp->GetArgF(8+is*7+6) );      
+    }
+    lr->SetRMin(rMin);
+    lr->SetRMax(rMax);
+    lr->SetMaterial(mat);
+    lr->init(nSectors, rsegm, phiUV, pitchUV, phiW, pitchW, sigR, sigRPhi);
+  }
+}
+
+//__________________________________________________________________________
 KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_t zPos, Float_t radL, Float_t density, 
 				      Float_t thickness, Float_t xRes, Float_t yRes, Float_t eff, NaMaterial* mat) 
 {
