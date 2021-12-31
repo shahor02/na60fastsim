@@ -6,12 +6,13 @@
 #include "KMCClusterFwd.h"
 #include "KMCProbeFwd.h"
 #include "NaMaterial.h"
+#include <TRandom.h>
 
 class KMCLayerFwd : public TNamed {
 public:
   enum {kTypeNA=-1,kVTX,kITS,kMS,kTRIG,kABS,kDUMMY,kMAG,kBitVertex=BIT(15)};
   enum {kMaxAccReg = 5};
-  KMCLayerFwd(const char *name);
+  KMCLayerFwd(const char *name = "");
   Float_t GetZ()         const {return fZ;}
   Float_t GetRMin()      const {return fRMin[0];}
   Float_t GetRMax()      const {return fRMax[fNAccReg-1];}
@@ -80,7 +81,9 @@ public:
   Bool_t  IsDummy()      const {return fType==kDUMMY;}
   Int_t   GetType()      const {return fType;}
   Bool_t  IsVertex()     const {return TestBit(kBitVertex);}
+  virtual void PrepareForTracking() {} 
   //
+  virtual bool          AddCluster(double x,double y,double z, Int_t id, bool isBG);
   Int_t                 AddBgCluster(double x,double y,double z, Int_t id);
   KMCClusterFwd*        GetBgCluster(Int_t i)    const {return (KMCClusterFwd*)fClBg[i];}
   TClonesArray*         GetBgClusters()          const {return (TClonesArray*)&fClBg;}
@@ -116,7 +119,7 @@ public:
   static void     SetDefEff(double eff=1) {fgDefEff = eff>1. ? 1.: (eff<0? 0:eff);}
   //
   Bool_t IsRPhiError() const { return fIsRPhiErr; }
-  void SetRPhiError(bool v) { fIsRPhiErr = v; }
+  virtual void SetRPhiError(bool v) { fIsRPhiErr = v; }
   //
  protected:
   //
