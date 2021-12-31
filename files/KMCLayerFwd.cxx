@@ -88,4 +88,35 @@ KMCProbeFwd* KMCLayerFwd::GetWinnerMCTrack()
   return win;
 }
 
+//__________________________________________________________________________
+bool KMCLayerFwd::AddCluster(double x,double y,double z, Int_t id, bool isBG)
+{
+  double r = TMath::Sqrt(x*x + y*y); 
+  if (r>GetRMax() || r<GetRMin()) {
+    return false;
+  }
+  // store randomized cluster local coordinates and phi
+  double rx,ry;
+  gRandom->Rannor(rx,ry);
+  double xerr = rx*GetXRes(r), yerr = ry*GetYRes(r);
+  if (IsRPhiError()) { // rotate track position to R,phi
+    double phi = TMath::ATan2(y,x);
+    r += yerr;
+    double rphi = xerr;
+    double cs = TMath::Cos(phi), sn = TMath::Sin(phi);
+    x = r*cs - rphi*sn;
+    y = r*sn + rphi*cs;
+  } else {
+    x += xerr;
+    y += yerr;
+  }
+  if (isBG) {
+    AddBgCluster(x, y, z, id);
+  }
+  else {
+    GetMCCluster()->Kill(false);
+    GetMCCluster()->Set(x, y, z, id);
+  }
+  return true;
+}
 

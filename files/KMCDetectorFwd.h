@@ -45,6 +45,7 @@ class KMCDetectorFwd : public TNamed {
   KMCPolyLayer* AddPolyLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density,  Float_t thickness);
   KMCLayerFwd* AddLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density,
                         Float_t thickness, Float_t xRes=999999, Float_t yRes=999999, Float_t eff=1, NaMaterial* mat=0);
+  void         AddLayer(KMCLayerFwd* lr, const char* type);
   void         AddBeamPipe(Float_t r, Float_t dr, Float_t radL, Float_t density, NaMaterial* mat=0);
   BeamPipe*    GetBeamPipe() const {return fBeamPipe;}
 
@@ -98,6 +99,7 @@ class KMCDetectorFwd : public TNamed {
   }
   
   //
+  void         PrepareForTracking();
   Bool_t       UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, const KMCClusterFwd* cl) const;
   Bool_t       NeedToKill(KMCProbeFwd* probe) const;
   Bool_t       GetUseBackground()          const {return fUseBackground;}

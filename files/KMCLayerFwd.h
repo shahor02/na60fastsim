@@ -6,6 +6,7 @@
 #include "KMCClusterFwd.h"
 #include "KMCProbeFwd.h"
 #include "NaMaterial.h"
+#include <TRandom.h>
 
 class KMCLayerFwd : public TNamed {
 public:
@@ -80,7 +81,9 @@ public:
   Bool_t  IsDummy()      const {return fType==kDUMMY;}
   Int_t   GetType()      const {return fType;}
   Bool_t  IsVertex()     const {return TestBit(kBitVertex);}
+  virtual void PrepareForTracking() {} 
   //
+  virtual bool          AddCluster(double x,double y,double z, Int_t id, bool isBG);
   Int_t                 AddBgCluster(double x,double y,double z, Int_t id);
   KMCClusterFwd*        GetBgCluster(Int_t i)    const {return (KMCClusterFwd*)fClBg[i];}
   TClonesArray*         GetBgClusters()          const {return (TClonesArray*)&fClBg;}
@@ -116,7 +119,7 @@ public:
   static void     SetDefEff(double eff=1) {fgDefEff = eff>1. ? 1.: (eff<0? 0:eff);}
   //
   Bool_t IsRPhiError() const { return fIsRPhiErr; }
-  void SetRPhiError(bool v) { fIsRPhiErr = v; }
+  virtual void SetRPhiError(bool v) { fIsRPhiErr = v; }
   //
  protected:
   //

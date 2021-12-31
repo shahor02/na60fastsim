@@ -344,6 +344,7 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     }
     
   }
+  Add3x1DMSStations(inp);
   //-------------------------------------
   //
   // init mag field
@@ -378,7 +379,7 @@ void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
 {
   //
   inp->Rewind();
-  TString fmtAct = "aaffff*fff";
+  TString fmtAct = "aafffddf*fffffff*fffffff*fffffff*fffffff*fffffff*fffffff";
   for (int i=0;i<KMCLayerFwd::kMaxAccReg-1;i++) fmtAct += "fff";
   int narg = 0;
   while ( (narg=inp->FindEntry("active3x1D",0,fmtAct.Data(),0,1))>0 ) {
@@ -386,7 +387,6 @@ void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
     // the sector description is: RMax of radial segment, its sigmaR sigmaRPhi, phiUV of strip planes of pitchUV, phiW pitchW of wire chamber.
     // maximum KMCLayerFwd::kMaxAccReg-1 segments per sector is allowed, at least 1 should be provided 
     NaMaterial* mat = GetMaterial(inp->GetArg(1,"U"));
-    double eff = inp->GetArgF(3);
     int nSectors = inp->GetArgD(5);
     int nSegments = inp->GetArgD(6);
     if (nSegments<1) {
@@ -399,8 +399,7 @@ void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
       printf("%s\n",inp->GetLastBuffer());
       exit(1);
     }
-    KMCMSStation* lr = (KMCMSStation*)AddLayer(inp->GetModifier(), inp->GetArg(0,"U"), inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), 
-					       inp->GetArgF(3), 0.1, 0.1, eff);
+    double thickness = inp->GetArgF(3), eff = inp->GetArgF(4), radL = mat->GetRadLength(), density = mat->GetDensity();
     std::vector<float> rsegm, phiUV, pitchUV, phiW, pitchW, sigR, sigRPhi;
     float rMin=inp->GetArgF(7), rMax = 0.;
     rsegm.push_back(rMin);
@@ -412,12 +411,23 @@ void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
       phiUV.push_back( inp->GetArgF(8+is*7+3) );
       pitchUV.push_back( inp->GetArgF(8+is*7+4) );
       phiW.push_back( inp->GetArgF(8+is*7+5) );
-      pitchW.push_back( inp->GetArgF(8+is*7+6) );      
+      pitchW.push_back( inp->GetArgF(8+is*7+6) );    
     }
+
+    KMCMSStation* lr = new KMCMSStation(inp->GetArg(0,"U"));
+    lr->SetZ(inp->GetArgF(2));
+    lr->SetThickness(thickness);
+    lr->SetX2X0( radL>0 ? thickness*density/radL : 0);
+    lr->SetXTimesRho(thickness*density);
+    lr->SetXRes(sigRPhi[0]);
+    lr->SetYRes(sigR[0]);
+    lr->SetLayerEff(eff);
     lr->SetRMin(rMin);
     lr->SetRMax(rMax);
     lr->SetMaterial(mat);
     lr->init(nSectors, rsegm, phiUV, pitchUV, phiW, pitchW, sigR, sigRPhi);
+    lr->SetRPhiError(true);
+    AddLayer(lr, inp->GetModifier());
   }
 }
 
@@ -466,6 +476,36 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
   newLayer->SetMaterial(mat);
   //
   return newLayer;
+}
+
+//__________________________________________________________________________
+void KMCDetectorFwd::AddLayer(KMCLayerFwd* newLayer, const char* type)
+{
+  //
+  // Add additional layer to the list of layers (ordered by z position)
+  //
+  KMCLayerFwd *old = GetLayer(newLayer->GetName());
+  if (old) {
+    printf("Error: Layer with the name %s does already exist\n",old->GetName());
+    exit(1);
+  }
+  TString types = type;
+  types.ToLower();
+  if (types=="ms")   newLayer->SetType(KMCLayerFwd::kMS);
+  else if (types=="tr")   newLayer->SetType(KMCLayerFwd::kTRIG);
+  else {
+    printf("Error: 3x1D layer is allowed only for MS and TR layers\n");
+    exit(1);
+  }
+  //
+  if (fLayers.GetEntries()==0) fLayers.Add(newLayer);
+  else {      
+    for (Int_t i = 0; i<fLayers.GetEntries(); i++) {
+      KMCLayerFwd *l = GetLayer(i);
+      if (newLayer->GetZ()<l->GetZ()) { fLayers.AddBefore(l,newLayer); break; }
+      if (newLayer->GetZ()>l->GetZ() && (i+1)==fLayers.GetEntries() ) { fLayers.Add(newLayer); } // even bigger then last one
+    }      
+  }
 }
 
 //__________________________________________________________________________
@@ -992,6 +1032,9 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   if (!fExternalInput) {if (!TransportKalmanTrackWithMS(currTr, maxLr, kFALSE)) return kFALSE;} // transport it to outermost layer where full MC is done
   else *currTr->GetTrack() = *GetLayer(maxLr)->GetAnProbe()->GetTrack();
   //printf("LastTrackedMS: "); currTr->GetTrack()->Print();
+
+  PrepareForTracking();
+  
   //
   if (maxLr<=fLastActiveLayerTracked && maxLr>fLastActiveLayerITS) { // prolongation from MS
     // start from correct track propagated from above till maxLr
@@ -1214,43 +1257,13 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     KMCLayerFwd* lr0 = GetLayer(j);
     KMCLayerFwd* lr  = GetLayer(j+1);
     //
+    if (!bg) {
+      lr->GetMCCluster()->Kill(); // will be reactivated if accepted
+    }
     if (!(resP=PropagateToLayer(probTr,lr0,lr, 1, kTRUE))) return kFALSE;
     if (lr->IsDead()) continue;
-    if (resP<0) {lr->GetMCCluster()->Kill(); continue;}
-    double r = probTr->GetR();
-    if (r>lr->GetRMax() || r<lr->GetRMin()) {
-      /*if (!bg)*/ lr->GetMCCluster()->Kill(); 
-      continue;
-    }
-    // store randomized cluster local coordinates and phi
-    double rx,ry;
-    gRandom->Rannor(rx,ry);
-    /*
-    double clxyz[3],clxyzL[3];
-    probTr->GetXYZ(clxyz);
-    clxyz[0] += rx*lr->GetXRes();
-    clxyz[1] += ry*lr->GetYRes();
-    KMCProbeFwd::Trk2Lab(clxyz, clxyzL);
-    lr->GetMCCluster()->Set(clxyzL[0],clxyzL[1],clxyzL[2]);
-    */
-    // cluster is stored in local frame
-    double xerr = rx*lr->GetXRes(r), yerr = ry*lr->GetYRes(r);
-    float y = probTr->GetY(), x = probTr->GetX();
-    if (lr->IsRPhiError()) { // rotate track position to R,phi
-      double phi = TMath::ATan2(y,x);
-      r += yerr;
-      double rphi = xerr;
-      double cs = TMath::Cos(phi), sn = TMath::Sin(phi);
-      x = r*cs - rphi*sn;
-      y = r*sn + rphi*cs;
-    } else {
-      x += xerr;
-      y += yerr;
-    }
-    if (bg) {
-      lr->AddBgCluster(x, y, probTr->GetZ(), probTr->GetTrID());
-    }
-    else lr->GetMCCluster()->Set(x, y, probTr->GetZ(), probTr->GetTrID());
+    if (resP<0) continue;
+    lr->AddCluster(probTr->GetX(), probTr->GetY(), probTr->GetZ(), probTr->GetTrID(), bg);
     //
   }
   //
@@ -1944,6 +1957,14 @@ void  KMCDetectorFwd::ForceLastActiveLayer(int lr)
 {
   printf("Attention: overriding last active layer from %d to %d\n",fLastActiveLayer,lr);
   fLastActiveLayer = lr;
+}
+
+//_____________________________________________________________________
+void  KMCDetectorFwd::PrepareForTracking()
+{
+  for (Int_t j=fNLayers; j--;) {  // Layer loop
+    GetLayer(j)->PrepareForTracking();
+  }
 }
 
 //=======================================================================================

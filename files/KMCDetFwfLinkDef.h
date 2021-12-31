@@ -24,7 +24,9 @@
 #pragma link C++ class RotAngle+;
 #pragma link C++ class Sector+;
 #pragma link C++ class MeasPlane1D+;
+#pragma link C++ class FiredChannel+;
 #pragma link C++ class KMCMSSector+;
+#pragma link C++ class KMCMSStation+;
 
 // for installation w/o aliroot
 #pragma link C++ enum  LocLog::EType_t;
