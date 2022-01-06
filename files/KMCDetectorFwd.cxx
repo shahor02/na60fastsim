@@ -384,7 +384,7 @@ void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
   int narg = 0;
   while ( (narg=inp->FindEntry("active3x1D",0,fmtAct.Data(),0,1))>0 ) {
     // expect format "active3x1D:type	NAME MATERIAL Z	DZ eff NSectors NSegments RMin NSegments*[RMax sigmaR sigmaRPhi phiUV pitchUV phiW pitchW]
-    // the sector description is: RMax of radial segment, its sigmaR sigmaRPhi, phiUV of strip planes of pitchUV, phiW pitchW of wire chamber.
+    // the sector description is: RMax of radial segment, its sigmaRPhi and sigmaR, phiUV of strip planes of pitchUV, phiW pitchW of wire chamber.
     // maximum KMCLayerFwd::kMaxAccReg-1 segments per sector is allowed, at least 1 should be provided 
     NaMaterial* mat = GetMaterial(inp->GetArg(1,"U"));
     int nSectors = inp->GetArgD(5);
@@ -406,8 +406,8 @@ void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
     for (int is=0;is<nSegments;is++) {
       rMax = inp->GetArgF(8+is*7+0);
       rsegm.push_back(rMax);
-      sigR.push_back( inp->GetArgF(8+is*7+1) );
-      sigRPhi.push_back( inp->GetArgF(8+is*7+2) );
+      sigRPhi.push_back( inp->GetArgF(8+is*7+1) );
+      sigR.push_back( inp->GetArgF(8+is*7+2) );
       phiUV.push_back( inp->GetArgF(8+is*7+3) );
       pitchUV.push_back( inp->GetArgF(8+is*7+4) );
       phiW.push_back( inp->GetArgF(8+is*7+5) );
@@ -681,14 +681,15 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     if (!lrP) continue;
     //
     if (!(resp=PropagateToLayer(probe,lrP,lr,1))) return 0;
-    KMCClusterFwd* cl = lr->GetCorCluster();
     double r = probe->GetR();
     //    printf("L%2d %f %f %f\n",j,r, lr->GetRMin(),lr->GetRMax());
     if (r<lr->GetRMax() && r>lr->GetRMin()) {
-      if (resp>0) cl->Set(probe->GetX(), probe->GetY(), probe->GetZ(),probe->GetTrID());
-      else cl->Kill();
+      if (resp>0) {
+	lr->AddCluster(probe->GetX(), probe->GetY(), probe->GetZ(),probe->GetTrID(), -1);
+      }
+      else lr->GetCorCluster()->Kill();
     }
-    else cl->Kill();
+    else lr->GetCorCluster()->Kill();
     //
     if (!lr->IsDead()) fLastActiveLayerTracked = j;
   }
@@ -904,20 +905,11 @@ Bool_t KMCDetectorFwd::UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, cons
   if (cl->IsKilled()) return kTRUE;
   // Note: we are working in the tracking frame: Lab X,Y,Z  <->  Tracking -Z,Y,X
   double meas[2] = {cl->GetYTF(), cl->GetZTF()}; // ideal cluster coordinate, tracking (AliExtTrParam frame)
-  double rcl = TMath::Sqrt(cl->GetYTF()*cl->GetYTF()+cl->GetZTF()*cl->GetZTF());
-  double sgY = lr->GetYRes(rcl), sgX = lr->GetXRes(rcl), sgY2 = sgY*sgY, sgX2 = sgX*sgX;
-  double measErr2[3] = {};
-  if (lr->IsRPhiError()) { // rotate error to angle phi
-    double phi = TMath::ATan2(cl->GetYTF(),cl->GetZTF()), cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
-    measErr2[0] = sgX2*cs2+sgY2*sn2;
-    measErr2[2] = sgX2*sn2+sgY2*cs2;
-    measErr2[1] = (sgY2-sgX2)*cssn;
-    
-  } else { // !!! Ylab<->Ytracking, Xlab<->Ztracking
-    measErr2[0] = sgY2;
-    measErr2[2] = sgX2;
-  }  
+  double measErr2[3] = {cl->GetSigYY(), cl->GetSigYZ(), cl->GetSigZZ()};
   //
+  //  if (trc->GetZ()>620 && trc->GetZ()<1140) {
+  //  printf("Update phi:%f Meas: %f %f Err: %f %f %f\n",TMath::ATan2(trc->GetY(), trc->GetX()),meas[0], meas[1], measErr2[0], measErr2[1], measErr2[2]);
+  //  }
   double chi2 = trc->GetTrack()->GetPredictedChi2(meas,measErr2);
   //  printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
   //  printf("cluster at Lr:%s was [%e %e / %e %e %e]: ", lr->GetName(), meas[0],meas[1], measErr2[0], measErr2[1], measErr2[2]); cl->Print("lc");
@@ -1263,7 +1255,7 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
     if (!(resP=PropagateToLayer(probTr,lr0,lr, 1, kTRUE))) return kFALSE;
     if (lr->IsDead()) continue;
     if (resP<0) continue;
-    lr->AddCluster(probTr->GetX(), probTr->GetY(), probTr->GetZ(), probTr->GetTrID(), bg);
+    lr->AddCluster(probTr->GetX(), probTr->GetY(), probTr->GetZ(), probTr->GetTrID(), bg ? 1:0);
     //
   }
   //

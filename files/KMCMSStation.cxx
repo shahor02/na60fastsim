@@ -95,9 +95,10 @@ void KMCMSStation::SetRPhiError(bool)
   fIsRPhiErr = true;;
 }
 
-bool KMCMSStation::AddCluster(double x, double y, double z, Int_t id, bool isBG)
+bool KMCMSStation::AddCluster(double x, double y, double z, Int_t id, int clType)
 {
-  if (!isBG) {
+  // clTypes are: -1 : ideal MC cluster, 0: signal MC cluster, 1: bg MC clusters
+  if (clType == 0) {
     GetMCCluster()->Kill(true);
   }
   // store randomized cluster local coordinates and phi
@@ -106,16 +107,31 @@ bool KMCMSStation::AddCluster(double x, double y, double z, Int_t id, bool isBG)
   if (!sect) {
     return false;
   }
-  double r = TMath::Sqrt(x*x + y*y); 
-  double rx,ry;
-  gRandom->Rannor(rx,ry);  
-  double xerr = rx*sect->sigRPhi, yerr = ry*sect->sigR;
+  double sgY = sect->sigR, sgX = sect->sigRPhi, sgY2 = sgY*sgY, sgX2 = sgX*sgX;
+  double measErr2[3] = {};
   double phi = TMath::ATan2(y,x);
-  r += yerr;
-  double rphi = xerr;
-  double cs = TMath::Cos(phi), sn = TMath::Sin(phi);
-  x = r*cs - rphi*sn;
-  y = r*sn + rphi*cs;
+  double cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
+  measErr2[0] = sgX2*cs2+sgY2*sn2;
+  measErr2[2] = sgX2*sn2+sgY2*cs2;
+  measErr2[1] = (sgY2-sgX2)*cssn;
+  if (clType != -1) { // randomize
+    double r = TMath::Sqrt(x*x + y*y); 
+    double rx,ry;
+    gRandom->Rannor(rx,ry);  
+    double xerr = rx*sgX, yerr = ry*sgY;
+    r += yerr;
+    double rphi = xerr;
+    x = r*cs - rphi*sn;
+    y = r*sn + rphi*cs;
+  }
+  if (clType==-1) {
+    KMCClusterFwd* cl = GetCorCluster();
+    cl->Kill(false);
+    cl->Set(x, y, z, id);
+    cl->SetErr(measErr2[0], measErr2[1], measErr2[2]);
+    return true;
+  }
+  
   int sid = getSectorID(x,y);
   if (sid>=0) { 
     sect = getSector(sid); // after randomization the sector might have changed, determine once more
@@ -125,19 +141,23 @@ bool KMCMSStation::AddCluster(double x, double y, double z, Int_t id, bool isBG)
   if (!res) {
     return false;
   }
-  if (!isBG) {
+  if (clType==0) { // signal
     signalU = U;
     signalV = V;
     signalW = W;
     signalSectorID = sid;
     GetMCCluster()->Kill(false);
     GetMCCluster()->Set(x, y, z, id);
-    
-  } else {
+    GetMCCluster()->SetErr(measErr2[0], measErr2[1], measErr2[2]);    
+  } else if (clType==1) { // bg
     sect->stripPlaneU.hits.emplace_back(U, id);
     sect->stripPlaneV.hits.emplace_back(V, id);
     sect->wirePlaneW.hits.emplace_back(W, id);
-    AddBgCluster(x, y, z, id);
+    int ncl = AddBgCluster(x, y, z, id);
+    GetBgCluster(ncl-1)->SetErr(measErr2[0], measErr2[1], measErr2[2]);
+  } else {
+    printf("Error: unknown cluster type %d\n", clType);
+    exit(1);
   }
   return true;
 }
@@ -203,7 +223,7 @@ void KMCMSStation::PrepareForTracking()
 	  } else {
 	    AddBgCluster(xlab,ylab,GetZ(),lbl);
 	  }	  
-	  printf("coincidence in sector %d: %f %f, chi2=%f, lbl: %d\n", int(is), xlab, ylab, chi2, lbl);
+	  //printf("coincidence in sector %d: %f %f, chi2=%f, lbl: %d\n", int(is), xlab, ylab, chi2, lbl);
 	}
       }
     }

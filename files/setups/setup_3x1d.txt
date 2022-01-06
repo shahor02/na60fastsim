@@ -31,18 +31,18 @@ dummy:          VT5Plane        CARBON          38.07   1000e-4
 #
 # UVstrip+Wire chambers:
 # expect format "active3x1D:type NAME MATERIAL Z DZ eff NSectors NSegments RMin NSegments*[RMax sigmaR sigmaRPhi phiUV pitchUV phiW pitchW]
-# the sector description is: RMax of radial segment, its sigmaR sigmaRPhi, phiUV of strip planes of pitchUV, phiW pitchW of wire chamber.
+# the sector description is: RMax of radial segment, its sigmaRPhi sigmaR, phiUV of strip planes of pitchUV, phiW pitchW of wire chamber.
 # maximum KMCLayerFwd::kMaxAccReg-1 segments per sector is allowed, at least 1 should be provided 
 
 # example 12 azimuthal sectors made of 2 segments with radii 20<R<60 and 60<R<140 with UV stereo angle 10degree
 # (80 degree wrt bisector of the sector) and pitch of 3mm and wire plane with wires inclination 360/12/2 degree (parallel to sector edge at 1 side)
 # and pitch of 3mm and effective resolution of 0.02cm in R and 0.04cm in RPhi
 #
-active3x1D:ms MS-CH0 SILICON 624.  0.1 0.95 12 2 20.      60 0.02 0.04 1.396 0.3 0.26179939 0.3     140 0.02 0.04 1.396 0.3 0.26179939 0.3
+active3x1D:ms MS-CH0 SILICON 624.  0.1 0.95 12 2 20.      60 0.04 0.02 1.396 0.3 0.26179939 0.3     140 0.02 0.04 1.396 0.3 0.26179939 0.3
 
-active3x1D:ms MS-CH1 SILICON 691.  0.1 0.95 12 2 20.      80 0.02 0.04 1.396 0.3 0.26179939 0.3     170 0.02 0.04 1.396 0.3 0.26179939 0.3
-active3x1D:ms MS-CH2 SILICON 1030. 0.1 0.95 12 2 20.      120 0.02 0.04 1.396 0.3 0.26179939 0.3     311 0.02 0.04 1.396 0.3 0.26179939 0.3
-active3x1D:ms MS-CH3 SILICON 1130. 0.1 0.95 12 2 20.      120 0.02 0.04 1.396 0.3 0.26179939 0.3     355 0.02 0.04 1.396 0.3 0.26179939 0.3
+active3x1D:ms MS-CH1 SILICON 691.  0.1 0.95 12 2 20.      80 0.04 0.02 1.396 0.3 0.26179939 0.3     170 0.02 0.04 1.396 0.3 0.26179939 0.3
+active3x1D:ms MS-CH2 SILICON 1030. 0.1 0.95 12 2 20.      120 0.04 0.02 1.396 0.3 0.26179939 0.3     311 0.02 0.04 1.396 0.3 0.26179939 0.3
+active3x1D:ms MS-CH3 SILICON 1130. 0.1 0.95 12 2 20.      120 0.04 0.02 1.396 0.3 0.26179939 0.3     355 0.02 0.04 1.396 0.3 0.26179939 0.3
 
 
 

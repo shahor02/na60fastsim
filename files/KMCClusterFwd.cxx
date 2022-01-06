@@ -9,6 +9,9 @@ KMCClusterFwd::KMCClusterFwd(KMCClusterFwd &src)
   ,fX(src.fX)
   ,fY(src.fY)
   ,fZ(src.fZ)
+  ,fSigYY(src.fSigYY)
+  ,fSigYZ(src.fSigYZ)
+  ,fSigZZ(src.fSigZZ)
 {}
 
 //__________________________________________________________________________
@@ -19,6 +22,9 @@ KMCClusterFwd& KMCClusterFwd::operator=(const KMCClusterFwd& src)
     fX = src.fX;
     fY = src.fY;
     fZ = src.fZ;
+    fSigYY = src.fSigYY;
+    fSigYZ = src.fSigYZ;
+    fSigZZ = src.fSigZZ;
   }
   return *this;
 }
@@ -29,9 +35,9 @@ void KMCClusterFwd::Print(Option_t *opt) const
   TString opts = opt;
   opts.ToLower();
   if (opts.Contains("lc")) 
-    printf("Tr#%4d TF (%+.4e,%+.4e %+.4e) %s",GetTrID(),GetXTF(), GetYTF(), GetZTF(),IsKilled()?"Killed":""); 
+    printf("Tr#%4d TF (%+.4e,%+.4e %+.4e / {%.4e %.4e %.4e}) %s",GetTrID(),GetXTF(), GetYTF(), GetZTF(), GetSigYY(),GetSigYZ(), GetSigZZ(), IsKilled()?"Killed":""); 
   else 
-    printf("Tr#%4d Lab (%+.4e,%+.4e %+.4e) %s",GetTrID(),GetX(),GetY(),GetZ(),IsKilled()?"Killed":""); 
+    printf("Tr#%4d Lab (%+.4e,%+.4e %+.4e / {%.4e %.4e %.4e}) %s",GetTrID(),GetX(),GetY(),GetZ(), GetSigYY(),GetSigYZ(), GetSigZZ(), IsKilled()?"Killed":""); 
   if (opts.Contains("nl")) return;
   printf("\n");
 }

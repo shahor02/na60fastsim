@@ -89,33 +89,54 @@ KMCProbeFwd* KMCLayerFwd::GetWinnerMCTrack()
 }
 
 //__________________________________________________________________________
-bool KMCLayerFwd::AddCluster(double x,double y,double z, Int_t id, bool isBG)
+bool KMCLayerFwd::AddCluster(double x,double y,double z, Int_t id, int clType)
 {
-  double r = TMath::Sqrt(x*x + y*y); 
-  if (r>GetRMax() || r<GetRMin()) {
+  // clTypes are: -1 : ideal MC cluster, 0: signal MC cluster, 1: bg MC clusters
+  double r = TMath::Sqrt(x*x + y*y);
+  bool inAcc = r<GetRMax() && r>GetRMin();
+  double measErr2[3]={}, sgY = GetYRes(r), sgX = GetXRes(r), sgY2 = sgY*sgY, sgX2 = sgX*sgX;
+  double phi = TMath::ATan2(y,x), cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
+  if (clType==-1 || inAcc) {
+    if (IsRPhiError()) { // rotate error to angle phi
+      measErr2[0] = sgX2*cs2+sgY2*sn2;
+      measErr2[2] = sgX2*sn2+sgY2*cs2;
+      measErr2[1] = (sgY2-sgX2)*cssn;
+    } else { // !!! Ylab<->Ytracking, Xlab<->Ztracking
+      measErr2[0] = sgY2;
+      measErr2[2] = sgX2;
+    }
+  }
+  if (clType==-1) {
+    KMCClusterFwd* cl = GetCorCluster();
+    cl->Kill(false);
+    cl->Set(x, y, z, id);
+    cl->SetErr(measErr2[0], measErr2[1], measErr2[2]);
+    return true;
+  }
+  if (!inAcc) {
     return false;
   }
   // store randomized cluster local coordinates and phi
   double rx,ry;
   gRandom->Rannor(rx,ry);
-  double xerr = rx*GetXRes(r), yerr = ry*GetYRes(r);
+  double xerr = rx*sgX, yerr = ry*sgY;
   if (IsRPhiError()) { // rotate track position to R,phi
-    double phi = TMath::ATan2(y,x);
     r += yerr;
     double rphi = xerr;
-    double cs = TMath::Cos(phi), sn = TMath::Sin(phi);
     x = r*cs - rphi*sn;
     y = r*sn + rphi*cs;
   } else {
     x += xerr;
     y += yerr;
   }
-  if (isBG) {
-    AddBgCluster(x, y, z, id);
-  }
-  else {
+  
+  if (clType==0) { // signal
     GetMCCluster()->Kill(false);
     GetMCCluster()->Set(x, y, z, id);
+    GetMCCluster()->SetErr(measErr2[0], measErr2[1], measErr2[2]);    
+  } else {
+    int ncl = AddBgCluster(x, y, z, id);
+    GetBgCluster(ncl-1)->SetErr(measErr2[0], measErr2[1], measErr2[2]);
   }
   return true;
 }

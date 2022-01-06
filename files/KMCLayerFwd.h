@@ -83,12 +83,15 @@ public:
   Bool_t  IsVertex()     const {return TestBit(kBitVertex);}
   virtual void PrepareForTracking() {} 
   //
-  virtual bool          AddCluster(double x,double y,double z, Int_t id, bool isBG);
+  virtual bool          AddCluster(double x,double y,double z, Int_t id, int clType);
   Int_t                 AddBgCluster(double x,double y,double z, Int_t id);
   KMCClusterFwd*        GetBgCluster(Int_t i)    const {return (KMCClusterFwd*)fClBg[i];}
+  KMCClusterFwd*        GetBgCluster(Int_t i)          {return (KMCClusterFwd*)fClBg[i];}
   TClonesArray*         GetBgClusters()          const {return (TClonesArray*)&fClBg;}
   KMCClusterFwd*        GetMCCluster()           const {return (KMCClusterFwd*)&fClMC;}
   KMCClusterFwd*        GetCorCluster()          const {return (KMCClusterFwd*)&fClCorr;}
+  KMCClusterFwd*        GetMCCluster()                 {return (KMCClusterFwd*)&fClMC;}
+  KMCClusterFwd*        GetCorCluster()                {return (KMCClusterFwd*)&fClCorr;}
   //
   void                  SetAnProbe(KMCProbeFwd& prb)   {fTrCorr = prb;}
   KMCProbeFwd*          GetAnProbe()             const {return (KMCProbeFwd*)&fTrCorr;}

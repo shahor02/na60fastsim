@@ -8,7 +8,7 @@ class KMCClusterFwd : public TObject {
   //
   enum {kBitKilled=BIT(14)};
   //
- KMCClusterFwd(Float_t x=0, Float_t y=0, Float_t z=0, int id=-1) : fX(x),fY(y),fZ(z) {SetTrID(id);}
+  KMCClusterFwd(Float_t x=0, Float_t y=0, Float_t z=0, int id=-1) : fX(x),fY(y),fZ(z), fSigYY(0), fSigYZ(0), fSigZZ(0) {SetTrID(id);}
   KMCClusterFwd(KMCClusterFwd &src);
   KMCClusterFwd& operator=(const KMCClusterFwd& src);
   virtual ~KMCClusterFwd() {}
@@ -29,6 +29,18 @@ class KMCClusterFwd : public TObject {
   void     SetY(double v)    {fY = v;}
   void     SetZ(double v)    {fZ = v;}
   //
+  float    GetSigYY() const { return fSigYY; }
+  float    GetSigYZ() const { return fSigYZ; }
+  float    GetSigZZ() const { return fSigZZ; }
+  
+  void     SetErr(float syy, float syz, float szz)
+  {
+    fSigYY = syy;
+    fSigYZ = syz;
+    fSigZZ = szz;
+  }
+  
+  //
   void    Kill(Bool_t v=kTRUE)          {SetBit(kBitKilled,v);}
   Bool_t  IsKilled()              const {return TestBit(kBitKilled);}
   void    Set(Float_t x, Float_t y, Float_t z, int id=-1) {fX=x; fY=y; fZ=z; SetTrID(id); ResetBit(kBitKilled);}
@@ -40,9 +52,12 @@ class KMCClusterFwd : public TObject {
 protected:
   Float_t fX; // tracking coordinates
   Float_t fY; 
-  Float_t fZ; 
+  Float_t fZ;
+  Float_t fSigYY;
+  Float_t fSigYZ;
+  Float_t fSigZZ;
   //
-  ClassDef(KMCClusterFwd,1);
+  ClassDef(KMCClusterFwd,2);
 };
 
 #endif

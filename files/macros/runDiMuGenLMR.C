@@ -106,7 +106,7 @@ void CalcBkgPar(Double_t E);
 void runDiMuGenLMR(int nev=30000,     // n events to generate
 		   const Char_t *Process = "jpsi",
 		   int Seed=12345,
-		   double Eint=40.,   // bg particles density - 30 GeV
+		   double Eint=110.,   // bg particles density - 30 GeV
 		   int refreshBg=100,  // generate new bg event for each refreshBg-th
 		   //double dndyBG=500,   // bg particles density - 20 GeV
 		   //double dndyBG=650,   // bg particles density - 20 GeV 
@@ -147,10 +147,11 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   det = new KMCDetectorFwd();
   //det->SetUseRPhiErrorMS(true);
   det->ReadSetup(setup,setup);
+  //det->SetUseRPhiErrorMS(true);
   NBGPi=0; NBGKplus=0;NBGKminus=0;NBGP=0;
-  //  det->InitBgGeneration(dndyBG,y0BG,sigyBG,yminBG,ymaxBG,TBG,ptminBG,ptmaxBG);
-  det->InitBgGenerationPart(NBGPi,NBGKplus,NBGKminus,NBGP,Piratio,y0BG,y0BGPi,y0BGKplus,y0BGKminus,y0BGP,sigyBGPi,sigyBGKplus,sigyBGKminus,sigyBGP,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
-  // det->InitBgGenerationPart(0.,dndyBGK,0.,y0BG,sigyBG,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
+  //det->InitBgGeneration(dndyBG,y0BG,sigyBG,yminBG,ymaxBG,TBG,ptminBG,ptmaxBG);
+  //det->InitBgGenerationPart(NBGPi,NBGKplus,NBGKminus,NBGP,Piratio,y0BG,y0BGPi,y0BGKplus,y0BGKminus,y0BGP,sigyBGPi,sigyBGKplus,sigyBGKminus,sigyBGP,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
+   det->InitBgGenerationPart(0.,dndyBGK,0.,y0BG,sigyBG,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
 
   printf("pion   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChPi());
   printf("kaon   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChK());

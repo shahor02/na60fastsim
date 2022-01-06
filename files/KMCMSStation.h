@@ -123,7 +123,7 @@ struct KMCMSStation : public KMCLayerFwd
   KMCMSSector* getSector(int id) { return id<int(sectors.size()) ? &sectors[id] : 0; }
   const KMCMSSector* getSector(int id) const { return id<int(sectors.size()) ? &sectors[id] : 0; }
   KMCMSSector* getSector(float x, float y) { return getSector( getSectorID(x,y) ); }
-  virtual bool AddCluster(double x,double y,double z, Int_t id, bool isBG);
+  virtual bool AddCluster(double x,double y,double z, Int_t id, int clType);
   virtual void Print(Option_t *opt) const;
   virtual void SetRPhiError(bool );
   virtual void PrepareForTracking();
