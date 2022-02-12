@@ -5,6 +5,7 @@
 #include <TObjArray.h>
 #include <fstream>
 #include <vector>
+#include "KMCLayerFwd.h"
 
 //====================================================================
 //
@@ -39,6 +40,14 @@ struct FlukaPart {
   ClassDefNV(FlukaPart,1);
 };
 
+struct FlukaHit {
+  int stationType = int(KMCLayerFwd::kTypeNA);
+  int stationID = -1;
+  int partCode = 0;
+  double recData[kNFld]={};
+  ClassDefNV(FlukaHit,1);
+};
+
 struct FlukaStat {
   int totalRead;
   int totalAccepted;
@@ -55,8 +64,13 @@ class KMCFlukaParser {
     
   Int_t SetInpList(const char* list);
   bool GetNextGoodPair(Int_t minPix=0,Int_t minMS=3,Int_t minTr=2);
+
+  bool GetNextBackgroundEvent(const TString& interactionSource="", bool allowRewind = true);
+  int readBackground(TString& interactionSource);
+    
   const FlukaStat& GetStat() const {return fStat;}
   const std::vector<FlukaPart>& GetParticles() const {return fParts;}
+  const std::vector<FlukaHit>& GetHits() const {return fHits;}
   
  protected:
 
@@ -67,6 +81,7 @@ class KMCFlukaParser {
   Int_t     fCurFileID;
   std::ifstream  fInpFile;
   std::vector<FlukaPart> fParts;
+  std::vector<FlukaHit> fHits;
   FlukaStat fStat;
   static const TString fgEndEvRecord;
 

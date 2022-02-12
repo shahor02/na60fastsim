@@ -68,6 +68,102 @@ bool KMCFlukaParser::GetNextGoodPair(Int_t minPix,Int_t minMS,Int_t minTr)
   return false;  
 }
 
+
+bool KMCFlukaParser::GetNextBackgroundEvent(const TString& interactionSource, bool allowRewind)
+{
+  // read next set of background hits, optionally from the interaction in the volume whose name starts with interactionSource
+  
+  while(1) { // loop over files
+    if (!fInpFile.is_open()) {
+      if (fCurFileID>=fInpFileList.GetEntriesFast()-1) {
+	if (!allowRewind) return false;
+	printf("Rewinding fluka backgroung files\n");
+	fCurFileID = -1;
+      }
+      const char* fnm = fInpFileList.At(++fCurFileID)->GetName();
+      printf("Processing %d-th file %s\n",fCurFileID,fnm);
+      fInpFile.open(fnm);
+      if (!fInpFile.good()) {
+	printf("Failed to open file %s\n",fnm);
+	exit(1);
+      }
+    }
+    TString intVol = "";
+    while (1) {
+      int res = readBackground(intVol);
+      fStat.totalRead++;
+      if (res<-1) break; // no more data in this file
+      if (!interactionSource.IsNull() && !intVol.BeginsWith(interactionSource)) continue;
+      printf("Read background event with %d hits\n", res);
+      return true;
+    }
+    fInpFile.close();
+  }
+  return false;  
+}
+
+int KMCFlukaParser::readBackground(TString& interactionSource)
+{
+  //
+  TString rec;
+  //
+  fHits.clear();
+  if (!fInpFile.good()) return -10;
+  interactionSource = "";
+  //
+  while(1) {
+    FlukaHit hit;
+    char key0[20], volint[20];
+    
+    rec = readNextRecord();
+    rec = rec.Strip(TString::kLeading,' ');
+    if (rec.IsNull()) return -9;
+    if (rec.BeginsWith(fgEndEvRecord)) break; // end of record reached
+    //    printf("rec is |%s|\n",rec.Data());
+
+    int nr = sscanf(rec.Data(),"%s %d %s %lf %lf %lf %lf %lf %lf %lf", key0, &hit.partCode, volint,
+		    &hit.recData[kE], &hit.recData[kX], &hit.recData[kY], &hit.recData[kZ],
+		    &hit.recData[kCX], &hit.recData[kCY],&hit.recData[kCZ]); 
+    if (nr!=10) {
+      printf("Expected to read %d items, got %d from\n%s\n",10,nr,rec.Data());
+      exit(1);
+    }
+    if (interactionSource.IsNull()) interactionSource = volint;
+    
+    if (rec.BeginsWith("PixStn")) {
+      int nr = sscanf(key0,"PixStn%d",&hit.stationID);	
+      if (nr!=1 || hit.stationID>=kMaxPix) {
+	printf("Failed to get VerTel plane number from:\n%s\n", rec.Data());
+	exit(1);
+      }
+      hit.stationType = KMCLayerFwd::kITS;
+    }
+    else if (rec.BeginsWith("MS")) {
+      int nr = sscanf(key0,"MS%d",&hit.stationID);
+      if (nr!=1 || hit.stationID>=kMaxMS) {
+	printf("Failed to get MS plane number from:\n%s\n", rec.Data());
+	exit(1);
+      }
+      hit.stationType = KMCLayerFwd::kMS;
+    }
+    else if (rec.BeginsWith("TrigStn")) {
+      int nr = sscanf(key0,"TrigStn%d",&hit.stationID);
+      if (nr!=1 || hit.stationID>=kMaxTrig) {
+	printf("Failed to get Trigger plane number from:\n%s\n", rec.Data());
+	exit(1);
+      }
+      hit.stationType = KMCLayerFwd::kTRIG;
+    }
+    else {
+	printf("Unknown detector keyword in %s\n",rec.Data());
+	exit(1);
+    }
+    fHits.push_back( hit );
+  }
+  //
+  return fHits.size();
+}
+
 int KMCFlukaParser::readNextPair(Bool_t verbose)
 {
   //
