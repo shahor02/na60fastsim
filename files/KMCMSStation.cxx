@@ -171,8 +171,12 @@ void KMCMSStation::PrepareForTracking()
     sect->stripPlaneV.hits.emplace_back(signalV, -1);
     sect->wirePlaneW.hits.emplace_back(signalW, -1);
   }
+  int nu=0, nv=0, nw=0;
   for (size_t is=0;is<sectors.size();is++) {
     KMCMSSector* sect = getSector(is);
+    nu += sect->stripPlaneU.hits.size();
+    nv += sect->stripPlaneV.hits.size();
+    nw += sect->wirePlaneW.hits.size();
     for (size_t iu=0;iu<sect->stripPlaneU.hits.size();iu++) {
       float hu = (sect->stripPlaneU.hits[iu].channel + sect->stripPlaneU.offset)*sect->stripPlaneU.pitch;
       for (size_t iw=0;iw<sect->wirePlaneW.hits.size();iw++) {
@@ -189,7 +193,7 @@ void KMCMSStation::PrepareForTracking()
 	*/
 	if (!sect->isInside(xsUW, ysUW)) continue;
 	
-	for (size_t iv=0;iv<sect->stripPlaneV.hits.size();iv++) { // check crossing of VW channels
+	for (size_t iv=0;iv<sect->stripPlaneV.hits.size();iv++) { // check crossing of VW channels	  
 	  float hv = (sect->stripPlaneV.hits[iv].channel + sect->stripPlaneV.offset)*sect->stripPlaneV.pitch;
 	  float tvw = (hw - hv*sect->cVW)/sect->sVW; // this is a point on the V channel line corresponding to crossing with W channel
 	  // rotate to sector frame
@@ -237,4 +241,13 @@ void KMCMSStation::PrepareForTracking()
     sect->wirePlaneW.hits.pop_back();
   }
   SortBGClusters();
+  printf("Primary background hits: U: %d V: %d W: %d\n",nu,nv,nw);
+  KMCLayerFwd::PrepareForTracking();
+}
+
+void KMCMSStation::ClearPrimaryHits()
+{
+  for (auto& sect : sectors) {
+    sect.clear();
+  }
 }

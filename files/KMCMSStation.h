@@ -127,6 +127,7 @@ struct KMCMSStation : public KMCLayerFwd
   virtual void Print(Option_t *opt) const;
   virtual void SetRPhiError(bool );
   virtual void PrepareForTracking();
+  void ClearPrimaryHits();
   
   int nSectors;               // number of sectors (each having 2pi/nSectors coverage)
   int nRadSegments;           // number of radial segments

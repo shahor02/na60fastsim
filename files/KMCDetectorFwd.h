@@ -19,6 +19,7 @@
 #include <TSystem.h>
 #include <TString.h>
 #include <stdio.h>
+#include "KMCFlukaParser.h"
 
 
 class NaCardsInput;
@@ -73,6 +74,7 @@ class KMCDetectorFwd : public TNamed {
   KMCLayerFwd* GetLayerITS(int i)          const {return (KMCLayerFwd*)fLayersITS[i];}
   KMCLayerFwd* GetLayerMS(int i)           const {return (KMCLayerFwd*)fLayersMS[i];}
   KMCLayerFwd* GetLayerTR(int i)           const {return (KMCLayerFwd*)fLayersTR[i];}
+  KMCLayerFwd* GetActiveLayer(int i, int type) const;
   //
   void         SetUseRPhiErrorITS(bool v) { SetUseRPhiError(v, KMCLayerFwd::kITS); }
   void         SetUseRPhiErrorMS(bool v)  { SetUseRPhiError(v, KMCLayerFwd::kMS); } 
@@ -129,7 +131,7 @@ class KMCDetectorFwd : public TNamed {
 				    double sigyBGPi=1.2, double sigmayBGKplus=0.8, double sigmayBGKminus=0.8, double sigmaBGP =0.8, double ymin=1.8,double ymax=4.,
 				    double Tpi=0.17, double TK=0.23, double TP=0.25, double ptmin=0.01, double ptmax=5);
   void         InitBkg(double beamenergy);
-
+  bool         ImposeFlukaBackground(KMCFlukaParser* fp, const TString& interactionSource="", bool allowRewind=true);
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
 

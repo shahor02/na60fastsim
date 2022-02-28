@@ -2,6 +2,7 @@
 #define _NOALIROOT_
 #include "KMCDetectorFwd.h"
 #include "KMCProbeFwd.h"
+#include "KMCFlukaParser.h"
 #include "TLorentzVector.h"
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
@@ -110,7 +111,9 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 		   int refreshBg=100,  // generate new bg event for each refreshBg-th
 		   //double dndyBG=500,   // bg particles density - 20 GeV
 		   //double dndyBG=650,   // bg particles density - 20 GeV 
-		   const char* setup="setup.txt" // setup to load
+		   const char* setup="setup.txt", // setup to load
+		   const char* flukaBGList="flbg.txt", // optional fluka background file, if empty, then use parametric background
+		   const char* interactionSource="Target" // optional primary interaction volume in fluka files, if empty, take all
 		   ){
 
 // Process can be "etaDalitz", "eta2Body", "rho", "omega2Body", "omegaDalitz", "phi", "etaPrime", "Jpsi", "jpsisch"
@@ -120,7 +123,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 
   CalcBkgPar(Eint);
   TLocTreeSRedirector outStream("dimuGenLMR.root"); // the output stream trees will go here
-  
+  TString flukaBG = flukaBGList;
 
   MagField *mag = new MagField(1);
   int BNreg = mag->GetNReg();
@@ -147,16 +150,24 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   det = new KMCDetectorFwd();
   //det->SetUseRPhiErrorMS(true);
   det->ReadSetup(setup,setup);
+  KMCFlukaParser* flukaParser = 0;
   //det->SetUseRPhiErrorMS(true);
-  NBGPi=0; NBGKplus=0;NBGKminus=0;NBGP=0;
-  //det->InitBgGeneration(dndyBG,y0BG,sigyBG,yminBG,ymaxBG,TBG,ptminBG,ptmaxBG);
-  //det->InitBgGenerationPart(NBGPi,NBGKplus,NBGKminus,NBGP,Piratio,y0BG,y0BGPi,y0BGKplus,y0BGKminus,y0BGP,sigyBGPi,sigyBGKplus,sigyBGKminus,sigyBGP,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
-   det->InitBgGenerationPart(0.,dndyBGK,0.,y0BG,sigyBG,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
+  if (flukaBG.IsNull()) {
+    NBGPi=0; NBGKplus=0;NBGKminus=0;NBGP=0;
+    //det->InitBgGeneration(dndyBG,y0BG,sigyBG,yminBG,ymaxBG,TBG,ptminBG,ptmaxBG);
+    //det->InitBgGenerationPart(NBGPi,NBGKplus,NBGKminus,NBGP,Piratio,y0BG,y0BGPi,y0BGKplus,y0BGKminus,y0BGP,sigyBGPi,sigyBGKplus,sigyBGKminus,sigyBGP,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
+    det->InitBgGenerationPart(0.,dndyBGK,0.,y0BG,sigyBG,yminBG,ymaxBG,TBGpi,TBGK,TBGP,ptminBG,ptmaxBG);
 
-  printf("pion   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChPi());
-  printf("kaon   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChK());
-  printf("proton multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChP());
-  //
+    printf("pion   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChPi());
+    printf("kaon   multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChK());
+    printf("proton multiplicity in %f<y<%f = %f\n",yminBG,ymaxBG,det->GetNChP());
+    //
+  } else {
+    printf("Will use Fluka background from %s\n", flukaBG.Data());
+    flukaParser = KMCFlukaParser();
+    flukaParser->SetInpList(flukaBG.Data());
+  }
+  
   // set the min N tracker hits needed to validate the track
   printf("min number of hits in MS = %d\n",det->GetNumberOfActiveLayersMS());
   det->SetMinITSHits(det->GetNumberOfActiveLayersITS()); //NA60+
@@ -180,7 +191,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   //
   det->SetIncludeVertex(kFALSE); // count vertex as an extra measured point
   //
-    det->SetApplyBransonPCorrection(); // Branson correction
+  det->SetApplyBransonPCorrection(); // Branson correction
 
   // create signal generation f-ns
   //TF1* fRhoLineShape = new TF1("fRhoLineShape",RhoLineShapeNew,0,2,2); 
@@ -241,7 +252,13 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   for (int iev=0;iev<nev;iev++) {
     //
     if ((iev%outN)==0) printf("Done %d out of %d\n",iev,nev);
-    if (dndyBGPi>0 && (iev%refreshBg)==0) det->GenBgEvent(vX,vY,vZ);
+    if (dndyBGPi>0 && (iev%refreshBg)==0) {
+      if (flukaParser) {
+	det->ImposeFlukaBackground(flukaParser, interactionSource, true); // allow rewind
+      } else {
+	det->GenBgEvent(vX,vY,vZ);
+      }
+    }
     //
 //     double y  = dndyFunSG->GetRandom();
 //     double pt = dndptFunSG->GetRandom();

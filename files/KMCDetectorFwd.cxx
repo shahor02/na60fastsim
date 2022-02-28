@@ -1602,6 +1602,9 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
     KMCLayerFwd* lr = GetLayer(ilr);
     if (lr->IsDead()) continue;
     lr->ResetBgClusters();
+    if (lr->InheritsFrom(KMCMSStation::Class())) {
+      ((KMCMSStation*)lr)->ClearPrimaryHits();
+    }
   }
   int decMode = fDecMode;
   fDecMode = kNoDecay;
@@ -1952,12 +1955,48 @@ void  KMCDetectorFwd::ForceLastActiveLayer(int lr)
 }
 
 //_____________________________________________________________________
-void  KMCDetectorFwd::PrepareForTracking()
+void KMCDetectorFwd::PrepareForTracking()
 {
   for (Int_t j=fNLayers; j--;) {  // Layer loop
-    GetLayer(j)->PrepareForTracking();
+    KMCLayerFwd* lr = GetLayer(j);
+    if (lr->IsDead()) continue;
+    lr->PrepareForTracking();
   }
 }
+
+//_____________________________________________________________________
+KMCLayerFwd* KMCDetectorFwd::GetActiveLayer(int i, int ltype) const
+{
+  if (ltype == KMCLayerFwd::kITS) return (KMCLayerFwd*)fLayersITS[i];
+  if (ltype == KMCLayerFwd::kMS) return (KMCLayerFwd*)fLayersMS[i];
+  if (ltype == KMCLayerFwd::kTRIG) return (KMCLayerFwd*)fLayersTR[i];
+  return 0;
+}
+
+//_____________________________________________________________________
+bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& interactionSource, bool allowRewind)
+{
+  if (!fp->GetNextBackgroundEvent(interactionSource, allowRewind)) return false;
+  const std::vector<FlukaHit>& hits = fp->GetHits();
+  for (int ilr=fLastActiveLayer;ilr--;) {
+    KMCLayerFwd* lr = GetLayer(ilr);
+    lr->ResetBgClusters();
+    if (lr->InheritsFrom(KMCMSStation::Class())) {
+      ((KMCMSStation*)lr)->ClearPrimaryHits();
+    }
+  }
+  int ic = 0;
+  for (const auto& hit : hits) {
+    KMCLayerFwd* lr = GetActiveLayer(hit.stationID, hit.stationType);
+    if (!lr) {
+      printf("ERROR: hit in non-existing layer %d of type %d, check setup\n",hit.stationID, hit.stationType);
+      exit(1);
+    }
+    lr->AddCluster(hit.recData[kX],hit.recData[kY],hit.recData[kZ], ic++, 1);
+  }
+  return true;
+}
+
 
 //=======================================================================================
 

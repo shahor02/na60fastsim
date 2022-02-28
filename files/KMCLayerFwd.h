@@ -81,7 +81,7 @@ public:
   Bool_t  IsDummy()      const {return fType==kDUMMY;}
   Int_t   GetType()      const {return fType;}
   Bool_t  IsVertex()     const {return TestBit(kBitVertex);}
-  virtual void PrepareForTracking() {} 
+  virtual void PrepareForTracking();
   //
   virtual bool          AddCluster(double x,double y,double z, Int_t id, int clType);
   Int_t                 AddBgCluster(double x,double y,double z, Int_t id);
