@@ -1994,6 +1994,7 @@ bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& in
     }
     lr->AddCluster(hit.recData[kX],hit.recData[kY],hit.recData[kZ], ic++, 1);
   }
+  printf("\nAdded Fluka background event of %d hits\n",ic);
   return true;
 }
 

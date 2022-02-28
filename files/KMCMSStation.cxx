@@ -189,7 +189,7 @@ void KMCMSStation::PrepareForTracking()
 	/*
 	float xsUWlab=0, ysUWlab=0;
 	sect->sector2Lab(xsUW,ysUW, xsUWlab,ysUWlab);
-	printf("UW check for lbl %d %d: %f %f\n", sect->stripPlaneU.hits[iu].label, sect->wirePlaneW.hits[iw].label, xsUWlab,ysUWlab);
+	printf("Sect:%d UW check for lbl %d %d: %f %f => passed = %d\n", int(is), sect->stripPlaneU.hits[iu].label, sect->wirePlaneW.hits[iw].label, xsUWlab,ysUWlab, sect->isInside(xsUW, ysUW));
 	*/
 	if (!sect->isInside(xsUW, ysUW)) continue;
 	
@@ -202,13 +202,14 @@ void KMCMSStation::PrepareForTracking()
 	  /*
 	  float xsVWlab=0, ysVWlab=0;
 	  sect->sector2Lab(xsVW,ysVW, xsVWlab,ysVWlab);
-	  printf("VW check for lbl %d %d: %f %f\n", sect->stripPlaneV.hits[iv].label, sect->wirePlaneW.hits[iw].label, xsVWlab,ysVWlab);
+	  printf("Sect:%d VW check for lbl %d %d: %f %f => passed = %d\n", int(is), sect->stripPlaneV.hits[iv].label, sect->wirePlaneW.hits[iw].label, xsVWlab,ysVWlab, sect->isInside(xsVW, ysVW));
 	  */
 	  if (!sect->isInside(xsVW, ysVW)) continue;
 	  //
 	  // check distance between UW and VW crossings (should be within 3 sigma to be counted as a coincidence)
 	  float dx = xsUW-xsVW, dy = ysUW-ysVW;
 	  float chi2 = (dx*dx/sect->sigR + dy*dy/sect->sigRPhi)/2;
+	  //printf("Chi2 = %f\n", chi2);
 	  if (chi2>9) continue;
 	  // register coincidence
 	  float xlab, ylab;
@@ -234,15 +235,17 @@ void KMCMSStation::PrepareForTracking()
 
   }
   
-  if (signalSectorID>=0) { // temporarily add signal channels to common channels pool
+  if (signalSectorID>=0) { // suppress temporarily added signal channels
     KMCMSSector* sect = getSector(signalSectorID);
     sect->stripPlaneU.hits.pop_back();
     sect->stripPlaneV.hits.pop_back();
     sect->wirePlaneW.hits.pop_back();
+    nu--;
+    nw--;
+    nv--;
   }
   SortBGClusters();
-  printf("Primary background hits: U: %d V: %d W: %d\n",nu,nv,nw);
-  KMCLayerFwd::PrepareForTracking();
+  printf("Lr:%s: Signal clusters: %d, Bb.clusters: %d | Primary background hits: U: %d V: %d W: %d\n",GetName(), fClMC.IsKilled() ? 0 : 1, fClBg.GetEntriesFast(), nu,nv,nw);
 }
 
 void KMCMSStation::ClearPrimaryHits()

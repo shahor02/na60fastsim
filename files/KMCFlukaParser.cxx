@@ -56,7 +56,7 @@ bool KMCFlukaParser::GetNextGoodPair(Int_t minPix,Int_t minMS,Int_t minTr)
       }
       if (nAcc==2) {
 	fStat.totalAccepted++;
-	printf("Read %d Accepted %d | %d/%d %d/%d %d/%d\n",
+	printf("\nRead %d Accepted %d | %d/%d %d/%d %d/%d\n",
 	       fStat.totalRead,fStat.totalAccepted,
 	       fParts[0].nPix,fParts[1].nPix, fParts[0].nMS,fParts[1].nMS,
 	       fParts[0].nTrig, fParts[1].nTrig);
@@ -94,7 +94,7 @@ bool KMCFlukaParser::GetNextBackgroundEvent(const TString& interactionSource, bo
       fStat.totalRead++;
       if (res<-1) break; // no more data in this file
       if (!interactionSource.IsNull() && !intVol.BeginsWith(interactionSource)) continue;
-      printf("Read background event with %d hits\n", res);
+      printf("\nRead background event with %d hits\n", res);
       return true;
     }
     fInpFile.close();

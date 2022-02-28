@@ -108,12 +108,12 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 		   const Char_t *Process = "jpsi",
 		   int Seed=12345,
 		   double Eint=110.,   // bg particles density - 30 GeV
-		   int refreshBg=100,  // generate new bg event for each refreshBg-th
+		   int refreshBg=10,   // generate new bg event for each refreshBg-th, 1 to refresh for every signal
 		   //double dndyBG=500,   // bg particles density - 20 GeV
 		   //double dndyBG=650,   // bg particles density - 20 GeV 
 		   const char* setup="setup.txt", // setup to load
-		   const char* flukaBGList="flbg.txt", // optional fluka background file, if empty, then use parametric background
-		   const char* interactionSource="Target" // optional primary interaction volume in fluka files, if empty, take all
+		   const char* flukaBGList="fluka.lst", // optional fluka background file, if empty, then use parametric background
+		   const char* interactionSource="" // optional primary interaction volume in fluka files, if empty, take all
 		   ){
 
 // Process can be "etaDalitz", "eta2Body", "rho", "omega2Body", "omegaDalitz", "phi", "etaPrime", "Jpsi", "jpsisch"
@@ -164,7 +164,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
     //
   } else {
     printf("Will use Fluka background from %s\n", flukaBG.Data());
-    flukaParser = KMCFlukaParser();
+    flukaParser = new KMCFlukaParser();
     flukaParser->SetInpList(flukaBG.Data());
   }
   
