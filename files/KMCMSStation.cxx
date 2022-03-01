@@ -1,14 +1,21 @@
 #include "KMCMSStation.h"
 
 MeasPlane1D::MeasPlane1D(float phiSector, float dphih, float rmin, float rmax, float phiMeas, float ptc)
-  : Sector(phiSector, dphih, rmin, rmax), pitch(ptc), offset(0), measAngle(phiMeas)
+  : Sector(phiSector, dphih, rmin, rmax), pitch(ptc), offset(0), nChan(0), measAngle(phiMeas)
 {
   // find offset
-  float chan = get1DMeasurement(rMin, rMin*TMath::Tan(dphiH));
-  chan = TMath::Min(chan, get1DMeasurement(rMin, -rMin*TMath::Tan(dphiH)));
-  chan = TMath::Min(chan, get1DMeasurement(rMax,  rMax*TMath::Tan(dphiH)));
-  chan = TMath::Min(chan, get1DMeasurement(rMax, -rMax*TMath::Tan(dphiH)));
-  offset = chan;
+  float chanLim[4] = { get1DMeasurement(rMin, rMin*TMath::Tan(dphiH)),
+		       get1DMeasurement(rMin, -rMin*TMath::Tan(dphiH)),
+		       get1DMeasurement(rMax,  rMax*TMath::Tan(dphiH)),
+		       get1DMeasurement(rMax, -rMax*TMath::Tan(dphiH)) };
+  float chmin=1e10, chmax=-1e10;
+  for (int i=0;i<4;i++) {
+    if (chmin>chanLim[i]) chmin = chanLim[i];
+    if (chmax<chanLim[i]) chmax = chanLim[i];    
+  }
+  offset = chmin;
+  nChan = int(chmax - chmin);
+  //  printf("chans: %f %f %f %f | %f %f %d\n",chanLim[0], chanLim[1], chanLim[2], chanLim[3], chmin, chmax, nChan);
 }
 
 KMCMSSector::KMCMSSector(float phiSector, float dphih, float rmin, float rmax,
@@ -83,9 +90,10 @@ void KMCMSStation::Print(Option_t *opt) const
   KMCLayerFwd::Print(opt);
   for (int ir=0;ir<nRadSegments;ir++) {
     const KMCMSSector* sect =  getSector(ir);
-    printf("** %d 3x1D stations for %.1f<R<%.1f, coverage in phi: %.2f\n", nSectors, radii[ir],radii[ir+1], dPhi);
+    printf("** %d 3x1D sectors for %.1f<R<%.1f, coverage in phi: %.2f\n", nSectors, radii[ir],radii[ir+1], dPhi);
     printf("** UV strip planes with angle: %.2f, pitch: %.1f, W plane with angle: %.2f, pitch: %.2f, sigmaR: %.3f, sigmaRPhi: %.3f\n",
 	   sect->stripPlaneU.sectAngle.phi0, sect->stripPlaneU.pitch, sect->wirePlaneW.sectAngle.phi0, sect->wirePlaneW.pitch, sect->sigR, sect->sigRPhi);
+    printf("** Channels per sector: U: %d V: %d W: %d\n", sect->stripPlaneU.nChan, sect->stripPlaneV.nChan, sect->wirePlaneW.nChan);
   }
 }
 

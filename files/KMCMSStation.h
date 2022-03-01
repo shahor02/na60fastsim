@@ -83,6 +83,7 @@ struct MeasPlane1D : public Sector
   std::vector<FiredChannel> hits;
   float pitch;
   float offset;
+  int nChan;
   RotAngle measAngle; // inclination of the 1d measurement direction wrt mother frame
 
   ClassDefNV(MeasPlane1D,1);
