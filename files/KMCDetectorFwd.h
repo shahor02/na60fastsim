@@ -252,6 +252,10 @@ class KMCDetectorFwd : public TNamed {
   float fChi2MuVtx; // chi2 of muon at vertex, if Branson correction is on
   //
   // field stepping optimization
+  Double_t  fZBendingMS; // Z of bending plane of toroid
+  Double_t  fZToroidStart;
+  Double_t  fZToroidEnd;
+  Double_t  fToroidB0;
   Int_t     fFldNReg;   // number of field regions
   const Double_t* fFldZMins;  // z of field regions beginning
   const Double_t* fFldZMaxs;  // z of field regions end

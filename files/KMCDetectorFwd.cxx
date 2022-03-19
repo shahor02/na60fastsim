@@ -52,6 +52,10 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
 ,fZDecay(0)
 ,fDecMode(kNoDecay)
 ,fChi2MuVtx(0)
+,fZBendingMS(0)
+,fZToroidStart(0)
+,fZToroidEnd(0)
+,fToroidB0(0)
 ,fFldNReg(0)
 ,fFldZMins(0)
 ,fFldZMaxs(0)
@@ -360,9 +364,17 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     if (zminToroid>-9999) ((MagField *) fld)->SetZMin(1,zminToroid);
     if (zmaxToroid>-9999) ((MagField *) fld)->SetZMax(1,zmaxToroid);
     if (dipoleField>-9999) ((MagField *) fld)->SetBVals(0,0,dipoleField);
-    if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
+    if (toroidField>-9999) {
+      ((MagField *) fld)->SetBVals(1,0,toroidField);
+      fToroidB0 = toroidField;
+    }
     if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
     if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
+    if (zminToroid>-9999 && zmaxToroid>-9999) {
+      fZBendingMS = 0.5*(zminToroid + zmaxToroid);
+      fZToroidStart = zminToroid;
+      fZToroidEnd = zmaxToroid;
+    }
     // end modification
     // -------------------------------------------------------------------
     TGeoGlobalMagField::Instance()->SetField( fld );
@@ -1996,6 +2008,48 @@ bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& in
   }
   printf("\nAdded Fluka background event of %d hits\n",ic);
   return true;
+}
+
+bool KMCDetectorFwd::createMSSeed(int ic0, int ic1)
+{
+  // try to create MS track seed from clusters ic0 and ic1 of the 1st and last layer after the magnet
+  KMCClusterFwd* cl0 = GetLayerMS(fNActiveLayersMS/2)->GetCluster(ic0);
+  KMCClusterFwd* cl1 = GetLayerMS(fNActiveLayersMS-1)->GetCluster(ic1);
+  double pos0[3] = {cl0->GetXLab(), cl0->GetYLab(), cl0->GetZLab()};
+  double pos1[3] = {cl1->GetXLab(), cl1->GetYLab(), cl1->GetZLab()};
+  double dirc[3], dirf[3], posBend[3], dirnrm = 0., dirnrmF = 0., dzbend = fZBendingMS - pos0[2];
+  for (int i=0;i<3;i++) {
+    dirc[i] = pos1[i] - pos0[i];
+    dirnrm += dirc[i]*dirc[i];
+  }
+  // check if the segment does not cross the normal from the origin ("too much" bending)
+  double tcross = - (dirc[0]*pos0[0] + dirc[1]*pos0[1])/(dirnrm - dirc[2]*dirc[2]);
+  if (tcross>0 && tcross<1) {
+    printf("reject as crossing origin\n");
+    for (int i=0;i<3;i++) printf("%+e ", pos0[i]); printf("\n");
+    for (int i=0;i<3;i++) printf("%+e ", pos1[i]); printf("\n");
+  }
+  return false;
+  
+  dirnrm = 1./TMath::Sqrt(dirnrm);
+  // bending angle of line from the origin to bending point and from bending point to clusters
+  for (int i=0;i<3;i++) {
+    dirc[i] *= dirnrm;
+    posBend[i] = pos0[i] + dirc[i]*dzbend;
+    dirnrmF += posBend[i]*posBend[i];
+  }
+  dirnrmF = 1./TMath::Sqrt(dirnrmF);
+  double theta0 = TMath::Sqrt(posBend[0]*posBend[0]+posBend[1]*posBend[1])/fZBendingMS;
+  double theta1 = TMath::Sqrt(dirc[0]*dirc[0]+dirc[1]*dirc[1])/dirc[2];
+  double dTheta = TMath::ATan(theta0) - TMath::ATan(theta1);  //  dTheta = 0.3* B0 / pT * ln(z2/z1) == bending angle, B in kgaus
+  double pTQF = TMath::Abs(dTheta)>1e-4 ? 0.3*fToroidB0*TMath::Log(fZToroidEnd/fZToroidStart)/dTheta : 1e3.; // estimate of q*pT at target
+  double ptot = TMath::Abs(pTQF) / TMath::Sin(theta0); // full momentum
+  double pT = ptot*TMath::Sin(theta1), pz = ptot*TMath::Cos(theta1);
+  double phi = TMath::ATan2(dirc[1],dirc[0]);
+  double pxyz[3] = {pT*TMath::Cos(phi), pT*TMath::Sin(phi), ptot*TMath::Cos(theta1)};
+
+  KMCProbeFwd* seed = CreateProbe(pos1, pxyz, pTQF>0 ? 1:-1);
+
 }
 
 

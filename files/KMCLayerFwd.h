@@ -92,6 +92,8 @@ public:
   KMCClusterFwd*        GetCorCluster()          const {return (KMCClusterFwd*)&fClCorr;}
   KMCClusterFwd*        GetMCCluster()                 {return (KMCClusterFwd*)&fClMC;}
   KMCClusterFwd*        GetCorCluster()                {return (KMCClusterFwd*)&fClCorr;}
+  KMCClusterFwd*        GetCluster(int i)        const {return i<0 ? GetCorCluster() : GetBgCluster(i); }
+  KMCClusterFwd*        GetCluster(int i)              {return i<0 ? GetCorCluster() : GetBgCluster(i); }
   //
   void                  SetAnProbe(KMCProbeFwd& prb)   {fTrCorr = prb;}
   KMCProbeFwd*          GetAnProbe()             const {return (KMCProbeFwd*)&fTrCorr;}
