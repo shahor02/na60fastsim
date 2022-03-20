@@ -135,6 +135,8 @@ class KMCDetectorFwd : public TNamed {
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
 
+  bool         CreateMSSeed(int ic0, int ic1);
+  
   void         ImposeVertex(float x=0.,float y=0., float z=0.) {
     fImposeVertexPosition = kTRUE;
     fRefVtx[0] = y; // assign in tracking frame

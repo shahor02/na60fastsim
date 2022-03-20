@@ -1038,7 +1038,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   //printf("LastTrackedMS: "); currTr->GetTrack()->Print();
 
   PrepareForTracking();
-  
+
   //
   if (maxLr<=fLastActiveLayerTracked && maxLr>fLastActiveLayerITS) { // prolongation from MS
     // start from correct track propagated from above till maxLr
@@ -1054,6 +1054,17 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   int fst = 0;
   const int fstLim = -1;
 
+  // RSTMP
+  KMCClusterFwd* cl0 = GetLayerMS(fNActiveLayersMS/2)->GetCluster(-1);
+  KMCClusterFwd* cl1 = GetLayerMS(fNActiveLayersMS-1)->GetCluster(-1);
+  printf("MSClusters: %d %d\n", cl0->IsKilled(), cl1->IsKilled());
+  cl0->Print();
+  cl1->Print();
+  if (!cl0->IsKilled() && !cl1->IsKilled()) {
+    CreateMSSeed(-1,-1);
+  }
+
+  
   for (Int_t j=maxLr; j--; ) {  // Layer loop
     //
     int ncnd=0,cndCorr=-1;
@@ -2010,7 +2021,7 @@ bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& in
   return true;
 }
 
-bool KMCDetectorFwd::createMSSeed(int ic0, int ic1)
+bool KMCDetectorFwd::CreateMSSeed(int ic0, int ic1)
 {
   // try to create MS track seed from clusters ic0 and ic1 of the 1st and last layer after the magnet
   KMCClusterFwd* cl0 = GetLayerMS(fNActiveLayersMS/2)->GetCluster(ic0);
@@ -2028,8 +2039,8 @@ bool KMCDetectorFwd::createMSSeed(int ic0, int ic1)
     printf("reject as crossing origin\n");
     for (int i=0;i<3;i++) printf("%+e ", pos0[i]); printf("\n");
     for (int i=0;i<3;i++) printf("%+e ", pos1[i]); printf("\n");
+    return false;
   }
-  return false;
   
   dirnrm = 1./TMath::Sqrt(dirnrm);
   // bending angle of line from the origin to bending point and from bending point to clusters
@@ -2041,15 +2052,19 @@ bool KMCDetectorFwd::createMSSeed(int ic0, int ic1)
   dirnrmF = 1./TMath::Sqrt(dirnrmF);
   double theta0 = TMath::Sqrt(posBend[0]*posBend[0]+posBend[1]*posBend[1])/fZBendingMS;
   double theta1 = TMath::Sqrt(dirc[0]*dirc[0]+dirc[1]*dirc[1])/dirc[2];
-  double dTheta = TMath::ATan(theta0) - TMath::ATan(theta1);  //  dTheta = 0.3* B0 / pT * ln(z2/z1) == bending angle, B in kgaus
-  double pTQF = TMath::Abs(dTheta)>1e-4 ? 0.3*fToroidB0*TMath::Log(fZToroidEnd/fZToroidStart)/dTheta : 1e3.; // estimate of q*pT at target
+  double dTheta = TMath::ATan(theta0) - TMath::ATan(theta1);  //  dTheta = 0.3e-3* B0 / pT * ln(z2/z1) == bending angle, B in kgaus
+  double pTQF = TMath::Abs(dTheta)>1e-4 ? 0.3e-3*fToroidB0*TMath::Log(fZToroidEnd/fZToroidStart)/dTheta : 1e3; // estimate of q*pT at target
   double ptot = TMath::Abs(pTQF) / TMath::Sin(theta0); // full momentum
+  //printf("Theta : %e %e dTheta: %e | qpt : %+e ptot : %+e\n", theta0, theta1, dTheta, pTQF, ptot);
   double pT = ptot*TMath::Sin(theta1), pz = ptot*TMath::Cos(theta1);
   double phi = TMath::ATan2(dirc[1],dirc[0]);
   double pxyz[3] = {pT*TMath::Cos(phi), pT*TMath::Sin(phi), ptot*TMath::Cos(theta1)};
 
-  KMCProbeFwd* seed = CreateProbe(pos1, pxyz, pTQF>0 ? 1:-1);
-
+  KMCProbeFwd* seed = new KMCProbeFwd(pos1, pxyz, pTQF>0 ? 1:-1);
+  printf("Seed : "); seed->Print("etp");
+  printf("True : "); GetLayerMS(fNActiveLayersMS-1)->GetAnProbe()->Print("etp");
+  delete seed;
+  return true;
 }
 
 
