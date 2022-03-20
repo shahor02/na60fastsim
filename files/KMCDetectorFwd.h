@@ -135,7 +135,7 @@ class KMCDetectorFwd : public TNamed {
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
 
-  bool         CreateMSSeed(int ic0, int ic1);
+  bool         CreateMSSeed(KMCClusterFwd* cl0, KMCClusterFwd* cl1);
   
   void         ImposeVertex(float x=0.,float y=0., float z=0.) {
     fImposeVertexPosition = kTRUE;
@@ -206,9 +206,10 @@ class KMCDetectorFwd : public TNamed {
   Int_t  fNLayers;               // total number of layers in the model
   Int_t  fNActiveLayers;         // number of active layers in the model
   Int_t  fNActiveLayersITS;      // number of active ITS layers in the model
-  Int_t  fNActiveLayersMS;      // number of active MS layers in the model
-  Int_t  fNActiveLayersTR;      // number of active Trigger layers in the model
+  Int_t  fNActiveLayersMS;       // number of active MS layers in the model
+  Int_t  fNActiveLayersTR;       // number of active Trigger layers in the model
   Int_t  fLastActiveLayerITS;    // id of last active ITS layer
+  Int_t  fLastActiveLayerMS;     // id of last active MS layer (including trigger stations)
   Int_t  fLastActiveLayer;       // id of last active layer
   Int_t  fLastActiveLayerTracked;    // id of last active layer really used for tracking of given pt
   Bool_t  fIntegrateMSX2X0;
