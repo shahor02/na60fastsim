@@ -1003,6 +1003,10 @@ void KMCDetectorFwd::TrackMS()
   // RSTMP
   KMCLayerFwd* lr0 = GetLayerMS(fNActiveLayersMS/2);
   KMCLayerFwd* lr1 = GetLayerMS(fNActiveLayersMS-1);
+  int nTrLr = GetNumberOfActiveLayersTR(), lastTrLr = -1;
+  if (nTrLr>0) {
+    lastTrLr = GetLayerTR(nTrLr-1)->GetID();
+  }
   for (int i0=-1;i0<lr0->GetNBgClusters();i0++) {
     KMCClusterFwd* cl0 = lr0->GetCluster(i0);
     if (cl0->IsKilled()) continue;
@@ -1010,9 +1014,27 @@ void KMCDetectorFwd::TrackMS()
       KMCClusterFwd* cl1 = lr1->GetCluster(i1);
       if (cl1->IsKilled()) continue;
       //
-      KMCProbeFwd* seed = CreateMSSeed(cl0, cl1);
+      KMCProbeFwd* seed = CreateMSSeed(lr0, cl0, lr1, cl1);
       if (!seed) continue;
       // check if there are TR hits matching to seed
+      KMCLayerFwd* lrP = lr1;
+      int nTriggAdd = 0, nTrigCheck = 0;
+      for (int ilr=lr1->GetID()+1; ilr<=lastTrLr;ilr++) {
+	KMCLayerFwd* lr = GetLayer(ilr);
+	if (!PropagateToLayer(seed,lrP,lr,1)) {
+	  delete seed;
+	  break;
+	}
+	if (lr->IsTrig()) {
+	  nTrigCheck++;
+	  // search for closest cluster at trigger station
+	}
+	lrP = lr;
+      }
+      if (lrStart<nTrLr) {
+	for (i
+
+      }
       if ( no TR ) {
 	delete seed;
 	continue;
@@ -2310,7 +2332,7 @@ bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& in
   return true;
 }
 
-KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCClusterFwd* cl0, KMCClusterFwd* cl1)
+KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, KMCLayerFwd* lr1, KMCClusterFwd* cl1)
 {
   // try to create MS track seed from clusters ic0 and ic1 of the 1st and last layer after the magnet
   double pos0[3] = {cl0->GetXLab(), cl0->GetYLab(), cl0->GetZLab()};
@@ -2343,13 +2365,34 @@ KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCClusterFwd* cl0, KMCClusterFwd* cl1
   double pTQF = TMath::Abs(dTheta)>1e-4 ? 0.3e-3*fToroidB0*TMath::Log(fZToroidEnd/fZToroidStart)/dTheta : 1e3; // estimate of q*pT at target
   double ptot = TMath::Abs(pTQF) / TMath::Sin(theta0); // full momentum
   //printf("Theta : %e %e dTheta: %e | qpt : %+e ptot : %+e\n", theta0, theta1, dTheta, pTQF, ptot);
-  double pT = ptot*TMath::Sin(theta1), pz = ptot*TMath::Cos(theta1);
+  double pT = ptot*TMath::Sin(theta0), pz = ptot*TMath::Cos(theta0);
   double phi = TMath::ATan2(dirc[1],dirc[0]);
   double pxyz[3] = {pT*TMath::Cos(phi), pT*TMath::Sin(phi), ptot*TMath::Cos(theta1)};
 
-  KMCProbeFwd* seed = new KMCProbeFwd(pos1, pxyz, pTQF>0 ? 1:-1);
+  KMCProbeFwd* seed = new KMCProbeFwd(pos0, pxyz, pTQF>0 ? 1:-1);
+  seed.ResetCovariance();
   printf("Seed : "); seed->Print("etp");
-  printf("True : "); GetLayerMS(fNActiveLayersMS-1)->GetAnProbe()->Print("etp");
+  printf("True : "); GetLayerMS(fNActiveLayersMS-2)->GetAnProbe()->Print("etp");
+  // update by 2 clusters in direction of the trigger stations  
+  double measErr2[3];
+  double meas[2] = {cl0->GetYTF(), cl0->GetZTF()};
+  cl0->GetErr(measErr2);
+  if (!seed->Update(meas,measErr2)) {
+    delete seed;
+    return 0;
+  }
+  if (!PropagateToLayer(seed,lr0,lr1, 1)) {
+    delete seed;
+    return 0;
+  }
+  
+  meas[0] = cl1->GetYTF();
+  meas[1] = cl1->GetZTF();  
+  cl1->GetErr(measErr2);
+  if (!seed->Update(meas,measErr2)) {
+    delete seed
+    return 0;
+  }
   return seed;
 }
 

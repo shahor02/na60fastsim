@@ -39,6 +39,20 @@ class KMCClusterFwd : public TObject {
     fSigYZ = syz;
     fSigZZ = szz;
   }
+
+  void     GetErr(double* err2) {
+  {
+    err2[0] = syy;
+    err2[1] = syz;
+    err2[2] = szz;
+  }
+
+  void     GetErr(float* err2) {
+  {
+    err2[0] = syy;
+    err2[1] = syz;
+    err2[2] = szz;
+  }
   
   //
   void    Kill(Bool_t v=kTRUE)          {SetBit(kBitKilled,v);}

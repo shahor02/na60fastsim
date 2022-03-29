@@ -135,7 +135,7 @@ class KMCDetectorFwd : public TNamed {
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
 
-  bool         CreateMSSeed(KMCClusterFwd* cl0, KMCClusterFwd* cl1);
+  bool         CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, KMCLayerFwd* lr1, KMCClusterFwd* cl1);
   
   void         ImposeVertex(float x=0.,float y=0., float z=0.) {
     fImposeVertexPosition = kTRUE;
