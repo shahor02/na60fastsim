@@ -1007,6 +1007,7 @@ void KMCDetectorFwd::TrackMS()
   if (nTrLr>0) {
     lastTrLr = GetLayerTR(nTrLr-1)->GetID();
   }
+  int bestClTrig[nTrLr];
   for (int i0=-1;i0<lr0->GetNBgClusters();i0++) {
     KMCClusterFwd* cl0 = lr0->GetCluster(i0);
     if (cl0->IsKilled()) continue;
@@ -1026,20 +1027,50 @@ void KMCDetectorFwd::TrackMS()
 	  break;
 	}
 	if (lr->IsTrig()) {
+	  bestClTrig[nTrigCheck] = -999;
 	  nTrigCheck++;
 	  // search for closest cluster at trigger station
+	  int ncl = lr->GetNBgClusters();
+	  double measErr2[3] = { 0., 0., 0.}, meas[2] = {0., 0.};
+	  double tolerY = seed->GetTrack()->GetSigmaY2();
+	  double tolerX = seed->GetTrack()->GetSigmaZ2();
+	  tolerY = TMath::Sqrt(fMaxChi2Cl*tolerY);
+	  tolerX = TMath::Sqrt(fMaxChi2Cl*tolerX);
+	  double yMin = seed->GetY() - tolerY;
+	  double yMax = seed->GetY() + tolerY;    
+	  double xMin = seed->GetX() - tolerX;
+	  double xMax = seed->GetX() + tolerX;
+	  double minChi2 = 1e9;
+	  int bestCl = -2;
+	  double measErr2[3];
+	  for (int icl=-1;icl<ncl;icl++) {
+	    if (gRandom->Rndm() > lr->GetLayerEff()) continue; // generate layer eff
+	    KMCClusterFwd *cl = lr->GetCluster(icl);
+	    double meas[2] = {cl->GetYTF(), cl->GetZTF()}; // RS TODO Check sign
+	    if (meas[1]>xMax) {if (icl==-1) continue; else break;} // all other x will be even smaller, no chance to match
+	    if (meas[1]<xMin) continue;
+	    if (meas[0]<yMin || meas[0]>yMax) continue; 
+	    cl->GetErr(measErr2);
+	    double chi2 = probe->GetPredictedChi2(meas,measErr2);
+	    if (chi2<minChi2) {
+	      minChi2 = chi2;
+	      bestCl = icl;
+	    }	    
+	  }
+	  if (minChi2<fMaxChi2Cl) {
+	    KMCClusterFwd *cl = lr->GetCluster(bestCl);
+	    if (!UpdateTrack(seed, lr, lr->GetCluster(bestCl))) continue;
+	    bestClTrig[nTrigCheck-1] = bestCl;
+	    nTriggAdd++;
+	  }	  
 	}
 	lrP = lr;
       }
-      if (lrStart<nTrLr) {
-	for (i
-
-      }
-      if ( no TR ) {
+      if (nTriggAdd<fMinTRHits) {
 	delete seed;
 	continue;
       }
-      
+      // RS HERE
       delete seed;
     }
   }
@@ -1992,11 +2023,13 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
     TransportKalmanTrackWithMS(&bgtr, maxLr,kTRUE);
   }
   //
+  /*
   for (int ilr=maxLr;ilr--;) {
     KMCLayerFwd* lr = GetLayer(ilr);
     if (lr->IsDead()) continue;
     lr->SortBGClusters();
   }
+  */
   fDecMode = decMode;
   //  
 }
