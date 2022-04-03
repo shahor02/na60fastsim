@@ -639,7 +639,8 @@ void KMCDetectorFwd::ClassifyLayers()
   printf("DefStep: Air %f Mat: %f | N.MagField regions: %d\n",fDefStepAir,fDefStepMat,fFldNReg);
   //
   KMCProbeFwd::SetNITSLayers(fNActiveLayersITS + ((fVtx && !fVtx->IsDead()) ? 1:0));
-  printf("KMCProbeFwd is initialized with %d slots\n",KMCProbeFwd::GetNITSLayers());
+  KMCProbeFwd::SetNActiveLayers(fNActiveLayers);
+  printf("KMCProbeFwd is initialized with %d ITS slots\n",KMCProbeFwd::GetNITSLayers());
 }
 
 //_________________________________________________________________
@@ -1007,42 +1008,38 @@ void KMCDetectorFwd::TrackMS()
   if (nTrLr>0) {
     lastTrLr = GetLayerTR(nTrLr-1)->GetID();
   }
-  int bestClTrig[nTrLr];
+  int bestClSel[fNLayers];
+  for (int i=0;i<fNLayers;i--;) bestClSel[i] = -999;
+  
   for (int i0=-1;i0<lr0->GetNBgClusters();i0++) {
     KMCClusterFwd* cl0 = lr0->GetCluster(i0);
     if (cl0->IsKilled()) continue;
+    bestClSel[fNActiveLayersMS/2] = i0;
     for (int i1=-1;i1<lr1->GetNBgClusters();i1++) {
       KMCClusterFwd* cl1 = lr1->GetCluster(i1);
       if (cl1->IsKilled()) continue;
+      bestClSel[fNActiveLayersMS-1] = i1;
       //
       KMCProbeFwd* seed = CreateMSSeed(lr0, cl0, lr1, cl1);
       if (!seed) continue;
       // check if there are TR hits matching to seed
       KMCLayerFwd* lrP = lr1;
       int nTriggAdd = 0, nTrigCheck = 0;
+      int lastUpdateLr = -1;
       for (int ilr=lr1->GetID()+1; ilr<=lastTrLr;ilr++) {
 	KMCLayerFwd* lr = GetLayer(ilr);
 	if (!PropagateToLayer(seed,lrP,lr,1)) {
-	  delete seed;
 	  break;
 	}
 	if (lr->IsTrig()) {
-	  bestClTrig[nTrigCheck] = -999;
+	  bestClSel[ilr] = -999;
 	  nTrigCheck++;
 	  // search for closest cluster at trigger station
-	  int ncl = lr->GetNBgClusters();
-	  double measErr2[3] = { 0., 0., 0.}, meas[2] = {0., 0.};
-	  double tolerY = seed->GetTrack()->GetSigmaY2();
-	  double tolerX = seed->GetTrack()->GetSigmaZ2();
+	  int ncl = lr->GetNBgClusters(), bestCl = -2;
+	  double measErr2[3] = { 0., 0., 0.}, meas[2] = {0., 0.}, tolerY = seed->GetTrack()->GetSigmaY2(), tolerX = seed->GetTrack()->GetSigmaZ2();
 	  tolerY = TMath::Sqrt(fMaxChi2Cl*tolerY);
 	  tolerX = TMath::Sqrt(fMaxChi2Cl*tolerX);
-	  double yMin = seed->GetY() - tolerY;
-	  double yMax = seed->GetY() + tolerY;    
-	  double xMin = seed->GetX() - tolerX;
-	  double xMax = seed->GetX() + tolerX;
-	  double minChi2 = 1e9;
-	  int bestCl = -2;
-	  double measErr2[3];
+	  double yMin = seed->GetY() - tolerY, yMax = seed->GetY() + tolerY, xMin = seed->GetX() - tolerX, xMax = seed->GetX() + tolerX, minChi2 = 1e9;
 	  for (int icl=-1;icl<ncl;icl++) {
 	    if (gRandom->Rndm() > lr->GetLayerEff()) continue; // generate layer eff
 	    KMCClusterFwd *cl = lr->GetCluster(icl);
@@ -1059,18 +1056,38 @@ void KMCDetectorFwd::TrackMS()
 	  }
 	  if (minChi2<fMaxChi2Cl) {
 	    KMCClusterFwd *cl = lr->GetCluster(bestCl);
-	    if (!UpdateTrack(seed, lr, lr->GetCluster(bestCl))) continue;
-	    bestClTrig[nTrigCheck-1] = bestCl;
+	    if (!UpdateTrack(seed, lr, lr->GetCluster(bestCl))) {	      
+	      break;
+	    }
+	    bestClSel[ilr] = bestCl;
+	    lastUpdateLr = ilr;
 	    nTriggAdd++;
 	  }	  
 	}
 	lrP = lr;
       }
-      if (nTriggAdd<fMinTRHits) {
+      if (nTriggAdd<fMinTRHits) { // abandone this pair of cl0, cl1
 	delete seed;
 	continue;
       }
-      // RS HERE
+      // now track back from the Trigger stations towards the 1st MS station
+      seed->ResetCovariance();
+      lrP = GetLayer(lastUpdateLr);
+      
+      for (int ilr=lastUpdateLr;ilr>=fNActiveLayersMS/2;ilr--) {
+	lr = GetLayer(ilr);
+	if (lr!=lrP && !PropagateToLayer(seed,lrP,lr,-1)) {
+	  delete seed;
+	  seed = 0;
+	  break;
+	}
+	if (bestClSel[ilr]>=-1 && !UpdateTrack(seed, lr, lr->GetCluster(bestClSel[ilr])) ) { // there is a cluster
+	  delete seed;
+	  seed = 0;
+	  break;
+	}
+	lr->AddMCTrack(seed);
+      }     
       delete seed;
     }
   }
@@ -1135,13 +1152,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   //
   int fst = 0;
   const int fstLim = -1;
-
-  // RSTMP
-  KMCClusterFwd* cl0 = GetLayerMS(fNActiveLayersMS/2)->GetCluster(-1);
-  KMCClusterFwd* cl1 = GetLayerMS(fNActiveLayersMS-1)->GetCluster(-1);
-  if (!cl0->IsKilled() && !cl1->IsKilled()) {
-    CreateMSSeed(-1,-1);
-  }
 
   if (maxLr>=fLastActiveLayerMS) {
     TrackMS();

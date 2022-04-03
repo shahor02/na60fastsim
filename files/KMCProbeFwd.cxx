@@ -6,6 +6,7 @@
 ClassImp(KMCProbeFwd)
 
 Int_t    KMCProbeFwd::fgNITSLayers = 0;
+Int_t    KMCProbeFwd::fgNActiveLayers = 0;
 Double_t KMCProbeFwd::fgMissingHitPenalty = 2.;
 
 //_______________________________________________________________________
@@ -22,6 +23,8 @@ KMCProbeFwd::KMCProbeFwd()
   ,fNHitsMS(0)
   ,fNHitsTR(0)
   ,fNHitsITSFake(0)
+  ,fNHitsMSFake(0)
+  ,fNHitsTRFake(0)
   ,fInnLrCheck(fgNITSLayers)
   ,fTrack()
 {
@@ -41,12 +44,14 @@ KMCProbeFwd::KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose)
   ,fNHitsMS(0)
   ,fNHitsTR(0)
   ,fNHitsITSFake(0)
+  ,fNHitsMSFake(0)
+  ,fNHitsTRFake(0)
   ,fInnLrCheck(fgNITSLayers)
   ,fTrack()
 {
   // create track
   Init(xyz,pxyz,sign,errLoose);
-  for (int i=kMaxITSLr;i--;) fClID[i]=-2; 
+  for (int i=kMaxActiveLr;i--;) fClID[i]=-2; 
   if (AliLog::GetGlobalDebugLevel()>=2) {
     AliDebug(2,Form("XYZ: %+e %+e %+e PXYZ: %+e %+e %+e Q=%d",xyz[0],xyz[1],xyz[2],pxyz[0],pxyz[1],pxyz[2],sign));
     Print("etp");
@@ -68,10 +73,12 @@ KMCProbeFwd::KMCProbeFwd(const KMCProbeFwd& src)
   ,fNHitsMS(src.fNHitsMS)
   ,fNHitsTR(src.fNHitsTR)
   ,fNHitsITSFake(src.fNHitsITSFake)
+  ,fNHitsMSFake(src.fNHitsMSFake)
+  ,fNHitsTRFake(src.fNHitsTRFake)
   ,fInnLrCheck(src.fInnLrCheck)
   ,fTrack( src.fTrack )
 {
-  for (int i=kMaxITSLr;i--;) fClID[i]=-src.fClID[i]; 
+  for (int i=kMaxActiveLr;i--;) fClID[i]=-src.fClID[i]; 
 }
 
 //_______________________________________________________________________
@@ -91,9 +98,11 @@ KMCProbeFwd& KMCProbeFwd::operator=(const KMCProbeFwd& src)
   fNHitsMS = src.fNHitsMS;
   fNHitsTR = src.fNHitsTR;
   fNHitsITSFake = src.fNHitsITSFake;
+  fNHitsMSFake = src.fNHitsMSFake;
+  fNHitsTRFake = src.fNHitsTRFake;
   fInnLrCheck = src.fInnLrCheck;
   fTrack = src.fTrack;
-  for (int i=kMaxITSLr;i--;) fClID[i] = src.fClID[i];
+  for (int i=kMaxActiveLr;i--;) fClID[i] = src.fClID[i];
   return *this;
 }
   
@@ -108,8 +117,8 @@ void KMCProbeFwd::Reset()
   fHits=fFakes=0;  
   fTrack.Reset();
   ResetCovariance();
-  for (int i=kMaxITSLr;i--;) fClID[i]=-2; 
-  fNHits = fNHitsITS = fNHitsMS = fNHitsTR = fNHitsITSFake;
+  for (int i=kMaxActiveLr;i--;) fClID[i]=-2; 
+  fNHits = fNHitsITS = fNHitsMS = fNHitsTR = fNHitsITSFake = fNHitsMSFake = fNHitsTRFake = 0;
   fTrack.Reset();
 }
   
@@ -395,13 +404,13 @@ Bool_t KMCProbeFwd::ApplyMSEL(double x2X0, double xTimesRho)
 //_______________________________________________________________________
 void KMCProbeFwd::Print(Option_t* opt) const
 {
-  printf("Killed:%d M:%.3f Chi2:%.3f(%.3f) Chi2ITS:%.3f(%.3f) | Wgh:%.2e\nHits: Tot:%2d ITS:%d ITSFake:%d (last check:%d)",
+  printf("Killed:%d M:%.3f Chi2:%.3f(%.3f) Chi2ITS:%.3f(%.3f) | Wgh:%.2e\nHits: Tot:%2d ITS:%d ITSFake:%d (last check:%d) MS:%d MSFake:%d TR:%d TRFake:%d",
 	 IsKilled(),fMass,GetChi2(),GetNormChi2(1),
 	 GetChi2ITS(),GetNormChi2ITS(1),GetWeight(),
-	 fNHits,fNHitsITS,fNHitsITSFake,fInnLrCheck);
+	 fNHits,fNHitsITS,fNHitsITSFake,fInnLrCheck, fNHitsMS, fNHitsMSFake, fNHitsTR, fNHitsTRFake);
   // hit pattern
   printf(" Pattern: |");
-  for (int i=0;i<fgNITSLayers;i++) {
+  for (int i=0;i<fgActiveLayers;i++) {
     if (!(fHits&(0x1<<i))) printf(".");
     else if ( fFakes&(0x1<<i) ) printf("-");
     else printf("+");
@@ -409,7 +418,7 @@ void KMCProbeFwd::Print(Option_t* opt) const
   printf("|  ");
   TString opts = opt; opts.ToLower();
   if (opts.Contains("clid")) {
-    for (int ilr=0;ilr<fgNITSLayers;ilr++) {
+    for (int ilr=0;ilr<fgNActiveLayers;ilr++) {
       printf("%4d|",fClID[ilr]);
     }
   }
@@ -424,19 +433,21 @@ void KMCProbeFwd::AddHit(const KMCLayerFwd* lr, double chi2, Int_t clID) {
   fNHits++;
   fChi2 += chi2;
   int lrID = lr->GetActiveID();
+  fClID[lrID] = clID;
+  SetWBit(fHits,lrID); 
+  if (clID>-1) SetWBit(fFakes,lrID);
   if (lr->IsITS()) {
-    fChi2ITS += chi2;
-    SetWBit(fHits,lrID); 
+    fChi2ITS += chi2;    
+    if (clID>-1) fNHitsITSFake++;    
     fNHitsITS++;
-    if (clID>-1) {
-      SetWBit(fFakes,lrID);
-      fNHitsITSFake++;
-    }
-    fClID[lrID] = clID;
-    //else ResetWBit(fFakes,lr);
+  } else if (lr->IsMS()) {
+    fNHitsMS++;
+    if (clID>-1) fNHitsMSFake++;
   }
-  else if (lr->IsMS()) fNHitsMS++;
-  else if (lr->IsTrig()) fNHitsTR++;
+  else if (lr->IsTrig()) {
+    fNHitsTR++;
+    if (clID>-1) fNHitsTRFake++;
+  }
   else {
     lr->Print();
     AliFatal("Invalid layer type");

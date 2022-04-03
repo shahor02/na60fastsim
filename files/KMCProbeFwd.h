@@ -17,7 +17,7 @@ class KMCProbeFwd: public TObject {
 
  public:
   enum {kBitKilled=BIT(14)};
-  enum {kNDOF=5,kMaxITSLr=32};
+  enum {kNDOF=5,kMaxActiveLr=32};
   enum {kY2=0,kZ2=2,kSnp2=5,kTgl2=9,kPtI2=14};
   enum {kY,kZ,kSnp,kTgl,kPtI};
   //
@@ -105,7 +105,9 @@ class KMCProbeFwd: public TObject {
   static void   ResetWBit(UInt_t &patt,UInt_t bit)             {patt &= ~(0x1<<bit);}
   static Bool_t IsWBit(const UInt_t &patt,const UInt_t bit)    {return patt&(0x1<<bit);}
   static void   SetNITSLayers(Int_t n)                         {fgNITSLayers = n;}
+  static void   SetNActiveLayers(Int_t n)                      {fgNActiveLayers = n;}  
   static int    GetNITSLayers()                                {return fgNITSLayers;}
+  static int    GetNActiveLayers()                             {return fgNActiveLayers;}  
   //
   static Double_t GetMissingHitPenalty()                        {return fgMissingHitPenalty;}
   static void     SetMissingHitPenalty(double p=2.)             {fgMissingHitPenalty = p;}
@@ -132,11 +134,14 @@ class KMCProbeFwd: public TObject {
   Int_t    fNHitsMS;  // total MS hits
   Int_t    fNHitsTR;  // total TR hits
   Int_t    fNHitsITSFake; // number of fake ITS hits
+  Int_t    fNHitsMSFake; // number of fake MS hits
+  Int_t    fNHitsTRFake; // number of fake TR hits  
   UInt_t   fInnLrCheck;   // lowest active layer where update was checked
-  Int_t    fClID[kMaxITSLr]; // id's of attached clusters
+  Int_t    fClID[kMaxActiveLr]; // id's of attached clusters
   AliExternalTrackParam fTrack;  // track params
   //
   static Int_t    fgNITSLayers;
+  static Int_t    fgNActiveLayers;
   static Double_t fgMissingHitPenalty;  //
   ClassDef(KMCProbeFwd,1)
 };
