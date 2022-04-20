@@ -922,7 +922,7 @@ Bool_t KMCDetectorFwd::UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, cons
   // Note: we are working in the tracking frame: Lab X,Y,Z  <->  Tracking -Z,Y,X
   double meas[2] = {cl->GetYTF(), cl->GetZTF()}; // ideal cluster coordinate, tracking (AliExtTrParam frame)
   double measErr2[3];
-  cl->GetErr(measErr2);//= {cl->GetSigYY(), cl->GetSigYZ(), cl->GetSigZZ()};
+  cl->GetErr(measErr2);
   //
   //  if (trc->GetZ()>620 && trc->GetZ()<1140) {
   //  printf("Update phi:%f Meas: %f %f Err: %f %f %f\n",TMath::ATan2(trc->GetY(), trc->GetX()),meas[0], meas[1], measErr2[0], measErr2[1], measErr2[2]);
@@ -931,9 +931,6 @@ Bool_t KMCDetectorFwd::UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, cons
   //  printf("Update for lr:%s -> chi2=%f\n",lr->GetName(), chi2);
   //  printf("cluster at Lr:%s was [%e %e / %e %e %e]: ", lr->GetName(), meas[0],meas[1], measErr2[0], measErr2[1], measErr2[2]); cl->Print("lc");
   //  printf("track   was : %e %e\n", trc->GetY(), trc->GetZ()); trc->Print("etp");
-  if (lr->IsMS() || lr->IsTrig()) {
-    printf("chi_ms %f\n",chi2);
-  }
   if (chi2>fMaxChi2Cl) return kTRUE; // chi2 is too large
     
   if (!trc->Update(meas,measErr2)) {
@@ -1015,8 +1012,7 @@ int KMCDetectorFwd::TrackMSSimple()
   const double *covIdeal = lr->GetAnProbe()->GetCovariance();
   for (int i=15;i--;) covMS[i] = covIdeal[i];
   currTr->Print("etp");
-
-  //if (fExternalInput) *currTr->GetTrack() = *GetLayer(maxLr)->GetAnProbe()->GetTrack();
+  // if (fExternalInput) *currTr->GetTrack() = *GetLayer(maxLr)->GetAnProbe()->GetTrack();
   
   for (Int_t j=maxLr-1; j>=lrMSLimID; j--) {  // Layer loop
     int ncnd=0,cndCorr=-1;
@@ -1139,7 +1135,18 @@ int KMCDetectorFwd::TrackMS()
       // now track back from the Trigger stations towards the 1st MS station
       seed->ResetCovariance();
       seed->Reset(false);
+      double *covMSSeed = (double*)seed->GetTrack()->GetCovariance();
+      covMSSeed[14] *= 1;      
+      seed->Print("etp");      
       lrP = GetLayer(lastUpdateLr);
+
+      /*
+      auto ss = lrP->GetMCTrack(0);
+      double *covMS = (double*)ss->GetTrack()->GetCovariance();
+      const double *covIdeal = lrP->GetAnProbe()->GetCovariance();
+      for (int i=15;i--;) covMS[i] = covIdeal[i];
+      ss->Print("etp");
+      */
       lrP->AddMCTrack(seed);
       // part after the toroid propagated to last plane before toroid
       for (int ilr=lastUpdateLr-1;ilr>=lrMSSeedLimID;ilr--) { 
@@ -1209,8 +1216,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   PrepareForTracking();
 
   if (maxLr<=fLastActiveLayerTracked && maxLr>fLastActiveLayerITS) { // tracking in MS
-    //maxLr = TrackMS();
-    maxLr = TrackMSSimple();
+    maxLr = TrackMS();
+    //maxLr = TrackMSSimple();
   } else {
     double r = currTr->GetR();
     currTr->ResetCovariance( kErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // RS: this is the coeff to play with
@@ -1410,8 +1417,8 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   double meas[2] = {0,0};
   double tolerY = probe->GetTrack()->GetSigmaY2() + measErr2[0];
   double tolerX = probe->GetTrack()->GetSigmaZ2() + measErr2[2]; // Xlab = -Zloc
-  tolerY = 3*TMath::Sqrt(fMaxChi2Cl*tolerY);
-  tolerX = 3*TMath::Sqrt(fMaxChi2Cl*tolerX);
+  tolerY = TMath::Sqrt(fMaxChi2Cl*tolerY);
+  tolerX = TMath::Sqrt(fMaxChi2Cl*tolerX);
   double yMin = probe->GetY() - tolerY;
   double yMax = probe->GetY() + tolerY;    
   double xMin = probe->GetX() - tolerX;

@@ -111,7 +111,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 		   int refreshBg=10,   // generate new bg event for each refreshBg-th, 1 to refresh for every signal
 		   //double dndyBG=500,   // bg particles density - 20 GeV
 		   //double dndyBG=650,   // bg particles density - 20 GeV 
-		   const char* setup="setup.txt", // setup to load
+		   const char* setup="setups/setup-EHN1_160GeV_5pixel.txt", //setup.txt", // setup to load
 		   const char* flukaBGList="",//"fluka.lst", // optional fluka background file, if empty, then use parametric background
 		   const char* interactionSource="" // optional primary interaction volume in fluka files, if empty, take all
 		   ){
