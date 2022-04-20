@@ -66,6 +66,8 @@ class KMCDetectorFwd : public TNamed {
   Bool_t PropagateToZBxByBz(KMCProbeFwd* trc,double z, double maxDZ=1.0, Double_t xOverX0=0., Double_t xTimesRho=0., Bool_t modeMC=kFALSE);
   Bool_t SolveSingleTrackViaKalmanMC(int offset);
   Bool_t TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr, Bool_t bg=kFALSE);
+  int TrackMS();
+  int TrackMSSimple();
   Int_t GetFieldReg(double z);
   //-------------------
   TList*       GetLayers()                 const {return (TList*)&fLayers;}
@@ -135,7 +137,7 @@ class KMCDetectorFwd : public TNamed {
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
 
-  bool         CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, KMCLayerFwd* lr1, KMCClusterFwd* cl1);
+  KMCProbeFwd* CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, KMCLayerFwd* lr1, KMCClusterFwd* cl1);
   
   void         ImposeVertex(float x=0.,float y=0., float z=0.) {
     fImposeVertexPosition = kTRUE;

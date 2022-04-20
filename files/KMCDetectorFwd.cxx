@@ -998,18 +998,74 @@ void KMCDetectorFwd::ResetMCTracks(Int_t maxLr)
   for (int i=maxLr+1;i--;) GetLayer(i)->ResetMCTracks();
 }
 
+
 //____________________________________________________________
-void KMCDetectorFwd::TrackMS()
+int KMCDetectorFwd::TrackMSSimple()
+{
+  int lrMSLimID = GetLayerMS(0)->GetID() - 1;
+  int maxLr = fLastActiveLayer;
+  if (fExternalInput) maxLr = fLastActiveLayerTracked;
+  KMCLayerFwd* lr = GetLayer(maxLr);
+  KMCProbeFwd* currTr = lr->AddMCTrack(&fProbe); // start with original track at vertex
+  if (!fExternalInput) {if (!TransportKalmanTrackWithMS(currTr, maxLr, kFALSE)) return kFALSE;} // transport it to outermost layer where full MC is done
+  else *currTr->GetTrack() = *GetLayer(maxLr)->GetAnProbe()->GetTrack();
+  
+  for (Int_t j=maxLr-1; j>=lrMSLimID; j--) {  // Layer loop
+    int ncnd=0,cndCorr=-1;
+    KMCLayerFwd *lrP = lr;
+    lr = GetLayer(j);
+    fIntegrateMSX2X0 = (j>fMSLrMinID && j<fMSLrMaxID);
+    int ntPrev = lrP->GetNMCTracks();
+    //
+    //    printf("Lr:%d %s IsDead:%d\n",j, lrP->GetName(),lrP->IsDead());
+    if (lrP->IsDead()) { // for passive layer just propagate the copy of all tracks of prev layer >>>
+      for (int itrP=ntPrev;itrP--;) { // loop over all tracks from previous layer
+	KMCProbeFwd* currTrP = lrP->GetMCTrack(itrP); 
+	if (currTrP->IsKilled()) continue;
+	currTr = lr->AddMCTrack( currTrP );
+	if (!PropagateToLayer(currTr,lrP,lr,-1))  {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer
+      }
+      continue;
+    } // treatment of dead layer <<<
+    //
+    if (lrP->IsMS() || lrP->IsTrig()) { // we don't consider bg hits in MS, just update with MC cluster
+      KMCClusterFwd* clmc = lrP->GetMCCluster();
+      for (int itrP=ntPrev;itrP--;) { // loop over all tracks from previous layer
+	KMCProbeFwd* currTrP = lrP->GetMCTrack(itrP); if (currTrP->IsKilled()) continue;
+	//	printf("At lr %d  | ",j+1); currTrP->Print("etp");
+	currTr = lr->AddMCTrack( currTrP );
+	// printf("\nAt Lr:%s ",lrP->GetName()); currTr->GetTrack()->Print();
+	if (!clmc->IsKilled()) {
+	  //	  lrP->Print("");
+	  //	  printf("BeforeMS Update: "); currTr->Print("etp");
+	  if (!UpdateTrack(currTr, lrP, clmc)) {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // update with correct MC cl.
+	  //	  printf("AfterMS Update: "); currTr->Print("etp");
+	}
+	if (!PropagateToLayer(currTr,lrP,lr,-1))            {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer	
+      }      
+      //      currTr->Print("etp");
+      continue;
+    } // treatment of ideal layer <<<
+    //
+    printf("We encountered non-MS active layer, this should not happen");
+    return -1;
+  }
+  return lrMSLimID;
+}
+
+//____________________________________________________________
+int KMCDetectorFwd::TrackMS()
 {
   // RSTMP
   KMCLayerFwd* lr0 = GetLayerMS(fNActiveLayersMS/2);
   KMCLayerFwd* lr1 = GetLayerMS(fNActiveLayersMS-1);
+  int lrMSLimID = GetLayerMS(fNActiveLayersMS/2-1)->GetID();
   int nTrLr = GetNumberOfActiveLayersTR(), lastTrLr = -1;
   if (nTrLr>0) {
     lastTrLr = GetLayerTR(nTrLr-1)->GetID();
   }
   int bestClSel[fNLayers];
-  for (int i=0;i<fNLayers;i--;) bestClSel[i] = -999;
+  for (int i=0;i<fNLayers;i++) bestClSel[i] = -999;
   
   for (int i0=-1;i0<lr0->GetNBgClusters();i0++) {
     KMCClusterFwd* cl0 = lr0->GetCluster(i0);
@@ -1036,19 +1092,20 @@ void KMCDetectorFwd::TrackMS()
 	  nTrigCheck++;
 	  // search for closest cluster at trigger station
 	  int ncl = lr->GetNBgClusters(), bestCl = -2;
-	  double measErr2[3] = { 0., 0., 0.}, meas[2] = {0., 0.}, tolerY = seed->GetTrack()->GetSigmaY2(), tolerX = seed->GetTrack()->GetSigmaZ2();
+	  double measErr2[3] = { 0., 0., 0.}, tolerY = seed->GetTrack()->GetSigmaY2(), tolerX = seed->GetTrack()->GetSigmaZ2();
 	  tolerY = TMath::Sqrt(fMaxChi2Cl*tolerY);
 	  tolerX = TMath::Sqrt(fMaxChi2Cl*tolerX);
 	  double yMin = seed->GetY() - tolerY, yMax = seed->GetY() + tolerY, xMin = seed->GetX() - tolerX, xMax = seed->GetX() + tolerX, minChi2 = 1e9;
 	  for (int icl=-1;icl<ncl;icl++) {
 	    if (gRandom->Rndm() > lr->GetLayerEff()) continue; // generate layer eff
 	    KMCClusterFwd *cl = lr->GetCluster(icl);
+	    double y = cl->GetY(), x = cl->GetX();
+	    if (x>xMax) {if (icl==-1) continue; else break;} // all other x will be even smaller, no chance to match
+	    if (x<xMin) continue;
+	    if (y<yMin || y>yMax) continue; 
 	    double meas[2] = {cl->GetYTF(), cl->GetZTF()}; // RS TODO Check sign
-	    if (meas[1]>xMax) {if (icl==-1) continue; else break;} // all other x will be even smaller, no chance to match
-	    if (meas[1]<xMin) continue;
-	    if (meas[0]<yMin || meas[0]>yMax) continue; 
 	    cl->GetErr(measErr2);
-	    double chi2 = probe->GetPredictedChi2(meas,measErr2);
+	    double chi2 = seed->GetPredictedChi2(meas,measErr2);
 	    if (chi2<minChi2) {
 	      minChi2 = chi2;
 	      bestCl = icl;
@@ -1056,7 +1113,7 @@ void KMCDetectorFwd::TrackMS()
 	  }
 	  if (minChi2<fMaxChi2Cl) {
 	    KMCClusterFwd *cl = lr->GetCluster(bestCl);
-	    if (!UpdateTrack(seed, lr, lr->GetCluster(bestCl))) {	      
+	    if (!UpdateTrack(seed, lr, cl)) {
 	      break;
 	    }
 	    bestClSel[ilr] = bestCl;
@@ -1066,31 +1123,35 @@ void KMCDetectorFwd::TrackMS()
 	}
 	lrP = lr;
       }
-      if (nTriggAdd<fMinTRHits) { // abandone this pair of cl0, cl1
+      if (nTriggAdd<fMinTRHits) { // abandon this pair of cl0, cl1
 	delete seed;
 	continue;
       }
       // now track back from the Trigger stations towards the 1st MS station
       seed->ResetCovariance();
       lrP = GetLayer(lastUpdateLr);
-      
-      for (int ilr=lastUpdateLr;ilr>=fNActiveLayersMS/2;ilr--) {
-	lr = GetLayer(ilr);
-	if (lr!=lrP && !PropagateToLayer(seed,lrP,lr,-1)) {
+      lrP->AddMCTrack(seed);
+      // part after the toroid propagated to last plane before toroid
+      for (int ilr=lastUpdateLr-1;ilr>=lrMSLimID;ilr--) { 
+	if (bestClSel[lrP->GetID()]>=-1 && !UpdateTrack(seed, lrP, lrP->GetCluster(bestClSel[lrP->GetID()])) ) { // there is a cluster
 	  delete seed;
 	  seed = 0;
 	  break;
 	}
-	if (bestClSel[ilr]>=-1 && !UpdateTrack(seed, lr, lr->GetCluster(bestClSel[ilr])) ) { // there is a cluster
+	KMCLayerFwd* lr = GetLayer(ilr);
+	if (!PropagateToLayer(seed,lrP,lr,-1)) {
 	  delete seed;
 	  seed = 0;
 	  break;
 	}
 	lr->AddMCTrack(seed);
-      }     
+	lrP = lr;
+      }
+      // part before the toroid
       delete seed;
     }
   }
+  return lrMSLimID;
 }
 
 //____________________________________________________________
@@ -1126,37 +1187,23 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     fRefVtx[2] = fProbe.GetZ();
   }
   //
-  //  printf("MaxLr: %d\n",maxLr);
   ResetMCTracks(maxLr);
-  KMCLayerFwd* lr = GetLayer(maxLr);
-  currTr = lr->AddMCTrack(&fProbe); // start with original track at vertex
-  //
-  //  printf("INI SEED: "); currTr->Print("etp");
-  if (!fExternalInput) {if (!TransportKalmanTrackWithMS(currTr, maxLr, kFALSE)) return kFALSE;} // transport it to outermost layer where full MC is done
-  else *currTr->GetTrack() = *GetLayer(maxLr)->GetAnProbe()->GetTrack();
-  //printf("LastTrackedMS: "); currTr->GetTrack()->Print();
-
   PrepareForTracking();
 
-  //
-  if (maxLr<=fLastActiveLayerTracked && maxLr>fLastActiveLayerITS) { // prolongation from MS
-    // start from correct track propagated from above till maxLr
-    double *covMS = (double*)currTr->GetTrack()->GetCovariance();
-    const double *covIdeal = GetLayer(maxLr)->GetAnProbe()->GetCovariance();
-    for (int i=15;i--;) covMS[i] = covIdeal[i];
-  }
-  else { // ITS SA: randomize the starting point
+  if (maxLr<=fLastActiveLayerTracked && maxLr>fLastActiveLayerITS) { // tracking in MS
+    maxLr = TrackMS();
+    //maxLr = TrackMSSimple();
+  } else {
+    KMCLayerFwd* lr = GetLayer(maxLr);
+    currTr = lr->AddMCTrack(&fProbe); // start with original track at vertex
+    if (!fExternalInput) {if (!TransportKalmanTrackWithMS(currTr, maxLr, kFALSE)) return kFALSE;} // transport it to outermost layer where full MC is done
     double r = currTr->GetR();
     currTr->ResetCovariance( kErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // RS: this is the coeff to play with
   }
-  //
-  int fst = 0;
-  const int fstLim = -1;
-
-  if (maxLr>=fLastActiveLayerMS) {
-    TrackMS();
+  if (maxLr<0) { // failed
+    return false;
   }
-
+  KMCLayerFwd* lr = GetLayer(maxLr);
   
   for (Int_t j=maxLr; j--; ) {  // Layer loop
     //
@@ -1172,10 +1219,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	currTrP = lrP->GetMCTrack(itrP); 
 	if (currTrP->IsKilled()) continue;
 	currTr = lr->AddMCTrack( currTrP );
-	if (fst<fstLim) {
-	  fst++;
-	  currTr->Print("etp");
-	}
 	if (!PropagateToLayer(currTr,lrP,lr,-1))  {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer
       }
       continue;
@@ -1187,10 +1230,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	currTrP = lrP->GetMCTrack(itrP); if (currTrP->IsKilled()) continue;
 	//	printf("At lr %d  | ",j+1); currTrP->Print("etp");
 	currTr = lr->AddMCTrack( currTrP );
-	if (fst<fstLim) {
-	  fst++;
-	  currTr->Print("etp");
-	}
 	// printf("\nAt Lr:%s ",lrP->GetName()); currTr->GetTrack()->Print();
 	if (!clmc->IsKilled()) {
 	  //	  lrP->Print("");
@@ -1275,11 +1314,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       
       currTr = lr->AddMCTrack( currTrP );
       
-      if (fst<fstLim) {
-	fst++;
-	currTr->Print("etp");
-      }
-      //
       AliDebug(2,Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
       CheckTrackProlongations(currTr, lrP,lr);
       AliDebug(2,Form("LastChecked after:%d",currTr->GetInnerLayerChecked()));
@@ -2388,9 +2422,11 @@ KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, 
   // check if the segment does not cross the normal from the origin ("too much" bending)
   double tcross = - (dirc[0]*pos0[0] + dirc[1]*pos0[1])/(dirnrm - dirc[2]*dirc[2]);
   if (tcross>0 && tcross<1) {
+    /*
     printf("reject as crossing origin\n");
     for (int i=0;i<3;i++) printf("%+e ", pos0[i]); printf("\n");
     for (int i=0;i<3;i++) printf("%+e ", pos1[i]); printf("\n");
+    */
     return 0;
   }
   
@@ -2402,9 +2438,9 @@ KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, 
     dirnrmF += posBend[i]*posBend[i];
   }
   dirnrmF = 1./TMath::Sqrt(dirnrmF);
-  double theta0 = TMath::Sqrt(posBend[0]*posBend[0]+posBend[1]*posBend[1])/fZBendingMS;
-  double theta1 = TMath::Sqrt(dirc[0]*dirc[0]+dirc[1]*dirc[1])/dirc[2];
-  double dTheta = TMath::ATan(theta0) - TMath::ATan(theta1);  //  dTheta = 0.3e-3* B0 / pT * ln(z2/z1) == bending angle, B in kgaus
+  double theta0 = TMath::ATan2( TMath::Sqrt(posBend[0]*posBend[0]+posBend[1]*posBend[1]), fZBendingMS);
+  double theta1 = TMath::ATan2( TMath::Sqrt(dirc[0]*dirc[0]+dirc[1]*dirc[1]), dirc[2]);
+  double dTheta = theta0 - theta1;  //  dTheta = 0.3e-3* B0 / pT * ln(z2/z1) == bending angle, B in kgaus
   double pTQF = TMath::Abs(dTheta)>1e-4 ? 0.3e-3*fToroidB0*TMath::Log(fZToroidEnd/fZToroidStart)/dTheta : 1e3; // estimate of q*pT at target
   double ptot = TMath::Abs(pTQF) / TMath::Sin(theta0); // full momentum
   //printf("Theta : %e %e dTheta: %e | qpt : %+e ptot : %+e\n", theta0, theta1, dTheta, pTQF, ptot);
@@ -2413,9 +2449,9 @@ KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, 
   double pxyz[3] = {pT*TMath::Cos(phi), pT*TMath::Sin(phi), ptot*TMath::Cos(theta1)};
 
   KMCProbeFwd* seed = new KMCProbeFwd(pos0, pxyz, pTQF>0 ? 1:-1);
-  seed.ResetCovariance();
-  printf("Seed : "); seed->Print("etp");
-  printf("True : "); GetLayerMS(fNActiveLayersMS-2)->GetAnProbe()->Print("etp");
+  seed->ResetCovariance();
+  //  printf("Seed : "); seed->Print("etp");
+  //  printf("True : "); GetLayerMS(fNActiveLayersMS-2)->GetAnProbe()->Print("etp");
   // update by 2 clusters in direction of the trigger stations  
   double measErr2[3];
   double meas[2] = {cl0->GetYTF(), cl0->GetZTF()};
@@ -2433,7 +2469,7 @@ KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, 
   meas[1] = cl1->GetZTF();  
   cl1->GetErr(measErr2);
   if (!seed->Update(meas,measErr2)) {
-    delete seed
+    delete seed;
     return 0;
   }
   return seed;

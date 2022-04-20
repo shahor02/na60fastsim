@@ -40,18 +40,18 @@ class KMCClusterFwd : public TObject {
     fSigZZ = szz;
   }
 
-  void     GetErr(double* err2) {
+  void     GetErr(double* err2)
   {
-    err2[0] = syy;
-    err2[1] = syz;
-    err2[2] = szz;
+    err2[0] = fSigYY;
+    err2[1] = fSigYZ;
+    err2[2] = fSigZZ;
   }
 
-  void     GetErr(float* err2) {
+  void     GetErr(float* err2)
   {
-    err2[0] = syy;
-    err2[1] = syz;
-    err2[2] = szz;
+    err2[0] = fSigYY;
+    err2[1] = fSigYZ;
+    err2[2] = fSigZZ;
   }
   
   //

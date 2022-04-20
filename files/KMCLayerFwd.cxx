@@ -145,5 +145,5 @@ bool KMCLayerFwd::AddCluster(double x,double y,double z, Int_t id, int clType)
 void KMCLayerFwd::PrepareForTracking()
 {
   SortBGClusters();
-  printf("Lr:%s: Signal clusters: %d, Bg.clusters: %d\n", GetName(), fClMC.IsKilled() ? 0 : 1, fClBg.GetEntriesFast());
+  //  printf("Lr:%s: Signal clusters: %d, Bg.clusters: %d\n", GetName(), fClMC.IsKilled() ? 0 : 1, fClBg.GetEntriesFast());
 }

@@ -2,7 +2,9 @@
 define:zinverted
 
 # if not defined or -1 : Alice field, otherwise custom
-define:magfield  0
+# parameters from zminDipole onwards are optional (but you cannot omit one in the middle)
+#                ID zminDipole  zmaxDipole  Bdipole ZminToroid ZmaxToroid Btoroid ToroidRmin ToroidRmax
+define:magfield  0  -1.0	44.5	    -15.	710.0      1045.    250.	30.0	  300.0
 
 #		r	dr	material
 #beampipe:	0.5	0.08    BERYLLIUM

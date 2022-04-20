@@ -410,7 +410,7 @@ void KMCProbeFwd::Print(Option_t* opt) const
 	 fNHits,fNHitsITS,fNHitsITSFake,fInnLrCheck, fNHitsMS, fNHitsMSFake, fNHitsTR, fNHitsTRFake);
   // hit pattern
   printf(" Pattern: |");
-  for (int i=0;i<fgActiveLayers;i++) {
+  for (int i=0;i<fgNActiveLayers;i++) {
     if (!(fHits&(0x1<<i))) printf(".");
     else if ( fFakes&(0x1<<i) ) printf("-");
     else printf("+");
