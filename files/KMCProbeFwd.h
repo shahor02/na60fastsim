@@ -33,7 +33,7 @@ class KMCProbeFwd: public TObject {
   AliExternalTrackParam* GetTrack()    const {return (AliExternalTrackParam*)&fTrack;}
   Double_t* GetCovariance()            const {return (double*)fTrack.GetCovariance();}
   //
-  void      Reset(); 
+  void      Reset(bool kinem = true); 
   void      ResetCovariance(float err=-1.);
   Bool_t    Init(const double *xyz, const double *pxyz, Int_t sign, double errLoose=-1);
   virtual   Bool_t IsSortable()                     const {return kTRUE;}

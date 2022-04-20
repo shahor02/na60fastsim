@@ -1059,7 +1059,8 @@ int KMCDetectorFwd::TrackMS()
   // RSTMP
   KMCLayerFwd* lr0 = GetLayerMS(fNActiveLayersMS/2);
   KMCLayerFwd* lr1 = GetLayerMS(fNActiveLayersMS-1);
-  int lrMSLimID = GetLayerMS(fNActiveLayersMS/2-1)->GetID();
+  int lrMSSeedLimID = GetLayerMS(fNActiveLayersMS/2-1)->GetID();
+  int lrMSLimID = GetLayerMS(0)->GetID()-1;
   int nTrLr = GetNumberOfActiveLayersTR(), lastTrLr = -1;
   if (nTrLr>0) {
     lastTrLr = GetLayerTR(nTrLr-1)->GetID();
@@ -1070,11 +1071,11 @@ int KMCDetectorFwd::TrackMS()
   for (int i0=-1;i0<lr0->GetNBgClusters();i0++) {
     KMCClusterFwd* cl0 = lr0->GetCluster(i0);
     if (cl0->IsKilled()) continue;
-    bestClSel[fNActiveLayersMS/2] = i0;
+    bestClSel[lr0->GetID()] = i0;
     for (int i1=-1;i1<lr1->GetNBgClusters();i1++) {
       KMCClusterFwd* cl1 = lr1->GetCluster(i1);
       if (cl1->IsKilled()) continue;
-      bestClSel[fNActiveLayersMS-1] = i1;
+      bestClSel[lr1->GetID()] = i1;
       //
       KMCProbeFwd* seed = CreateMSSeed(lr0, cl0, lr1, cl1);
       if (!seed) continue;
@@ -1129,10 +1130,11 @@ int KMCDetectorFwd::TrackMS()
       }
       // now track back from the Trigger stations towards the 1st MS station
       seed->ResetCovariance();
+      seed->Reset(false);
       lrP = GetLayer(lastUpdateLr);
       lrP->AddMCTrack(seed);
       // part after the toroid propagated to last plane before toroid
-      for (int ilr=lastUpdateLr-1;ilr>=lrMSLimID;ilr--) { 
+      for (int ilr=lastUpdateLr-1;ilr>=lrMSSeedLimID;ilr--) { 
 	if (bestClSel[lrP->GetID()]>=-1 && !UpdateTrack(seed, lrP, lrP->GetCluster(bestClSel[lrP->GetID()])) ) { // there is a cluster
 	  delete seed;
 	  seed = 0;
@@ -1151,7 +1153,7 @@ int KMCDetectorFwd::TrackMS()
       delete seed;
     }
   }
-  return lrMSLimID;
+  return lrMSSeedLimID;
 }
 
 //____________________________________________________________
@@ -1167,7 +1169,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   //
   const float kErrScale = 100.; // RS: this is the parameter defining the initial cov.matrix error wrt sensor resolution
       
-  Bool_t checkMS = kTRUE;
   fMuTrackVertex.SetUniqueID(999); // invalidate
   fMuTrackBCVertex.SetUniqueID(999); // invalidate
   fMuTrackBCLastITS.SetUniqueID(999); // invalidate
@@ -1191,8 +1192,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   PrepareForTracking();
 
   if (maxLr<=fLastActiveLayerTracked && maxLr>fLastActiveLayerITS) { // tracking in MS
-    maxLr = TrackMS();
-    //maxLr = TrackMSSimple();
+    //maxLr = TrackMS();
+    maxLr = TrackMSSimple();
   } else {
     KMCLayerFwd* lr = GetLayer(maxLr);
     currTr = lr->AddMCTrack(&fProbe); // start with original track at vertex
@@ -1224,6 +1225,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       continue;
     } // treatment of dead layer <<<
     //
+    /*
     if (lrP->IsMS() || lrP->IsTrig()) { // we don't consider bg hits in MS, just update with MC cluster
       KMCClusterFwd* clmc = lrP->GetMCCluster();
       for (int itrP=ntPrev;itrP--;) { // loop over all tracks from previous layer
@@ -1242,6 +1244,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       //      currTr->Print("etp");
       continue;
     } // treatment of ideal layer <<<
+    */
+    
     //
     // active layer under eff. study (ITS?): propagate copy of every track to MC cluster frame (to have them all in the same frame)
     // and calculate the limits of bg generation
@@ -1254,8 +1258,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     for (int itrP=0;itrP<ntPrev;itrP++) { // loop over all tracks from previous layer
       currTrP = lrP->GetMCTrack(itrP); if (currTrP->IsKilled()) continue;
       //
-      if (checkMS) {
-	checkMS = kFALSE;
+      if (fNActiveLayersMS && lr->GetID()==(GetLayerMS(0)->GetID()-1)) {
 	// check if muon track is well defined
 	if (currTrP->GetNTRHits()<fMinTRHits) {currTrP->Kill(); continue;}
 	if (currTrP->GetNMSHits()<fMinMSHits) {currTrP->Kill(); continue;}
@@ -1714,7 +1717,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     //
     if (gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
     //
-    KMCClusterFwd *cl = icl<0 ? lrP->GetMCCluster() : lrP->GetBgCluster(icl);  // -1 is for true MC cluster
+    KMCClusterFwd *cl = lrP->GetCluster(icl); //icl<0 ? lrP->GetMCCluster() : lrP->GetBgCluster(icl);  // -1 is for true MC cluster
     if (cl->IsKilled()) {
       if (AliLog::GetGlobalDebugLevel()>1) {printf("Skip cluster %d ",icl); cl->Print();}
       continue;

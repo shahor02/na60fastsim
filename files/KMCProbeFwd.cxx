@@ -107,7 +107,7 @@ KMCProbeFwd& KMCProbeFwd::operator=(const KMCProbeFwd& src)
 }
   
 //_______________________________________________________________________
-void KMCProbeFwd::Reset() 
+void KMCProbeFwd::Reset(bool kinem) 
 {
   fWeight = 1.;
   fMass=0.14; 
@@ -115,11 +115,10 @@ void KMCProbeFwd::Reset()
   fChi2ITS=0;
   fMSX2X0Seen = 0;
   fHits=fFakes=0;  
-  fTrack.Reset();
   ResetCovariance();
   for (int i=kMaxActiveLr;i--;) fClID[i]=-2; 
   fNHits = fNHitsITS = fNHitsMS = fNHitsTR = fNHitsITSFake = fNHitsMSFake = fNHitsTRFake = 0;
-  fTrack.Reset();
+  if (kinem) fTrack.Reset();
 }
   
 //_______________________________________________________________________
