@@ -1044,6 +1044,8 @@ int KMCDetectorFwd::TrackMSSimple()
 	  //	  printf("BeforeMS Update: "); currTr->Print("etp");
 	  if (!UpdateTrack(currTr, lrP, clmc)) {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // update with correct MC cl.
 	  //	  printf("AfterMS Update: "); currTr->Print("etp");
+	} else {
+	  printf("Skip update at MS cluster  "); clmc->Print();
 	}
 	if (!PropagateToLayer(currTr,lrP,lr,-1))            {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer	
       }      
@@ -1133,12 +1135,14 @@ int KMCDetectorFwd::TrackMS()
 	continue;
       }
       // now track back from the Trigger stations towards the 1st MS station
+      lrP = GetLayer(lastUpdateLr);
+      *seed->GetTrack() = *lrP->GetMCTrack(0)->GetTrack();
+      
       seed->ResetCovariance();
       seed->Reset(false);
       double *covMSSeed = (double*)seed->GetTrack()->GetCovariance();
-      covMSSeed[14] *= 1;      
-      seed->Print("etp");      
-      lrP = GetLayer(lastUpdateLr);
+      covMSSeed[14] *= 2;
+      //      seed->Print("etp");      
 
       /*
       auto ss = lrP->GetMCTrack(0);
@@ -1147,6 +1151,7 @@ int KMCDetectorFwd::TrackMS()
       for (int i=15;i--;) covMS[i] = covIdeal[i];
       ss->Print("etp");
       */
+      
       lrP->AddMCTrack(seed);
       // part after the toroid propagated to last plane before toroid
       for (int ilr=lastUpdateLr-1;ilr>=lrMSSeedLimID;ilr--) { 
@@ -1214,7 +1219,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   }
   //
   PrepareForTracking();
-
+  printf("\n\nSTART\n");
   if (maxLr<=fLastActiveLayerTracked && maxLr>fLastActiveLayerITS) { // tracking in MS
     maxLr = TrackMS();
     //maxLr = TrackMSSimple();
@@ -1243,6 +1248,8 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	  if (currTrP->GetNTRHits()<fMinTRHits) {currTrP->Kill(); continue;}
 	  if (currTrP->GetNMSHits()<fMinMSHits) {currTrP->Kill(); continue;}
 	  if (fHChi2MS) fHChi2MS->Fill(currTr->GetChi2(),currTr->GetNHits());      
+	  printf("MSDONE %d of %d\n", itrP,ntPrev);
+	  currTrP->Print("etp");
 	}	
 	currTr = lr->AddMCTrack( currTrP );
 	if (!PropagateToLayer(currTr,lrP,lr,-1))  {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer
@@ -1262,13 +1269,16 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     for (int itrP=0;itrP<ntPrev;itrP++) { // loop over all tracks from previous layer
       currTrP = lrP->GetMCTrack(itrP); if (currTrP->IsKilled()) continue;
       //
+      //      printf("checkms itrP: %d ntPrev: %d fNActiveLayersMS:%d lrP->GetID()=%d GetLayerMS(0)->GetID()-1=%d\n", itrP, ntPrev, fNActiveLayersMS, lrP->GetID(), GetLayerMS(0)->GetID()-1);
       if (fNActiveLayersMS && lrP->GetID()==(GetLayerMS(0)->GetID()-1)) { // check if muon track is well defined
 	if (currTrP->GetNTRHits()<fMinTRHits) {currTrP->Kill(); continue;}
 	if (currTrP->GetNMSHits()<fMinMSHits) {currTrP->Kill(); continue;}
-	if (fHChi2MS) fHChi2MS->Fill(currTr->GetChi2(),currTr->GetNHits());      
+	if (fHChi2MS) fHChi2MS->Fill(currTr->GetChi2(),currTr->GetNHits());
+	printf("MSDONE %d of %d\n", itrP,ntPrev);
+	currTrP->Print("etp");
       }
       //
-      if (lrP->GetID() == fLastActiveLayerITS && fVtx && !fVtx->IsDead() && fApplyBransonPCorrection>=0) {
+      if (lrP->GetID() == fLastActiveLayerITS && fVtx && !fVtx->IsDead() && fApplyBransonPCorrection>=0) {	
 	trcConstr = *currTrP;
 	fMuTrackLastITS = trcConstr;
 	if (!PropagateToLayer(&trcConstr,lrP,fVtx,-1))  {currTrP->Kill();continue;} // propagate to vertex
@@ -1299,9 +1309,16 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       currTr = lr->AddMCTrack( currTrP );
       
       AliDebug(2,Form("LastChecked before:%d",currTr->GetInnerLayerChecked()));
-      CheckTrackProlongations(currTr, lrP,lr);
+      int nfnd = CheckTrackProlongations(currTr, lrP,lr);
+      printf("found %d at lr %d -> %d for %d of %d\n", nfnd, lrP->GetID(), lr->GetID(), itrP, ntPrev);
+      ncnd += nfnd;
       AliDebug(2,Form("LastChecked after:%d",currTr->GetInnerLayerChecked()));
-      ncnd++;
+      // currTrP had no update update on layer lrP, since in the MS we don't allow holes, it should not have been propagated to the lr, kill ir
+      if (lrP->IsMS() || lrP->IsTrig()) {
+	currTr->Kill();
+      } else {
+	ncnd++;
+      }	
       if (currTr->GetNFakeITSHits()==0 && cndCorr<ncnd) cndCorr=ncnd;
       if (NeedToKill(currTr)) {currTr->Kill(); continue;}
     }
@@ -1390,7 +1407,7 @@ Bool_t KMCDetectorFwd::TransportKalmanTrackWithMS(KMCProbeFwd *probTr, int maxLr
 }
 
 //____________________________________________________________________________
-void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP, KMCLayerFwd* lr)
+int KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP, KMCLayerFwd* lr)
 {
   // explore prolongation of probe from lrP to lr with all possible clusters of lrP
   // the probe is already brought to clusters frame
@@ -1408,17 +1425,19 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     printf("After Branson: "); probe->Print("etp");
   }
   */
+  int nAdded = 0;
   static KMCProbeFwd propVtx;
   //
   int nCl = lrP->GetNBgClusters();
+  float useChi2 = lrP->IsITS() ? fMaxChi2Cl : fMaxChi2Cl*10;
   double rad = probe->GetR();
   double sgy = lrP->GetYRes(rad), sgx = lrP->GetXRes(rad); 
   double measErr2[3] = { sgy*sgy, 0, sgx*sgx}; 
   double meas[2] = {0,0};
   double tolerY = probe->GetTrack()->GetSigmaY2() + measErr2[0];
   double tolerX = probe->GetTrack()->GetSigmaZ2() + measErr2[2]; // Xlab = -Zloc
-  tolerY = TMath::Sqrt(fMaxChi2Cl*tolerY);
-  tolerX = TMath::Sqrt(fMaxChi2Cl*tolerX);
+  tolerY = TMath::Sqrt(useChi2*tolerY);
+  tolerX = TMath::Sqrt(useChi2*tolerX);
   double yMin = probe->GetY() - tolerY;
   double yMax = probe->GetY() + tolerY;    
   double xMin = probe->GetX() - tolerX;
@@ -1430,20 +1449,21 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
 		  lrP->GetActiveID(),lrP->GetName(),lr->GetActiveID(),lr->GetName(),probe->GetInnerLayerChecked()));
   for (int icl=-1;icl<nCl;icl++) {
     //
-    if (gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
+    //if (gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
     //
     KMCClusterFwd *cl = lrP->GetCluster(icl); //icl<0 ? lrP->GetMCCluster() : lrP->GetBgCluster(icl);  // -1 is for true MC cluster
     if (cl->IsKilled()) {
+      printf("Skip cluster %d ",icl); cl->Print();
       if (AliLog::GetGlobalDebugLevel()>1) {printf("Skip cluster %d ",icl); cl->Print();}
       continue;
     }
     double y = cl->GetY(); // ! tracking frame coordinates: Ylab
     double x = cl->GetX(); //                               XLab, sorted in decreasing order
     //
-    //AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)",
-    //		    icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetY(),y,yMin,yMax,probe->GetX(),x,xMin,xMax));
+    AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) x: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)",
+    		    icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetY(),y,yMin,yMax,probe->GetX(),x,xMin,xMax));
     //
-    if (lrP->IsMS() && (x>xMax || x<xMin || y<yMin || y>yMax)) {
+    if (/*lrP->IsMS() &&*/ (x>xMax || x<xMin || y<yMin || y>yMax)) {
       printf("fail at range check: "); lrP->Print("");
       probe->Print("etp");
       printf("X: %f < %f <%f Y: %f < %f < %f\n",xMin,x,xMax, yMin,y,yMax);
@@ -1461,7 +1481,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     //      cl->Print("lc");
     //    AliDebug(2,Form("Seed-to-cluster chi2 = Chi2=%.2f",chi2));
     if (icl<0 && fHChi2LrCorr) fHChi2LrCorr->Fill(lrP->GetActiveID(), chi2);
-    if (chi2>fMaxChi2Cl) {
+    if (chi2>useChi2) {
       printf("fail at chi2 check: "); lrP->Print("");
       probe->Print("etp");
       printf("X: %f < %f <%f Y: %f < %f < %f -> %f\n",xMin,x,xMax, yMin,y,yMax, chi2);
@@ -1469,12 +1489,12 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     }
     // 
     //    printf("Lr%d | cl%d, chi:%.3f X:%+.4f Y:%+.4f | x:%+.4f y:%+.4f |Sg: %.4f %.4f\n",
-    //	   lrP->GetActiveID(),icl,chi2, (zMin+zMax)/2,(yMin+yMax)/2, z,y, tolerX/TMath::Sqrt(fMaxChi2Cl),tolerY/TMath::Sqrt(fMaxChi2Cl));
+    //	   lrP->GetActiveID(),icl,chi2, (zMin+zMax)/2,(yMin+yMax)/2, z,y, tolerX/TMath::Sqrt(useChi2),tolerY/TMath::Sqrt(useChi2));
     // update track copy
     KMCProbeFwd* newTr = lr->AddMCTrack( probe );
     if (!newTr->Update(meas,measErr2)) {
-      AliDebug(2,Form("Layer %s: Failed to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e}",
-		      lrP->GetName(),meas[0],meas[1], measErr2[0],measErr2[1],measErr2[2]));
+      AliInfo(Form("fail to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e} at lr: %s", meas[0],meas[1], measErr2[0],measErr2[1],measErr2[2],lrP->GetName()));
+      AliDebug(2,Form("Layer %s: Failed to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e}", lrP->GetName(),meas[0],meas[1], measErr2[0],measErr2[1],measErr2[2]));
       if (AliLog::GetGlobalDebugLevel()>1) newTr->Print("l");
       newTr->Kill();
       lr->GetMCTracks()->RemoveLast();
@@ -1483,13 +1503,13 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     if (fMinP2Propagate>0) {
       double p = newTr->GetTrack()->GetP();
       if (p<fMinP2Propagate) {
+	AliInfo(Form("Layer %s: Failed at P check %f on Lr %s", p, lrP->GetName()));
 	newTr->Kill();
 	lr->GetMCTracks()->RemoveLast();
 	continue;
       }
     }
     newTr->AddHit(lrP, chi2, cl->GetTrID());
-
     //////////////////// check chi2 to vertex
     if (fVtx && lrP->IsITS() && !fVtx->IsDead() && fMaxChi2Vtx>0) {
       double measVErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; // we work in tracking frame here!
@@ -1501,11 +1521,11 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
 	if (IsCorrect(newTr)) fHChi2VtxCorr->Fill(newTr->GetNITSHits(),chi2V);
 	else                  fHChi2VtxFake->Fill(newTr->GetNITSHits(),chi2V);
       }
-      AliDebug(2,Form("Chi2 to vertex: %f | y: Tr:%+8.4f Cl:%+8.4f  z: Tr:%+8.4f Cl: %+8.4f",chi2V,
-		      propVtx.GetY(),fRefVtx[0],
-		      propVtx.GetX(),fRefVtx[1]));
+      AliDebug(2,Form("Chi2 to vertex: %f | y: Tr:%+8.4f Cl:%+8.4f  z: Tr:%+8.4f Cl: %+8.4f",chi2V, propVtx.GetY(),fRefVtx[0], propVtx.GetX(),fRefVtx[1]));
 
       if (chi2V>fMaxChi2Vtx) {
+	AliInfo(Form("fail on Chi2 to vertex: %f | y: Tr:%+8.4f Cl:%+8.4f  z: Tr:%+8.4f Cl: %+8.4f",chi2V, propVtx.GetY(),fRefVtx[0], propVtx.GetX(),fRefVtx[1]));
+
 	newTr->Kill();
 	lr->GetMCTracks()->RemoveLast();
 	continue;
@@ -1517,9 +1537,8 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
 	printf("LowMom: %f | chi2V=%f (%f | %f %f %f)  ",pz,chi2V, fMaxChi2Vtx, fRefVtx[0],fRefVtx[1],fRefVtx[2]);  propVtx.Print("etp");       
       }
       */
-
     }
-
+    nAdded++;
     ////////////////////////////////////////
 
     //    if (!PropagateToLayer(newTr,lrP,lr,-1)) {newTr->Kill(); continue;} // propagate to next layer
@@ -1529,6 +1548,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     }
   }
   //
+  return nAdded;
 }
 
 //_________________________________________________________

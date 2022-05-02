@@ -47,7 +47,7 @@ class KMCProbeFwd: public TObject {
   Double_t  GetWeight()                           const {return fWeight;}
   Double_t  GetChi2()                             const {return fChi2;}
   Double_t  GetChi2ITS()                          const {return fChi2ITS;}
-
+  Float_t   GetChi2Lr(int i)                      const {return fLrChi2[i];}
   void      SetChi2(double chi2)                        {fChi2 = chi2;}
   void      SetChi2ITS(double chi2)                     {fChi2ITS = chi2;}
   void      AddChi2(double chi2)                        {fChi2 += chi2;}
@@ -138,6 +138,7 @@ class KMCProbeFwd: public TObject {
   Int_t    fNHitsTRFake; // number of fake TR hits  
   UInt_t   fInnLrCheck;   // lowest active layer where update was checked
   Int_t    fClID[kMaxActiveLr]; // id's of attached clusters
+  Float_t  fLrChi2[kMaxActiveLr]; // track-cluster chi2 at each layer
   AliExternalTrackParam fTrack;  // track params
   //
   static Int_t    fgNITSLayers;

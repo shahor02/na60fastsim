@@ -51,7 +51,10 @@ KMCProbeFwd::KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose)
 {
   // create track
   Init(xyz,pxyz,sign,errLoose);
-  for (int i=kMaxActiveLr;i--;) fClID[i]=-2; 
+  for (int i=kMaxActiveLr;i--;) {
+    fClID[i]=-2;
+    fLrChi2[i] = -1.;
+  }
   if (AliLog::GetGlobalDebugLevel()>=2) {
     AliDebug(2,Form("XYZ: %+e %+e %+e PXYZ: %+e %+e %+e Q=%d",xyz[0],xyz[1],xyz[2],pxyz[0],pxyz[1],pxyz[2],sign));
     Print("etp");
@@ -78,7 +81,10 @@ KMCProbeFwd::KMCProbeFwd(const KMCProbeFwd& src)
   ,fInnLrCheck(src.fInnLrCheck)
   ,fTrack( src.fTrack )
 {
-  for (int i=kMaxActiveLr;i--;) fClID[i]=-src.fClID[i]; 
+  for (int i=kMaxActiveLr;i--;) {
+    fClID[i]=-src.fClID[i];
+    fLrChi2[i] = src.fLrChi2[i];
+  }
 }
 
 //_______________________________________________________________________
@@ -102,7 +108,10 @@ KMCProbeFwd& KMCProbeFwd::operator=(const KMCProbeFwd& src)
   fNHitsTRFake = src.fNHitsTRFake;
   fInnLrCheck = src.fInnLrCheck;
   fTrack = src.fTrack;
-  for (int i=kMaxActiveLr;i--;) fClID[i] = src.fClID[i];
+  for (int i=kMaxActiveLr;i--;) {
+    fClID[i] = src.fClID[i];
+    fLrChi2[i] = src.fLrChi2[i];
+  }
   return *this;
 }
   
@@ -116,7 +125,10 @@ void KMCProbeFwd::Reset(bool kinem)
   fMSX2X0Seen = 0;
   fHits=fFakes=0;  
   ResetCovariance();
-  for (int i=kMaxActiveLr;i--;) fClID[i]=-2; 
+  for (int i=kMaxActiveLr;i--;) {
+    fClID[i]=-2;
+    fLrChi2[i] = -1.;
+  }
   fNHits = fNHitsITS = fNHitsMS = fNHitsTR = fNHitsITSFake = fNHitsMSFake = fNHitsTRFake = 0;
   if (kinem) fTrack.Reset();
 }
@@ -421,6 +433,12 @@ void KMCProbeFwd::Print(Option_t* opt) const
       printf("%4d|",fClID[ilr]);
     }
   }
+  if (opts.Contains("lrchi")) {
+    for (int ilr=0;ilr<fgNActiveLayers;ilr++) {
+      printf("%.3f|",fLrChi2[ilr]);
+    }
+  }
+  
   printf("\n");
   if (opts.Contains("etp")) fTrack.Print();
 }
@@ -433,6 +451,7 @@ void KMCProbeFwd::AddHit(const KMCLayerFwd* lr, double chi2, Int_t clID) {
   fChi2 += chi2;
   int lrID = lr->GetActiveID();
   fClID[lrID] = clID;
+  fLrChi2[lrID] = chi2;
   SetWBit(fHits,lrID); 
   if (clID>-1) SetWBit(fFakes,lrID);
   if (lr->IsITS()) {

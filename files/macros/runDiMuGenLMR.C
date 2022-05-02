@@ -236,6 +236,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   TLorentzVector parent, dimuGen, muGen[2], muRec[2], muRecMS[2], dimuRecMS, dimuRec;//eli
   int npix[2]={0}, nfake[2]={0};
   float chiGlo[2] = {999.,999.};
+  float chiGloITS[2] = {999.,999.};
   TParticle mupart[2];
 
   TTree *t1 = new TTree("t1","TLorentzVectorMuons");
@@ -325,7 +326,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 //       // hit map histogram of muon station qui!!!!!!!!!!!
 //      hxySextantCH[ch]->Fill(c[ch]->GetXLab(),c[ch]->GetYLab());
       //    }
-      
+/*       
       KMCClusterFwd* cl = det->GetLayerMS(0)->GetMCCluster();
       if (!cl) break; 
       //      sext[imu] = GetSextant(cl->GetXLab(),cl->GetYLab());
@@ -352,19 +353,19 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 // 	hxySextantITS[i]->Fill(clITS[i]->GetXLab(),clITS[i]->GetYLab());
 //       }
 
-
+*/
 
       KMCProbeFwd* trw = det->GetLayer(0)->GetWinnerMCTrack();
       if (!trw) break;
       trw->Print();
-      if(trw->GetNormChi2(kTRUE)>ChiTot) continue;
-      nrec++;
+
       nfakeHits += trw->GetNFakeITSHits();
       trw->GetPXYZ(pxyz);
       muRec[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],prodM[imu]);
       npix[imu] = trw->GetNITSHits();
       nfake[imu] = trw->GetNFakeITSHits();
       chiGlo[imu] = trw->GetNormChi2(kTRUE);
+      chiGloITS[imu] = trw->GetNormChi2ITS(kTRUE);      
       mupart[imu].SetMomentum(muRec[imu].Px(),muRec[imu].Py(),muRec[imu].Pz(),muRec[imu].Energy());
 
       KMCProbeFwd* muMS = det->GetMuBransonCorrVtx();
@@ -372,6 +373,16 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 	muMS->GetPXYZ(pxyz);
 	muRecMS[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],KMCDetectorFwd::kMassMu);
       }
+
+      outStream << "probeRec" << "genMu=" << &muGen[imu] << "recMu=" << &muRec[imu] << "recMuMS=" << &muRecMS[imu]
+		<< "npix=" << npix[imu] << "nfake=" << nfake[imu] << "chi=" << chiGlo[imu] << "chiITS=" << chiGloITS[imu]
+		<< "probe=" << trw
+		<< "\n";
+
+      
+      if(trw->GetNormChi2(kTRUE)>ChiTot) continue;      
+      nrec++;
+
     }
 
     if (nrec<2) continue;
@@ -407,7 +418,9 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
       	      << "recMuMS0=" << &muRecMS[0] << "recMuMS1=" << &muRecMS[1]
 	      << "npix0=" << npix[0] << "npix1=" << npix[1]
 	      << "nfake0=" << nfake[0] << "nfake1=" << nfake[1]
-	      << "chi0=" << chiGlo[0] << "chi1=" << chiGlo[1] << "\n";
+	      << "chi0=" << chiGlo[0] << "chi1=" << chiGlo[1]
+	      << "chiITS0=" << chiGloITS[0] << "chiITS1=" << chiGloITS[1]
+	      << "\n";
     
     
     //
