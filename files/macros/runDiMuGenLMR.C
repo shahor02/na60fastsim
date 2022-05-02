@@ -374,9 +374,16 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
 	muRecMS[imu].SetXYZM(pxyz[0],pxyz[1],pxyz[2],KMCDetectorFwd::kMassMu);
       }
 
+      KMCProbeFwd* seed0 = det->GetLayerTR(1)->GetMCTrack(0);
+      KMCProbeFwd* seed1 = det->GetLayerTR(1)->GetMCTrack(1);
+      if (!seed0 || !seed1) {
+	printf("failed to get seed at L11: %p %p\n", seed0, seed1);
+	break;
+      }
       outStream << "probeRec" << "genMu=" << &muGen[imu] << "recMu=" << &muRec[imu] << "recMuMS=" << &muRecMS[imu]
 		<< "npix=" << npix[imu] << "nfake=" << nfake[imu] << "chi=" << chiGlo[imu] << "chiITS=" << chiGloITS[imu]
 		<< "probe=" << trw
+	        << "pr11=" << seed0 << "pr11s=" << seed1
 		<< "\n";
 
       

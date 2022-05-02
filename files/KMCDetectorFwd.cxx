@@ -1136,7 +1136,7 @@ int KMCDetectorFwd::TrackMS()
       }
       // now track back from the Trigger stations towards the 1st MS station
       lrP = GetLayer(lastUpdateLr);
-      *seed->GetTrack() = *lrP->GetMCTrack(0)->GetTrack();
+      //*seed->GetTrack() = *lrP->GetMCTrack(0)->GetTrack();
       
       seed->ResetCovariance();
       seed->Reset(false);
