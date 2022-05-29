@@ -164,6 +164,7 @@ int KMCFlukaParser::readBackground(TString& interactionSource)
   return fHits.size();
 }
 
+// for Geant version from Maryna
 int KMCFlukaParser::readNextPair(Bool_t verbose)
 {
   //
@@ -289,6 +290,134 @@ int KMCFlukaParser::readNextPair(Bool_t verbose)
   return 0;
 }
 
+/*
+// for old fluka version from Gianluca
+int KMCFlukaParser::readNextPair(Bool_t verbose)
+{
+  //
+  TString rec;
+  double en,x,y,z,cx,cy,cz;
+  int code,codeP,st;
+  char key0[20];
+  //
+  if (!fInpFile.good()) return 0;
+  //
+  for (int ip=2;ip--;) fParts[ip].clear();
+  //
+  int nPart = 0, idPart = 0;
+  double *datTmp=0;
+  //  
+  while(1) {
+    rec = readNextRecord();
+    rec = rec.Strip(TString::kLeading,' ');
+    if (rec.IsNull()) return nPart;
+    if (rec.BeginsWith(fgEndEvRecord)) return nPart; // end of record reached
+    //    printf("rec is |%s|\n",rec.Data());
+
+    int nr = sscanf(rec.Data(),"%s %d %d %lf %lf %lf %lf %lf %lf %lf",key0,&code,&codeP,&en,&x,&y,&z,&cx,&cy,&cz);
+    if (nr!=10) {
+      printf("Expected to read %d items, got %d from\n%s\n",10,nr,rec.Data());
+      exit(1);
+    }
+    if (!strcmp(key0,"Primary")) {
+      nPart++;
+      if (nPart>2) {
+	printf("More than 2 Primary records are found in the same event\n%s\n",rec.Data());
+	exit(1);
+      }
+      idPart = nPart-1;
+      fParts[idPart].codeOr = code;
+      datTmp = fParts[idPart].recDataPrim;
+    } 
+    else {
+      // make sure 2 primaries were read
+      if (nPart<2) {
+	printf("Non-Primary record is found while only %d primary is read (must be 2)\n%s\n",nPart,rec.Data());
+	exit(1);
+      }
+      // find to which particle this record belongs to
+      if (codeP==fParts[0].codeOr) {
+	idPart = 0;
+      }
+      else if (codeP==fParts[1].codeOr) {
+	idPart = 1;
+      }
+      else {
+	printf("skip record: detector hit parent code %d does not correspond to neither of parents %d and %d\n%s\n",
+	       codeP,fParts[0].codeOr,fParts[1].codeOr,rec.Data());
+	//exit(1);
+	continue;
+      }
+      if (rec.BeginsWith("PixStn")) {
+	int nr = sscanf(key0,"PixStn%d",&st);
+	if (nr!=1 || st>=kMaxPix) {
+	  printf("Failed to get VerTel plane number from:\n%s\n", rec.Data());
+	  exit(1);
+	}
+	if (fParts[idPart].recTypePix[st]!=kRecDummy) {
+	  if (verbose) printf("Competing hit from part. %d (primary:%d) on occupied PixStn%d |"
+			      "Enew=%.2e Eold=%.2e\n",code,codeP,st,en,fParts[idPart].recDataPix[st][kE]);
+	  if (en<fParts[idPart].recDataPix[st][kE]) continue; // ignore particle with lower energy
+	}
+	else fParts[idPart].nPix++;
+	
+	datTmp = fParts[idPart].recDataPix[st];
+	fParts[idPart].recTypePix[st] = code; // pixel station
+      }
+      else if (rec.BeginsWith("MS")) {
+	int nr = sscanf(key0,"MS%d",&st);
+	if (nr!=1 || st>=kMaxMS) {
+	  printf("Failed to get MS plane number from:\n%s\n", rec.Data());
+	  exit(1);
+	}
+	if (fParts[idPart].recTypeMS[st]!=kRecDummy) {
+	  if (verbose) printf("Competing hit from part. %d (primary:%d) on occupied MS%d |"
+			      "Enew=%.2e Eold=%.2e\n",code,codeP,st,en,fParts[idPart].recDataMS[st][kE]);
+	  if (en<fParts[idPart].recDataMS[st][kE]) continue; // ignore particle with lower energy
+	}
+	else fParts[idPart].nMS++;
+
+	datTmp = fParts[idPart].recDataMS[st];
+	fParts[idPart].recTypeMS[st] = code; // MS station
+	//
+      }
+      else if (rec.BeginsWith("TrigStn")) {
+	int nr = sscanf(key0,"TrigStn%d",&st);
+	if (nr!=1 || st>=kMaxTrig) {
+	  printf("Failed to get Trigger plane number from:\n%s\n", rec.Data());
+	  exit(1);
+	}
+	if (fParts[idPart].recTypeTR[st]!=kRecDummy) {
+	  if (verbose) printf("Competing hit from part. %d (primary:%d) on occupied MS%d |"
+			      "Enew=%.2e Eold=%.2e\n",code,codeP,st,en,fParts[idPart].recDataTR[st][kE]);
+	  if (en<fParts[idPart].recDataTR[st][kE]) continue; // ignore particle with lower energy
+	}
+	else fParts[idPart].nTrig++;
+
+	datTmp = fParts[idPart].recDataTR[st];
+	fParts[idPart].recTypeTR[st] = code; // Trigger station
+	//
+      }
+      else {
+	printf("Unknown detector keyword in %s\n",rec.Data());
+	exit(1);
+      }
+    }
+    //
+    if (fParts[idPart].zMuFirst>1e6 && (code==10||code==11) ) fParts[idPart].zMuFirst = z;
+    datTmp[kE] = en;
+    datTmp[kX] = x;
+    datTmp[kY] = y;
+    datTmp[kZ] = z;    
+    datTmp[kCX] = cx;
+    datTmp[kCY] = cy;
+    datTmp[kCZ] = cz;    
+    //      
+  }
+  return 0;
+}
+*/
+
 char* KMCFlukaParser::readNextRecord()
 {
   if (!fInpFile.good()) return 0;
@@ -298,6 +427,7 @@ char* KMCFlukaParser::readNextRecord()
     //   printf("read %s\n",recStr.Data());
     recStr = recStr.Strip(TString::kLeading,' ');
     recStr = recStr.ReplaceAll("\r"," ");
+    if (recStr.BeginsWith("#")) continue; // commented out
     return (char*)recStr.Data();
   }
   return 0;
