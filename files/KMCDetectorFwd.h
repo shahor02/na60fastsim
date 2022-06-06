@@ -134,6 +134,8 @@ class KMCDetectorFwd : public TNamed {
 				    double Tpi=0.17, double TK=0.23, double TP=0.25, double ptmin=0.01, double ptmax=5);
   void         InitBkg(double beamenergy);
   bool         ImposeFlukaBackground(KMCFlukaParser* fp, const TString& interactionSource="", bool allowRewind=true);
+  int ImposeBackgroundHits(const std::vector<SimHit> &hits);
+  int ImposeSignalHits(const std::vector<SimHit> &hits);
   void         SetExternalInput(Bool_t v = kFALSE)    {fExternalInput = v;}
   Bool_t       GetExternalInput()           const  {return fExternalInput;}
 

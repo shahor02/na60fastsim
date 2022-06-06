@@ -3,10 +3,12 @@
 
 #include <TString.h>
 #include <TObjArray.h>
+#include <TParticle.h>
+#include <TParticlePDG.h>
+#include <TDatabasePDG.h>
 #include <fstream>
 #include <vector>
 #include "KMCLayerFwd.h"
-
 //====================================================================
 //
 // These are settings for the fluka parser
@@ -14,6 +16,24 @@
 enum {kRecDummy=-9999,kMaxPix=20,kMaxMS=20,kMaxTrig=10};
 enum {kE,kX,kY,kZ,kCX,kCY,kCZ,kNFld};
 
+struct SimHit {
+  int stationType = int(KMCLayerFwd::kTypeNA);
+  int stationID = -1;
+  TParticle track;
+  ClassDefNV(SimHit,1);
+};
+
+struct SimEvent {
+  std::vector<TParticle> signal;
+  std::vector<std::vector<SimHit>> signalHits;
+  std::vector<SimHit> bgHits;
+  void clear() {
+    signal.clear();
+    signalHits.clear();
+    bgHits.clear();
+  }
+  ClassDefNV(SimEvent, 1);
+};
 
 struct FlukaPart {
   int    codeOr; // particle fluka code
@@ -40,14 +60,6 @@ struct FlukaPart {
   ClassDefNV(FlukaPart,1);
 };
 
-struct FlukaHit {
-  int stationType = int(KMCLayerFwd::kTypeNA);
-  int stationID = -1;
-  int partCode = 0;
-  double recData[kNFld]={};
-  ClassDefNV(FlukaHit,1);
-};
-
 struct FlukaStat {
   int totalRead;
   int totalAccepted;
@@ -67,21 +79,30 @@ class KMCFlukaParser {
 
   bool GetNextBackgroundEvent(const TString& interactionSource="", bool allowRewind = true);
   int readBackground(TString& interactionSource);
-    
+
+  bool readNextTrackGeant();
+  
   const FlukaStat& GetStat() const {return fStat;}
   const std::vector<FlukaPart>& GetParticles() const {return fParts;}
-  const std::vector<FlukaHit>& GetHits() const {return fHits;}
+  const std::vector<SimHit> &GetHits() const { return fHits; }
+
+  int Fluka2PDG(int flcode) const;
+
+  const SimEvent& getSimEvent() const { return simEvent; }
+  SimEvent& getSimEvent() { return simEvent; }
   
  protected:
 
   int readNextPair(Bool_t verbose=kFALSE);
   char* readNextRecord();
 
+  SimEvent simEvent;
+  
   TObjArray fInpFileList;
   Int_t     fCurFileID;
   std::ifstream  fInpFile;
   std::vector<FlukaPart> fParts;
-  std::vector<FlukaHit> fHits;
+  std::vector<SimHit> fHits;
   FlukaStat fStat;
   static const TString fgEndEvRecord;
 

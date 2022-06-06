@@ -1503,8 +1503,8 @@ int KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lrP
     if (fMinP2Propagate>0) {
       double p = newTr->GetTrack()->GetP();
       if (p<fMinP2Propagate) {
-	AliInfo(Form("Layer %s: Failed at P check %f on Lr %s", p, lrP->GetName()));
-	newTr->Kill();
+        AliInfo(Form("Failed at P check %f on Lr %s", p, lrP->GetName()));
+        newTr->Kill();
 	lr->GetMCTracks()->RemoveLast();
 	continue;
       }
@@ -2138,7 +2138,14 @@ KMCLayerFwd* KMCDetectorFwd::GetActiveLayer(int i, int ltype) const
 bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& interactionSource, bool allowRewind)
 {
   if (!fp->GetNextBackgroundEvent(interactionSource, allowRewind)) return false;
-  const std::vector<FlukaHit>& hits = fp->GetHits();
+  int ic = ImposeBackgroundHits(fp->GetHits());
+  printf("\nAdded background event of %d hits\n", ic);
+  return true;
+}
+
+//_____________________________________________________________________
+int KMCDetectorFwd::ImposeBackgroundHits(const std::vector<SimHit> &hits) {
+  int ic = 0, clAcc = 0;
   for (int ilr=fLastActiveLayer;ilr--;) {
     KMCLayerFwd* lr = GetLayer(ilr);
     lr->ResetBgClusters();
@@ -2146,17 +2153,35 @@ bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& in
       ((KMCMSStation*)lr)->ClearPrimaryHits();
     }
   }
-  int ic = 0;
   for (const auto& hit : hits) {
     KMCLayerFwd* lr = GetActiveLayer(hit.stationID, hit.stationType);
     if (!lr) {
       printf("ERROR: hit in non-existing layer %d of type %d, check setup\n",hit.stationID, hit.stationType);
       exit(1);
     }
-    lr->AddCluster(hit.recData[kX],hit.recData[kY],hit.recData[kZ], ic++, 1);
+    clAcc +=
+        lr->AddCluster(hit.track.Vx(), hit.track.Vy(), hit.track.Vz(), ic++, 1);
   }
-  printf("\nAdded Fluka background event of %d hits\n",ic);
-  return true;
+  return clAcc;
+}
+
+//_____________________________________________________________________
+int KMCDetectorFwd::ImposeSignalHits(const std::vector<SimHit> &hits) {
+  int ic = 0, clAcc = 0;
+  for (Int_t j = 0; j < fNLayers; j++) {
+    GetLayer(j)->GetMCCluster()->Kill(); // will be reactivated if accepted
+  }
+  for (const auto &hit : hits) {
+    KMCLayerFwd *lr = GetActiveLayer(hit.stationID, hit.stationType);
+    if (!lr) {
+      printf("ERROR: hit in non-existing layer %d of type %d, check setup\n",
+             hit.stationID, hit.stationType);
+      exit(1);
+    }
+    clAcc +=
+        lr->AddCluster(hit.track.Vx(), hit.track.Vy(), hit.track.Vz(), ic++, 0);
+  }
+  return clAcc;
 }
 
 KMCProbeFwd* KMCDetectorFwd::CreateMSSeed(KMCLayerFwd* lr0, KMCClusterFwd* cl0, KMCLayerFwd* lr1, KMCClusterFwd* cl1)

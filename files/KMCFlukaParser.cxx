@@ -3,7 +3,77 @@
 
 const TString KMCFlukaParser::fgEndEvRecord = "**************** end of event";
 
-
+int KMCFlukaParser::Fluka2PDG(int flCode) const
+{
+  const int pdgCode[] =
+    {
+     0, // NA
+     2212, // Proton   
+     -2212, // Antiproton   
+     11, // Electron   
+     -11, // Positron   
+     12, // Electron Neutrino  
+     -12, // Electron Antineutrino  
+     22, // Photon   
+     2112, // Neutron   
+     -2112, // Antineutron   
+     13, // Positive Muon   
+     -13, // Negative Muon   
+     130, // Kaon-zero long  
+     211, // Positive Pion   
+     -211, // Negative Pion   
+     321, // Positive Kaon   
+     -321, // Negative Kaon   
+     3122, // Lambda   
+     -3122, // Antilambda   
+     310, // Kaon zero short  
+     -3112, // Negative Sigma  
+     3222, // Positive Sigma  
+     3212, // Sigma-zero   
+     111, // Pion-zero   
+     311, // Kaon-zero   
+     -311, // Antikaon-zero
+     0, // NA
+     14, // Muon neutrino   
+     -14, // Muon antineutrino
+     0, // NA
+     0, // NA
+     -3222, // Antisigma-minus  
+     -3212, // Antisigma-zero  
+     -3112, // Antisigma-plus  
+     3322, // Xi-zero   
+     -3322, // Antixi-zero   
+     -3312, // Negative Xi   
+     3312, // Positive Xi   
+     3334, // Omega-minus   
+     -3334, // Antiomega
+     0, // NA   
+     15, // Positive Tau    
+     -15, // Negative Tau    
+     16, // Tau neutrino    
+     -16, // Tau antineutrino  
+     411, // D-plus   
+     411, // D-minus   
+     421, // D-zero   
+     -421, // AntiD-zero   
+     431, // D_s-plus   
+     -431, // D_s-minus   
+     4122, // Lambda_c-plus   
+     4232, // Xi_c-plus   
+     4112, // Xi_c-zero   
+     4322, // Xi'_c-plus   
+     4312, // Xi'_c-zero   
+     4332, // Omega_c-zero    
+     -4122, // Antilambda_c-minus  
+     -4232, // AntiXi_c-minus  
+     -4132, // AntiXi_c-zero   
+     -4322, // AntiXi'_c-minus  
+     -4312, // AntiXi'_c-zero  
+     -4332  // AntiOmega_c-zero
+    };
+  return flCode<0 || flCode > int(sizeof(pdgCode)/sizeof(int)) ? 0 : pdgCode[flCode];
+}
+    
 Int_t KMCFlukaParser::SetInpList(const char* list)
 {
   // files to parse
@@ -111,183 +181,155 @@ int KMCFlukaParser::readBackground(TString& interactionSource)
   if (!fInpFile.good()) return -10;
   interactionSource = "";
   //
+  double en, x, y, z, cx, cy, cz;
+  int partCode;
   while(1) {
-    FlukaHit hit;
-    char key0[20], volint[20];
-    
+    SimHit hit;
+    char vol0[20], volint[20];
+
     rec = readNextRecord();
     rec = rec.Strip(TString::kLeading,' ');
     if (rec.IsNull()) return -9;
     if (rec.BeginsWith(fgEndEvRecord)) break; // end of record reached
     //    printf("rec is |%s|\n",rec.Data());
 
-    int nr = sscanf(rec.Data(),"%s %d %s %lf %lf %lf %lf %lf %lf %lf", key0, &hit.partCode, volint,
-		    &hit.recData[kE], &hit.recData[kX], &hit.recData[kY], &hit.recData[kZ],
-		    &hit.recData[kCX], &hit.recData[kCY],&hit.recData[kCZ]); 
+    int nr = sscanf(rec.Data(), "%s %d %s %lf %lf %lf %lf %lf %lf %lf", vol0,
+                    &partCode, volint, &en, &x, &y, &z, &cx, &cy, &cz);
     if (nr!=10) {
       printf("Expected to read %d items, got %d from\n%s\n",10,nr,rec.Data());
       exit(1);
     }
     if (interactionSource.IsNull()) interactionSource = volint;
-    
+    int pdg = Fluka2PDG(partCode);
+    if (pdg == 0) {
+      printf("Skipping particle with uknown code %d\n", partCode);
+      continue;
+    }
+    TParticlePDG *particle = TDatabasePDG::Instance()->GetParticle(pdg);
+    if (particle->Charge() == 0)
+      continue;
+    int stType = -1, stID = -1;
     if (rec.BeginsWith("PixStn")) {
-      int nr = sscanf(key0,"PixStn%d",&hit.stationID);	
-      if (nr!=1 || hit.stationID>=kMaxPix) {
-	printf("Failed to get VerTel plane number from:\n%s\n", rec.Data());
+      int nr = sscanf(vol0, "PixStn%d", &stID);
+      if (nr != 1) {
+        printf("Failed to get VerTel plane number from:\n%s\n", rec.Data());
 	exit(1);
       }
-      hit.stationType = KMCLayerFwd::kITS;
-    }
-    else if (rec.BeginsWith("MS")) {
-      int nr = sscanf(key0,"MS%d",&hit.stationID);
-      if (nr!=1 || hit.stationID>=kMaxMS) {
-	printf("Failed to get MS plane number from:\n%s\n", rec.Data());
+      stType = KMCLayerFwd::kITS;
+    } else if (rec.BeginsWith("MS")) {
+      int nr = sscanf(vol0, "MS%d", &stID);
+      if (nr != 1) {
+        printf("Failed to get MS plane number from:\n%s\n", rec.Data());
 	exit(1);
       }
-      hit.stationType = KMCLayerFwd::kMS;
-    }
-    else if (rec.BeginsWith("TrigStn")) {
-      int nr = sscanf(key0,"TrigStn%d",&hit.stationID);
-      if (nr!=1 || hit.stationID>=kMaxTrig) {
-	printf("Failed to get Trigger plane number from:\n%s\n", rec.Data());
+      stType = KMCLayerFwd::kMS;
+    } else if (rec.BeginsWith("TrigStn")) {
+      int nr = sscanf(vol0, "TrigStn%d", &stID);
+      if (nr != 1) {
+        printf("Failed to get Trigger plane number from:\n%s\n", rec.Data());
 	exit(1);
       }
-      hit.stationType = KMCLayerFwd::kTRIG;
+      stType = KMCLayerFwd::kTRIG;
+    } else {
+      printf("Unknown detector keyword in %s\n", rec.Data());
+      exit(1);
     }
-    else {
-	printf("Unknown detector keyword in %s\n",rec.Data());
-	exit(1);
-    }
-    fHits.push_back( hit );
+    // register hit
+    double ptot = TMath::Sqrt(
+        en * (en + 2 * particle->Mass())); // file provides kinetic energy
+    fHits.emplace_back(SimHit{stType, stID,
+                              TParticle{pdg, 0, 0, -1, -1, -1, -1, ptot * cx,
+                                        ptot * cy, ptot * cz, x, y, z, 0.}});
   }
   //
   return fHits.size();
 }
 
 // for Geant version from Maryna
-int KMCFlukaParser::readNextPair(Bool_t verbose)
+bool KMCFlukaParser::readNextTrackGeant()
 {
   //
   TString rec;
   double en,x,y,z,cx,cy,cz;
-  int code,codeP,st;
-  char key0[20];
-  //
-  if (!fInpFile.good()) return 0;
-  //
-  for (int ip=2;ip--;) fParts[ip].clear();
-  //
-  int nPart = 0, idPart = 0;
-  double *datTmp=0;
-  //  
+  int code, trID;
+  char vol0[20], vol1[20];
+  int signalTrackID = -1;
   while(1) {
+    if (!fInpFile.is_open()) {
+      if (fCurFileID>=fInpFileList.GetEntriesFast()-1) return false;
+      const char* fnm = fInpFileList.At(++fCurFileID)->GetName();
+      printf("Processing %d-th file %s\n",fCurFileID,fnm);
+      fInpFile.open(fnm);
+      if (!fInpFile.good()) {
+	printf("Failed to open file %s\n",fnm);
+	exit(1);
+      }
+    }
+    
     rec = readNextRecord();
     rec = rec.Strip(TString::kLeading,' ');
-    if (rec.IsNull()) return nPart;
-    if (rec.BeginsWith(fgEndEvRecord)) return nPart; // end of record reached
+    if (rec.IsNull()) {
+      fInpFile.close();
+      return false;
+    }
+    if (rec.BeginsWith(fgEndEvRecord)) break; // end of record reached
     //    printf("rec is |%s|\n",rec.Data());
-
-    int nr = sscanf(rec.Data(),"%s %d %d %lf %lf %lf %lf %lf %lf %lf",key0,&code,&codeP,&en,&x,&y,&z,&cx,&cy,&cz);
-    if (nr!=10) {
-      printf("Expected to read %d items, got %d from\n%s\n",10,nr,rec.Data());
+    if (rec.BeginsWith("#")) continue; // comment
+    
+    int nr = sscanf(rec.Data(),"%s %d %s %lf %lf %lf %lf %lf %lf %lf %d",vol0,&code,vol1,&en,&x,&y,&z,&cx,&cy,&cz,&trID);
+    if (nr!=11) {
+      printf("Expected to read %d items, got %d from\n%s\n",11,nr,rec.Data());
       exit(1);
     }
-    if (!strcmp(key0,"Primary")) {
-      nPart++;
-      if (nPart>2) {
-	printf("More than 2 Primary records are found in the same event\n%s\n",rec.Data());
-	exit(1);
-      }
-      idPart = nPart-1;
-      fParts[idPart].codeOr = code;
-      datTmp = fParts[idPart].recDataPrim;
-    } 
-    else {
-      // make sure 2 primaries were read
-      if (nPart<2) {
-	printf("Non-Primary record is found while only %d primary is read (must be 2)\n%s\n",nPart,rec.Data());
-	exit(1);
-      }
-      // find to which particle this record belongs to
-      if (codeP==fParts[0].codeOr) {
-	idPart = 0;
-      }
-      else if (codeP==fParts[1].codeOr) {
-	idPart = 1;
-      }
-      else {
-	printf("skip record: detector hit parent code %d does not correspond to neither of parents %d and %d\n%s\n",
-	       codeP,fParts[0].codeOr,fParts[1].codeOr,rec.Data());
-	//exit(1);
-	continue;
-      }
+    if (trID == 0) trID = 1; // RS: this is a hack, in the files of Maryna 1 means injected particle
+    int pdg = Fluka2PDG(code);
+    if (pdg==0) {
+      printf("Skipping particle with uknown code %d\n", code);
+      continue;
+    }
+    TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdg);
+    if (particle->Charge()==0) continue;
+    double ptot = TMath::Sqrt(en*(en + 2*particle->Mass())); // file provides kinetic energy
+    if (!strcmp(vol0,"IP")) { // interaction point: this is a primary
+      // register primary kinematics
+      // register particle
+      simEvent.signal.emplace_back(pdg, 0, 0, -1, -1, -1, -1, ptot*cx, ptot*cy, ptot*cz, x, y, z, 0.);
+      simEvent.signalHits.emplace_back(); // add empty vector of hits for this particle
+      signalTrackID = trID;
+    } else { // we are seeing hits
+      int stType = -1, stID = -1;
       if (rec.BeginsWith("PixStn")) {
-	int nr = sscanf(key0,"PixStn%d",&st);
-	if (nr!=1 || st>=kMaxPix) {
+	int nr = sscanf(vol0,"PixStn%d",&stID);
+	if (nr!=1) {
 	  printf("Failed to get VerTel plane number from:\n%s\n", rec.Data());
 	  exit(1);
 	}
-	if (fParts[idPart].recTypePix[st]!=kRecDummy) {
-	  if (verbose) printf("Competing hit from part. %d (primary:%d) on occupied PixStn%d |"
-			      "Enew=%.2e Eold=%.2e\n",code,codeP,st,en,fParts[idPart].recDataPix[st][kE]);
-	  if (en<fParts[idPart].recDataPix[st][kE]) continue; // ignore particle with lower energy
-	}
-	else fParts[idPart].nPix++;
-	
-	datTmp = fParts[idPart].recDataPix[st];
-	fParts[idPart].recTypePix[st] = code; // pixel station
-      }
-      else if (rec.BeginsWith("MS")) {
-	int nr = sscanf(key0,"MS%d",&st);
-	if (nr!=1 || st>=kMaxMS) {
+	stType = KMCLayerFwd::kITS;
+      } else if (rec.BeginsWith("MS")) {
+	int nr = sscanf(vol0,"MS%d",&stID);
+	if (nr!=1) {
 	  printf("Failed to get MS plane number from:\n%s\n", rec.Data());
 	  exit(1);
 	}
-	if (fParts[idPart].recTypeMS[st]!=kRecDummy) {
-	  if (verbose) printf("Competing hit from part. %d (primary:%d) on occupied MS%d |"
-			      "Enew=%.2e Eold=%.2e\n",code,codeP,st,en,fParts[idPart].recDataMS[st][kE]);
-	  if (en<fParts[idPart].recDataMS[st][kE]) continue; // ignore particle with lower energy
-	}
-	else fParts[idPart].nMS++;
-
-	datTmp = fParts[idPart].recDataMS[st];
-	fParts[idPart].recTypeMS[st] = code; // MS station
-	//
-      }
-      else if (rec.BeginsWith("TrigStn")) {
-	int nr = sscanf(key0,"TrigStn%d",&st);
-	if (nr!=1 || st>=kMaxTrig) {
+	stType = KMCLayerFwd::kMS;
+      } else if (rec.BeginsWith("TrigStn")) {
+	int nr = sscanf(vol0,"TrigStn%d",&stID);
+	if (nr!=1) {
 	  printf("Failed to get Trigger plane number from:\n%s\n", rec.Data());
 	  exit(1);
 	}
-	if (fParts[idPart].recTypeTR[st]!=kRecDummy) {
-	  if (verbose) printf("Competing hit from part. %d (primary:%d) on occupied MS%d |"
-			      "Enew=%.2e Eold=%.2e\n",code,codeP,st,en,fParts[idPart].recDataTR[st][kE]);
-	  if (en<fParts[idPart].recDataTR[st][kE]) continue; // ignore particle with lower energy
-	}
-	else fParts[idPart].nTrig++;
-
-	datTmp = fParts[idPart].recDataTR[st];
-	fParts[idPart].recTypeTR[st] = code; // Trigger station
-	//
-      }
-      else {
+	stType = KMCLayerFwd::kTRIG;
+      } else {
 	printf("Unknown detector keyword in %s\n",rec.Data());
 	exit(1);
       }
+      // register hit
+      auto& dest = (trID == signalTrackID) ? simEvent.signalHits.back() : simEvent.bgHits;
+      dest.emplace_back(SimHit{stType, stID, TParticle{pdg, 0, 0, -1, -1, -1, -1, ptot*cx, ptot*cy, ptot*cz, x, y, z, 0.}});
+      dest.back().track.SetUniqueID(trID);      
     }
-    //
-    if (fParts[idPart].zMuFirst>1e6 && (code==10||code==11) ) fParts[idPart].zMuFirst = z;
-    datTmp[kE] = en;
-    datTmp[kX] = x;
-    datTmp[kY] = y;
-    datTmp[kZ] = z;    
-    datTmp[kCX] = cx;
-    datTmp[kCY] = cy;
-    datTmp[kCZ] = cz;    
-    //      
   }
-  return 0;
+  return true;
 }
 
 /*
