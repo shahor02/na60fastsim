@@ -149,6 +149,11 @@ void runDiMu_Geant(
       //      (!det->SolveSingleTrack(fMu[imu]->Pt(),fMu[imu]->Y(),fMu[imu]->Phi(),particle->Mass(),particle->Charge()/3,
       //      fMu[imu]->Vx(), fMu[imu]->Vy(),fMu[imu]->Vz(), 0, 1, 99))
       //      continue;
+      /* test
+      det->SetExternalInput(kFALSE);
+      det->SolveSingleTrack(fMu[imu]->Pt(),fMu[imu]->Y(),fMu[imu]->Phi(),fMu[imu]->GetMass(),crg,fMu[imu]->Vx(), fMu[imu]->Vy(), fMu[imu]->Vz(), 0,1,99);
+      det->SetExternalInput(kTRUE);
+      */
       det->ImposeSignalHits(simEv.signalHits[imu]);
       det->CreateProbe(det->GetProbe(), fMu[imu]->Pt(), fMu[imu]->Y(), fMu[imu]->Phi(), fMu[imu]->GetMass(), crg, fMu[imu]->Vx(), fMu[imu]->Vy(), fMu[imu]->Vz());
       det->SetLastActiveLayerTracked(det->GetLastActiveLayer());
