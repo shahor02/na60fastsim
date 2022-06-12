@@ -290,10 +290,11 @@ bool KMCFlukaParser::readNextTrackGeant()
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdg);
     if (particle->Charge()==0) continue;
     double ptot = TMath::Sqrt(en*(en + 2*particle->Mass())); // file provides kinetic energy
+    double etot = en + particle->Mass();
     if (!strcmp(vol0,"IP")) { // interaction point: this is a primary
       // register primary kinematics
       // register particle
-      simEvent.signal.emplace_back(pdg, 0, 0, -1, -1, -1, -1, ptot*cx, ptot*cy, ptot*cz, x, y, z, 0.);
+      simEvent.signal.emplace_back(pdg, 0, -1, -1, -1, -1, ptot*cx, ptot*cy, ptot*cz, etot, x, y, z, 0.);
       simEvent.signalHits.emplace_back(); // add empty vector of hits for this particle
       signalTrackID = trID;
     } else { // we are seeing hits
@@ -325,7 +326,7 @@ bool KMCFlukaParser::readNextTrackGeant()
       }
       // register hit
       auto& dest = (trID == signalTrackID) ? simEvent.signalHits.back() : simEvent.bgHits;
-      dest.emplace_back(SimHit{stType, stID, TParticle{pdg, 0, 0, -1, -1, -1, -1, ptot*cx, ptot*cy, ptot*cz, x, y, z, 0.}});
+      dest.emplace_back(SimHit{stType, stID, TParticle{pdg, 0, -1, -1, -1, -1, ptot*cx, ptot*cy, ptot*cz, etot, x, y, z, 0.}});
       dest.back().track.SetUniqueID(trID);      
     }
   }

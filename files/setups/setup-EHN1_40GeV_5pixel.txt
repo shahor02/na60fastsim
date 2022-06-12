@@ -24,8 +24,8 @@ activelayer:vt	VT5		SILICON		38.1175	50e-4		5.e-4	5.e-4	0.99	0.3   15.
 
 # tracking chambers
 activelayer:ms	MS-CH0		SILICON		294.	610e-4		200e-4	200e-4	0.95	6.5329 90.0
-activelayer:ms	MS-CH1		SILICON		361.	610e-4		200e-4	200e-4	0.95	30.000 110.0
-activelayer:ms	MS-CH2		SILICON		737.	700e-4		200e-4	200e-4	0.95	30.0000 220.0
+activelayer:ms	MS-CH1		SILICON		361.	610e-4		200e-4	200e-4	0.95	16.000 110.0
+activelayer:ms	MS-CH2		SILICON		737.	700e-4		200e-4	200e-4	0.95	16.0000 220.0
 activelayer:ms	MS-CH3		SILICON		800.	700e-4		200e-4	200e-4	0.95	16.6656 240.0
 
 # trigger chambers

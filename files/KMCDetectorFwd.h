@@ -87,6 +87,7 @@ class KMCDetectorFwd : public TNamed {
   void         SetDefStepMat(Double_t v=1) {fDefStepMat = v;}
   //
   KMCProbeFwd* GetProbe()                  const {return (KMCProbeFwd*)&fProbe;}
+  KMCProbeFwd* GetProbe()                        {return (KMCProbeFwd*)&fProbe;}
   Double_t     GetZDecay()                 const {return fZDecay;}
 
   KMCProbeFwd* GetMuBransonCorrVtx()    const {

@@ -25,19 +25,14 @@ KMCDetectorFwd *det = 0;
 
 void runDiMu_Geant(
     int nev = 30000,    // n events to generate
-    int refreshBg = 10, // generate new bg event for each refreshBg-th, 1 to
-                        // refresh for every signal
-    const char *setup =
-        "setups/setup-EHN1_160GeV_5pixel.txt", // setup.txt", // setup to load
+    int refreshBg = 10, // generate new bg event for each refreshBg-th, 1 to refresh for every signal
+    const char *setup = "setups/setup-EHN1_40GeV_5pixel.txt", // setup.txt", // setup to load
     const char *geantList = "g.lst",
-    const char *flukaBGList =
-        "", //"fluka.lst", // optional fluka background file, if empty, then use
-            //parametric background
-    const char *interactionSource = "" // optional primary interaction volume in
-                                       // fluka files, if empty, take all
+    // arguments below are at the moment not to be used
+    const char *flukaBGList = "", //"fluka.lst", // optional fluka background file, if empty, then use parametric background
+    const char *interactionSource = "" // optional primary interaction volume in  fluka files, if empty, take all
 ) {
-  TLocTreeSRedirector outStream(
-      "dimuGenLMR.root"); // the output stream trees will go here
+  TLocTreeSRedirector outStream("dimuGenLMR.root"); // the output stream trees will go here
   TString flukaBG = flukaBGList;
   TString signalGeant = geantList;
   MagField *mag = new MagField(1);
@@ -51,22 +46,22 @@ void runDiMu_Geant(
     BVal = mag->GetBVals(i);
     printf("*** Field region %d ***\n", i);
     if (i == 0) {
-      printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1],
-             BVal[2], BzMin[i], BzMax[i]);
+      printf("Bx = %f B = %f Bz = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
     } else if (i == 1) {
-      printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0],
-             BVal[1], BVal[2], BzMin[i], BzMax[i]);
+      printf("B = %f Rmin = %f Rmax = %f zmin = %f zmax = %f\n", BVal[0], BVal[1], BVal[2], BzMin[i], BzMax[i]);
     }
   }
 
-  int outN = nev / 10;
-  if (outN < 1)
-    outN = 1;
+  int outN = 1;//nev / 10;
+  if (outN < 1) outN = 1;
   //
   //
   det = new KMCDetectorFwd();
   // det->SetUseRPhiErrorMS(true);
   det->ReadSetup(setup, setup);
+  det->SetExternalInput(kTRUE); // !!! important
+  
+  
   KMCFlukaParser flukaParserSig;
   KMCFlukaParser *flukaParser;
 
@@ -88,10 +83,10 @@ void runDiMu_Geant(
   //
   // max number of seeds on each layer to propagate (per muon track)
   det->SetMaxSeedToPropagate(3000);
-  //
+
   // set chi2 cuts
-  det->SetMaxChi2Cl(10.);  // max track to cluster chi2
-  det->SetMaxChi2NDF(3.5); // max total chi2/ndf
+  det->SetMaxChi2Cl(40.);  // max track to cluster chi2
+  det->SetMaxChi2NDF(13.5); // max total chi2/ndf
   det->SetMaxChi2Vtx(20);  // fiducial cut on chi2 of convergence to vtx
 
   // IMPORTANT FOR NON-UNIFORM FIELDS
@@ -118,17 +113,14 @@ void runDiMu_Geant(
 
   for (int iev = 0; iev < nev; iev++) {
     //
-    if ((iev % outN) == 0)
-      printf("Done %d out of %d\n", iev, nev);
-
-    if (!flukaParserSig.readNextTrackGeant() &&
-        !flukaParserSig.readNextTrackGeant()) {
+    if ((iev % outN) == 0) printf("Done %d out of %d\n", iev, nev);
+    auto &simEv = flukaParserSig.getSimEvent();
+    simEv.clear();
+    if (!flukaParserSig.readNextTrackGeant() || !flukaParserSig.readNextTrackGeant()) {
       return;
     }
-    const auto &simEv = flukaParserSig.getSimEvent();
     if (simEv.signal.size() < 2) {
-      printf("Got %zu signal particles at event %d\n", simEv.signal.size(),
-             iev);
+      printf("Got %zu signal particles at event %d\n", simEv.signal.size(), iev);
       return;
     }
     /*
@@ -145,10 +137,7 @@ void runDiMu_Geant(
     const TParticle *fMu[2] = {&simEv.signal[0], &simEv.signal[1]};
 
     for (int imu = 0; imu < 2; imu++) {
-      det->ImposeSignalHits(simEv.signalHits[imu]);
-
-      muGen[imu].SetXYZM(fMu[imu]->Px(), fMu[imu]->Py(), fMu[imu]->Pz(),
-                         0.105658369);
+      muGen[imu].SetXYZM(fMu[imu]->Px(), fMu[imu]->Py(), fMu[imu]->Pz(), 0.105658369);
     }
     dimuGen = muGen[0];
     dimuGen += muGen[1];
@@ -160,12 +149,13 @@ void runDiMu_Geant(
       //      (!det->SolveSingleTrack(fMu[imu]->Pt(),fMu[imu]->Y(),fMu[imu]->Phi(),particle->Mass(),particle->Charge()/3,
       //      fMu[imu]->Vx(), fMu[imu]->Vy(),fMu[imu]->Vz(), 0, 1, 99))
       //      continue;
-      if (!det->SolveSingleTrackViaKalmanMC(999))
-        break;
+      det->ImposeSignalHits(simEv.signalHits[imu]);
+      det->CreateProbe(det->GetProbe(), fMu[imu]->Pt(), fMu[imu]->Y(), fMu[imu]->Phi(), fMu[imu]->GetMass(), crg, fMu[imu]->Vx(), fMu[imu]->Vy(), fMu[imu]->Vz());
+      det->SetLastActiveLayerTracked(det->GetLastActiveLayer());
+      if (!det->SolveSingleTrackViaKalmanMC(999)) break;
 
       KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
-      if (!trw)
-        break;
+      if (!trw) break;
       trw->Print();
 
       nfakeHits += trw->GetNFakeITSHits();

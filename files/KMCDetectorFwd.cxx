@@ -1335,6 +1335,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     //
     for (int itr=ntTot;itr--;) {
       currTr = lr->GetMCTrack(itr);
+      if (currTr->IsKilled()) continue;
       if (!PropagateToLayer(currTr,lrP,lr,-1))  {currTr->Kill();continue;} // propagate to current layer
     }
     AliDebug(1,Form("Got %d tracks on layer %s",ntTot,lr->GetName()));
@@ -2159,8 +2160,7 @@ int KMCDetectorFwd::ImposeBackgroundHits(const std::vector<SimHit> &hits) {
       printf("ERROR: hit in non-existing layer %d of type %d, check setup\n",hit.stationID, hit.stationType);
       exit(1);
     }
-    clAcc +=
-        lr->AddCluster(hit.track.Vx(), hit.track.Vy(), hit.track.Vz(), ic++, 1);
+    clAcc += lr->AddCluster(hit.track.Vx(), hit.track.Vy(), hit.track.Vz(), ic++, 1);
   }
   return clAcc;
 }
@@ -2171,6 +2171,8 @@ int KMCDetectorFwd::ImposeSignalHits(const std::vector<SimHit> &hits) {
   for (Int_t j = 0; j < fNLayers; j++) {
     GetLayer(j)->GetMCCluster()->Kill(); // will be reactivated if accepted
   }
+  int nhits[KMCLayerFwd::kNTypes] = {};
+  unsigned int patt = 0;
   for (const auto &hit : hits) {
     KMCLayerFwd *lr = GetActiveLayer(hit.stationID, hit.stationType);
     if (!lr) {
@@ -2178,8 +2180,16 @@ int KMCDetectorFwd::ImposeSignalHits(const std::vector<SimHit> &hits) {
              hit.stationID, hit.stationType);
       exit(1);
     }
-    clAcc +=
-        lr->AddCluster(hit.track.Vx(), hit.track.Vy(), hit.track.Vz(), ic++, 0);
+    bool res = lr->AddCluster(hit.track.Vx(), hit.track.Vy(), hit.track.Vz(), -1, 0);
+    if (res) {
+      nhits[lr->GetType()]++;
+      patt |= 0x1<<(31 - lr->GetActiveID());
+    }
+    clAcc += res;
+  }
+  printf("Signal hits: ITS: %d MS: %d Trigg: %d | ", nhits[KMCLayerFwd::kITS],nhits[KMCLayerFwd::kMS],nhits[KMCLayerFwd::kTRIG]);
+  for(int i=0;i<fNActiveLayers;i++) {
+    printf("%c", (patt & (0x1<<(31-i))) ? '+':'.');
   }
   return clAcc;
 }
