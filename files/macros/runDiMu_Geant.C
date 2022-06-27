@@ -161,6 +161,7 @@ void runDiMu_Geant(
 
       KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
       if (!trw) break;
+      printf("Doing mu = %d\n", imu);
       trw->Print();
 
       nfakeHits += trw->GetNFakeITSHits();
@@ -215,4 +216,5 @@ void runDiMu_Geant(
               << "chi1=" << chiGlo[1] << "chiITS0=" << chiGloITS[0]
               << "chiITS1=" << chiGloITS[1] << "\n";
   }
+  outStream.Close();
 }

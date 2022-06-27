@@ -287,6 +287,13 @@ bool KMCFlukaParser::readNextTrackGeant()
       printf("Skipping particle with uknown code %d\n", code);
       continue;
     }
+    // tmp rotate by pi/2
+    {
+      double tmp;
+      tmp = y; y = x; x = -tmp;
+      tmp = cy; cy = cx; cx = -tmp;
+    }
+    //
     TParticlePDG* particle = TDatabasePDG::Instance()->GetParticle(pdg);
     if (particle->Charge()==0) continue;
     double ptot = TMath::Sqrt(en*(en + 2*particle->Mass())); // file provides kinetic energy

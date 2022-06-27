@@ -17,7 +17,7 @@ ifdef DOPTS
 $(info additional options:  $(DOPTS) )
 endif
 
-LFLAGS = -L$(ROOTSYS)/lib 
+LFLAGS = -L$(ROOTSYS)/lib -l Tree -l RIO -l TreePlayer -l TreeViewer -l Cling -l Core -l MathCore -l Matrix
 INC =	-I$(ROOTSYS)/include -I$(ALICE_ROOT)/include -I./
 TGT =	libKMCDetFwd.so
 DICT=	KMCDetFwdDict.cxx
