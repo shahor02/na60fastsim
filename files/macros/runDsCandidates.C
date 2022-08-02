@@ -92,8 +92,8 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
 				bool writeNtuple = kFALSE, 
 				bool simulateBg=kTRUE){
   
-  // Generate Lc->pKpi signals and simulate detector response for decay tracks
-  // Need input Lc pt and y ditribution from POWHEG
+  // Generate Ds->KKpi signals and simulate detector response for decay tracks
+  // Need input Ds pt and y ditribution from POWHEG
 
 
   int refreshBg = 10000;
@@ -654,7 +654,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 			       Int_t writeNtuple = kFALSE){
 
   // Read the TTree of tracks produced with runBkgVT.C
-  // Create D0 combinatorial background candidates (= OS pairs of tracks)
+  // Create Ds combinatorial background candidates (= triplets of tracks)
   // Store in THnSparse and (optionally) TNtuple
 
   KMCDetectorFwd *det = new KMCDetectorFwd();

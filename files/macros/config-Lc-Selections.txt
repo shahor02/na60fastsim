@@ -13,6 +13,9 @@ THnSparse axes:
   NumOfImpParDauBins: 10
   MinImpParDauForSparse: 0.
   MaxImpParDauForSparse 0.05
+  NumOfImpParProdBins: 40
+  MinImpParProdForSparse: -0.002
+  MaxImpParProdForSparse: 0.
   NumOfSigVerBins: 12
   MinSigVerForSparse: 0.
   MaxSigVerForSparse: 0.03
@@ -22,4 +25,3 @@ THnSparse axes:
   NumOfImpParLcBins: 12
   MinImpParLcForSparse: 0.
   MaxImpParLcForSparse: 0.03
-
