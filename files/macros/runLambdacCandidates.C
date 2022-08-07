@@ -64,9 +64,9 @@ Double_t maxImpPro=0.0005;
 Int_t nBinsSigVer=12;
 Double_t minSigVer=0.;
 Double_t maxSigVer=0.03;
-Int_t nBinsPtmDau=6;
-Double_t minPtmDau=0.;
-Double_t maxPtmDau=3.;
+Int_t nBinsPrat=7;
+Double_t minPrat=0.;
+Double_t maxPrat=1.4;
 Int_t nBinsImpLc=12;
 Double_t minImpLc=0.;
 Double_t maxImpLc=0.03;
@@ -270,9 +270,9 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   TNtuple *ntLccand = 0x0;
   if (writeNtuple){
     fnt = new TFile("Lc-Signal-ntuple.root", "recreate");
-    ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:ptMin:d0Lc", 32000);
+    ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:pP:pK:pPi:d0Lc", 32000);
   }
-  Float_t arrnt[11];
+  Float_t arrnt[13];
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -304,6 +304,9 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     Double_t ptK = -999.;
     Double_t ptPi = -999.;
     Double_t ptP = -999.;
+    Double_t momK = -999.;
+    Double_t momPi = -999.;
+    Double_t momP = -999.;
     Double_t yK=-999.;
     Double_t yPi = -999.;
     Double_t yP = -999.;
@@ -346,6 +349,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	if (kf == 2212){
 	  // Proton daughter
 	  ptP = iparticle1->Pt();
+	  momP = iparticle1->P();
 	  yP = iparticle1->Y();
 	  hptP->Fill(ptGenD,ptP);
 	  hyP->Fill(yP);
@@ -358,6 +362,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	}else if (kf == 321){
 	  // Kaon daughter
 	  ptK = iparticle1->Pt();
+	  momK = iparticle1->P();
 	  yK = iparticle1->Y();
 	  hptK->Fill(ptGenD,ptK);
 	  hyK->Fill(yK);
@@ -370,6 +375,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	}else if (kf == 211){
 	  // Pion daughter
 	  ptPi = iparticle1->Pt();
+	  momPi = iparticle1->P();
 	  yPi = iparticle1->Y();
 	  hptPi->Fill(ptGenD,ptPi);
 	  hyPi->Fill(yPi);
@@ -522,7 +528,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
       arrsp[7] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
       arrsp[8] = d0xy1*d0xy3; // same sign daughters
       arrsp[9] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(
-      arrsp[10] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+      arrsp[10] = momPi/momP;
       arrsp[11] = TMath::Abs(ipD);	    
       hsp->Fill(arrsp);
       
@@ -536,8 +542,10 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	arrnt[6] = d0xy2;
 	arrnt[7] = d0xy3;
 	arrnt[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-	arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
-	arrnt[10] = TMath::Abs(ipD);	    
+	arrnt[9] = momP;
+	arrnt[10] = momK;
+	arrnt[11] = momPi;
+	arrnt[12] = TMath::Abs(ipD);	    
 	ntLccand->Fill(arrnt);
       }
     }
@@ -634,7 +642,8 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 				    const char *selectionFile="",
 				    Int_t nevents = 999999, 
 				    Int_t writeNtuple = kFALSE,
-				    Bool_t usePID=kFALSE){
+				    Bool_t usePID=kFALSE,
+				    Double_t maxMomForPID=1.9){
 
   // Read the TTree of tracks produced with runBkgVT.C
   // Create Lc combinatorial background candidates (= triplets of tracks)
@@ -721,10 +730,10 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 
   TFile *fnt = 0x0;
   TNtuple *ntLccand = 0x0;
-  Float_t arrnt[11];
+  Float_t arrnt[13];
   if (writeNtuple){
     fnt = new TFile("Lc-Bkg-ntuple.root", "recreate");
-    ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:ptMin:d0Lc", 32000);
+    ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d01:d02:d03:sigvert:pP:pK:pPi:d0Lc", 32000);
   }
 
   // define mother particle
@@ -809,7 +818,8 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 	      momPi=recProbe[2].GetTrack()->P();
 	      momK=recProbe[1].GetTrack()->P();
 	      momP=recProbe[0].GetTrack()->P();
-	      if(usePID && recProbe[0].GetMass()<0.2 && momP<3) continue; // rough PID (reject pions with p<3 GeV)
+	      if(usePID && recProbe[0].GetMass()<0.2 && momP<maxMomForPID) continue; // rough PID (reject pions with p<thresh)
+	      if(usePID && recProbe[2].GetMass()>0.7 && momPi<maxMomForPID) continue; // rough PID (reject protons with p<thresh)
 	    }else{
 	      daurec[0].SetXYZM(pxyz0[0], pxyz0[1], pxyz0[2], KMCDetectorFwd::kMassPi);
 	      daurec[1].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassK);
@@ -817,7 +827,8 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 	      momPi=recProbe[0].GetTrack()->P();
 	      momK=recProbe[1].GetTrack()->P();
 	      momP=recProbe[2].GetTrack()->P();	      
-	      if(usePID && recProbe[2].GetMass()<0.2 && momP<3) continue; // rough PID (reject pions with p<3 GeV)
+	      if(usePID && recProbe[2].GetMass()<0.2 && momP<maxMomForPID) continue; // rough PID (reject pions with p<thresh)
+	      if(usePID && recProbe[0].GetMass()>0.7 && momPi<maxMomForPID) continue; // rough PID (reject protons with p<thresh)
 	    }
 	    parent = daurec[0];
 	    parent += daurec[1];
@@ -871,7 +882,7 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 		arrsp[7] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
 		arrsp[8] = d0xy1*d0xy3; // same sign daughters
 		arrsp[9] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(
-		arrsp[10] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+		arrsp[10] = momPi/momP;
 		arrsp[11] = TMath::Abs(ipD);	    
 		hsp->Fill(arrsp);
 		
@@ -885,8 +896,10 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 		  arrnt[6] = d0xy2;
 		  arrnt[7] = d0xy3;
 		  arrnt[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-		  arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
-		  arrnt[10] = TMath::Abs(ipD);
+		  arrnt[9] = momP;
+		  arrnt[10] = momK;
+		  arrnt[11] = momPi;
+		  arrnt[12] = TMath::Abs(ipD);	    
 		  ntLccand->Fill(arrnt);
 		}
 	      }
@@ -946,11 +959,11 @@ THnSparseF* CreateSparse(){
 			"d_0^{min} (cm)",
 			"d01xd03 (cm2)",
 			"sigmaVert",
-			"p_{T}^{min} (GeV/c)",
+			"p_{#pi}/p_{p}",
 			"d_0^{Lc} (cm)"};
-  Int_t bins[nAxes] =   {100,  5,  20, nBinsDecLen, nBinsDecLen, nBinsCosPoi, nBinsCosPoi, nBinsImpDau, nBinsImpPro, nBinsSigVer, nBinsPtmDau, nBinsImpLc};
-  Double_t min[nAxes] = {2.0,  0., 1., minDecLen,   minDecLen,   minCosPoi,   minCosPoi,   minImpDau,   minImpPro,   minSigVer,   minPtmDau,   minImpLc};
-  Double_t max[nAxes] = {2.5,  5., 5., maxDecLen,   maxDecLen,   maxCosPoi,   maxCosPoi,   maxImpDau,   maxImpPro,   maxSigVer,   maxPtmDau,   maxImpLc};
+  Int_t bins[nAxes] =   {100,  5,  20, nBinsDecLen, nBinsDecLen, nBinsCosPoi, nBinsCosPoi, nBinsImpDau, nBinsImpPro, nBinsSigVer, nBinsPrat, nBinsImpLc};
+  Double_t min[nAxes] = {2.0,  0., 1., minDecLen,   minDecLen,   minCosPoi,   minCosPoi,   minImpDau,   minImpPro,   minSigVer,   minPrat,   minImpLc};
+  Double_t max[nAxes] = {2.5,  5., 5., maxDecLen,   maxDecLen,   maxCosPoi,   maxCosPoi,   maxImpDau,   maxImpPro,   maxSigVer,   maxPrat,   maxImpLc};
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
   for(Int_t iax=0; iax<nAxes; iax++) hsp->GetAxis(iax)->SetTitle(axTit[iax].Data());
   return hsp;
@@ -1046,17 +1059,17 @@ void ConfigureSelectionsAndAxes(const char *selectionFile){
       readok=fscanf(confFil,"%f",&x);
       maxSigVer=x;
     }
-    else if(strstr(line,"NumOfPtMinDauBins")){
+    else if(strstr(line,"NumOfPratioBins")){
       readok=fscanf(confFil,"%d",&n);
-      nBinsPtmDau=n;
+      nBinsPrat=n;
     }
-    else if(strstr(line,"MinPtMinDauForSparse")){
+    else if(strstr(line,"MinPratioForSparse")){
       readok=fscanf(confFil,"%f",&x);
-      minPtmDau=x;
+      minPrat=x;
     }
-    else if(strstr(line,"MaxPtMinDauForSparse")){
+    else if(strstr(line,"MaxPratioForSparse")){
       readok=fscanf(confFil,"%f",&x);
-      maxPtmDau=x;
+      maxPrat=x;
     }
     else if(strstr(line,"NumOfImpParLcBins")){
       readok=fscanf(confFil,"%d",&n);
