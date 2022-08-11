@@ -52,6 +52,9 @@ double vX = 0, vY = 0, vZ = 0; // event vertex
 Int_t nBinsDecLen=20;
 Double_t minDecLen=0.;
 Double_t maxDecLen=0.1;
+Int_t nBinsDecLenXY=16;
+Double_t minDecLenXY=0.;
+Double_t maxDecLenXY=0.04;
 Int_t nBinsCosPoi=20;
 Double_t minCosPoi=0.98;
 Double_t maxCosPoi=1.;
@@ -524,12 +527,11 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
       arrsp[3] = dist;
       arrsp[4] = distXY;
       arrsp[5] = cosp;
-      arrsp[6] = cospxy;
-      arrsp[7] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-      arrsp[8] = d0xy1*d0xy3; // same sign daughters
-      arrsp[9] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(
-      arrsp[10] = momPi/momP;
-      arrsp[11] = TMath::Abs(ipD);	    
+      arrsp[6] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
+      arrsp[7] = d0xy1*d0xy3; // same sign daughters
+      arrsp[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(
+      arrsp[9] = momPi/momP;
+      arrsp[10] = TMath::Abs(ipD);	    
       hsp->Fill(arrsp);
       
       if (ntLccand){
@@ -840,7 +842,7 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 	    hYPtRecoAll->Fill(yD, ptD);
 	    hPtRecoAll->Fill(ptD);
 	    hMassAll->Fill(invMassD);
-	    if(invMassD>2.0  && invMassD<2.5){
+	    if(invMassD>2.15  && invMassD<2.45){
 	      // range to fill histos
 	      if(TMath::Abs(invMassD-mass)<0.06) countCandInPeak++;
 	      hMomPion->Fill(momPi);
@@ -878,12 +880,11 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 		arrsp[3] = dist;
 		arrsp[4] = distXY;
 		arrsp[5] = cosp;
-		arrsp[6] = cospxy;
-		arrsp[7] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-		arrsp[8] = d0xy1*d0xy3; // same sign daughters
-		arrsp[9] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(
-		arrsp[10] = momPi/momP;
-		arrsp[11] = TMath::Abs(ipD);	    
+		arrsp[6] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
+		arrsp[7] = d0xy1*d0xy3; // same sign daughters
+		arrsp[8] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(
+		arrsp[9] = momPi/momP;
+		arrsp[10] = TMath::Abs(ipD);	    
 		hsp->Fill(arrsp);
 		
 		if (ntLccand){
@@ -948,22 +949,21 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 }
 
 THnSparseF* CreateSparse(){
-  const Int_t nAxes=12;
+  const Int_t nAxes=11;
   TString axTit[nAxes]={"Inv. mass (GeV/c^{2})",
 			"p_{T} (GeV/c)",
 			"y",
 			"Dec Len (cm)",
 			"DecLenXY (cm)",
 			"cos(#vartheta_{p})",
-			"cos(#vartheta_{p}^{XY})",
 			"d_0^{min} (cm)",
 			"d01xd03 (cm2)",
 			"sigmaVert",
 			"p_{#pi}/p_{p}",
 			"d_0^{Lc} (cm)"};
-  Int_t bins[nAxes] =   {100,  5,  20, nBinsDecLen, nBinsDecLen, nBinsCosPoi, nBinsCosPoi, nBinsImpDau, nBinsImpPro, nBinsSigVer, nBinsPrat, nBinsImpLc};
-  Double_t min[nAxes] = {2.0,  0., 1., minDecLen,   minDecLen,   minCosPoi,   minCosPoi,   minImpDau,   minImpPro,   minSigVer,   minPrat,   minImpLc};
-  Double_t max[nAxes] = {2.5,  5., 5., maxDecLen,   maxDecLen,   maxCosPoi,   maxCosPoi,   maxImpDau,   maxImpPro,   maxSigVer,   maxPrat,   maxImpLc};
+  Int_t bins[nAxes] =   {60,  3,  16, nBinsDecLen, nBinsDecLenXY, nBinsCosPoi, nBinsImpDau, nBinsImpPro, nBinsSigVer, nBinsPrat, nBinsImpLc};
+  Double_t min[nAxes] = {2.15,  0., 1., minDecLen,   minDecLenXY,   minCosPoi,   minImpDau,   minImpPro,   minSigVer,   minPrat,   minImpLc};
+  Double_t max[nAxes] = {2.45,  3., 5., maxDecLen,   maxDecLenXY,   maxCosPoi,   maxImpDau,   maxImpPro,   maxSigVer,   maxPrat,   maxImpLc};
   THnSparseF *hsp = new THnSparseF("hsp", "hsp", nAxes, bins, min, max);
   for(Int_t iax=0; iax<nAxes; iax++) hsp->GetAxis(iax)->SetTitle(axTit[iax].Data());
   return hsp;
@@ -1010,6 +1010,18 @@ void ConfigureSelectionsAndAxes(const char *selectionFile){
     else if(strstr(line,"MaxDecLenForSparse")){
       readok=fscanf(confFil,"%f",&x);
       maxDecLen=x;
+    }
+    else if(strstr(line,"NumOfDecLenXYBins")){
+      readok=fscanf(confFil,"%d",&n);
+      nBinsDecLenXY=n;
+    }
+    else if(strstr(line,"MinDecLenXYForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      minDecLenXY=x;
+    }
+    else if(strstr(line,"MaxDecLenXYForSparse")){
+      readok=fscanf(confFil,"%f",&x);
+      maxDecLenXY=x;
     }
     else if(strstr(line,"NumOfCosPoiBins")){
       readok=fscanf(confFil,"%d",&n);
