@@ -1,0 +1,8 @@
+*.d
+*.o
+*.so
+*Dict.cxx
+*.pcm
+.envrc
+.direnv/
+.vscode/
