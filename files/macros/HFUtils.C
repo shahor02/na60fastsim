@@ -2,7 +2,7 @@
 #include <TLorentzVector.h>
 #include "AliStrLine.h"
 #include "AliVertexerTracks.h"
-#include "../KMCProbeFwd.h"
+#include "KMCProbeFwd.h"
 #endif
 
 // void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, Double_t &xV, Double_t &yV, Double_t &zV);
@@ -22,13 +22,13 @@ void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, Double_t &xV, Double_t &yV,
   Double_t sx1=t0.GetSigmaX2()+ss, sy1=t0.GetSigmaY2()+ss;
   t1.GetXYZ(tmp);
   Double_t  x2=tmp[0],  y2=tmp[1],  z2=tmp[2];
-  Double_t sx2=t1.GetSigmaX2()+ss, sy2=t1.GetSigmaY2()+ss; 
-    
+  Double_t sx2=t1.GetSigmaX2()+ss, sy2=t1.GetSigmaY2()+ss;
+
   Double_t wx1=sx2/(sx1+sx2), wx2=1.- wx1;
   Double_t wy1=sy2/(sy1+sy2), wy2=1.- wy1;
   Double_t wz1=0.5, wz2=1.- wz1;
-  xV=wx1*x1 + wx2*x2; 
-  yV=wy1*y1 + wy2*y2; 
+  xV=wx1*x1 + wx2*x2;
+  yV=wy1*y1 + wy2*y2;
   zV=wz1*z1 + wz2*z2;
   return;
 }
@@ -73,7 +73,7 @@ void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, KMCProbeFwd &t2, Double_t z
   wmat[8]=1./sigmasq[2];
   linarray[2]= new AliStrLine(pos,sigmasq,wmat,dir);
   // do not use errors as weights for the moment
-  AliESDVertex vv=AliVertexerTracks::TrackletVertexFinder(linarray,3,kFALSE); 
+  AliESDVertex vv=AliVertexerTracks::TrackletVertexFinder(linarray,3,kFALSE);
   xV=vv.GetX();
   yV=vv.GetY();
   zV=vv.GetZ();
@@ -108,7 +108,7 @@ Double_t CosPointingAngleXY(Double_t vprim[3], Double_t vsec[3], TLorentzVector 
   TVector3 flineXY(vsec[0] - vprim[0],
 		   vsec[1] - vprim[1],
 		   0.);
-  
+
   Double_t ptot2 = momXY.Mag2() * flineXY.Mag2();
   if (ptot2 <= 0)
     {
