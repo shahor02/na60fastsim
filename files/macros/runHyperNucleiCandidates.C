@@ -18,8 +18,7 @@
 #include "./HFUtils.C"
 #endif
 
-constexpr int kPDGofInterest = 1010020040;
-constexpr double kMassOfInterest = 4.839961;
+constexpr int kPDGofInterest = 1010020050;
 constexpr double kC = 0.0299792458;
 constexpr double kTau = 274.;
 constexpr double kCTau = kTau * kC;
@@ -67,12 +66,14 @@ std::unordered_map<int, ParticleProperty> particles{
 
 struct MiniH
 {
-  float px, py, pz;
+  float pt, eta, phi;
   float x, y, z;
   float m;
+  float cosPA;
+  float ct;
   float ProngPvDCAx[kNdaughters];
   float ProngPvDCAy[kNdaughters];
-  float pxMC, pyMC, pzMC;
+  float ptMC, etaMC, phiMC;
   float xMC, yMC, zMC;
   unsigned char NClusters[kNdaughters];
   char reconstructed = 0;
@@ -235,25 +236,26 @@ void runHyperNucleiCandidates(int nevents = 14000000,
 
     if (simulateBg && (iev % refreshBg) == 0)
       det->GenBgEvent(0., 0., 0.);
-    double ptGenD = ptShape->GetRandom(); // get Lc distribution from file
+    hyper.ptMC = ptShape->GetRandom(); // get Lc distribution from file
     double yGenD = yShape->GetRandom();
-    double phi = gRandom->Rndm() * 2 * TMath::Pi();
-    hyper.pxMC = ptGenD * std::cos(phi);
-    hyper.pyMC = ptGenD * std::sin(phi);
+    hyper.phiMC = gRandom->Rndm() * 2 * TMath::Pi();
+    double pxMC = hyper.ptMC * std::cos(hyper.phiMC);
+    double pyMC = hyper.ptMC * std::sin(hyper.phiMC);
 
-    double mt = std::hypot(ptGenD, kHyperMass);
-    hyper.pzMC = mt * TMath::SinH(yGenD);
-    double totGenMom{std::hypot(ptGenD, hyper.pzMC)};
+    double mt = std::hypot(hyper.ptMC, kHyperMass);
+    double pzMC = mt * TMath::SinH(yGenD);
+    double totGenMom{std::hypot(hyper.ptMC, pzMC)};
     double en = mt * TMath::CosH(yGenD);
     hyper.reconstructed = 0;
     hyper.fake = 0;
 
-    parentgen.SetPxPyPzE(hyper.pxMC, hyper.pyMC, hyper.pzMC, en);
+    parentgen.SetPxPyPzE(pxMC, pyMC, pzMC, en);
+    hyper.etaMC = parentgen.Eta();
 
     double decayLenght = gRandom->Exp(kCTau) * parentgen.Beta() * parentgen.Gamma();
-    hyper.zMC = decayLenght * hyper.pzMC / totGenMom;
-    hyper.xMC = decayLenght * ptGenD * std::cos(phi) / totGenMom;
-    hyper.yMC = decayLenght * ptGenD * std::sin(phi) / totGenMom;
+    hyper.zMC = decayLenght * pzMC / totGenMom;
+    hyper.xMC = decayLenght * hyper.ptMC * std::cos(hyper.phiMC) / totGenMom;
+    hyper.yMC = decayLenght * hyper.ptMC * std::sin(hyper.phiMC) / totGenMom;
     decay.SetDecay(parentgen, 3, kDaughterMasses);
     decay.Generate();
 
@@ -312,9 +314,11 @@ void runHyperNucleiCandidates(int nevents = 14000000,
       parentgen += daugen[iD];
     }
 
-    hyper.px = parent.Px();
-    hyper.py = parent.Py();
-    hyper.pz = parent.Pz();
+    hyper.pt = parent.Pt();
+    hyper.phi = parent.Phi();
+    hyper.eta = parent.Eta();
+    hyper.cosPA = (parent.Px() * xV + parent.Py() * yV + parent.Pz() * zV) / std::hypot(xV, yV ,zV) / parent.P();
+    hyper.ct = std::hypot(xV, yV, zV) * kHyperMass / parent.P();
     hyper.m = parent.M();
 
     tree.Fill();
@@ -328,6 +332,7 @@ void runHyperNucleiCandidates(int nevents = 14000000,
 }
 
 void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
+                                        int startEv = 0,
                                         double Eint = 160.,
                                         const char *setup = "setup.txt",
                                         const char *filNamPow = "output.root",
@@ -365,7 +370,7 @@ void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
   TTree tree("hyper", "hyper");
   tree.Branch("h", &hyper);
 
-  int inputEntry{0};
+  int inputEntry{startEv};
   bool newEvent{false};
   TH1D hDCAx("hDCAx", ";DCA_{x} (cm);", 200, -0.1, 0.1);
   TH1D hDCAy("hDCAy", ";DCA_{y} (cm);", 200, -0.1, 0.1);
@@ -378,6 +383,7 @@ void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
     }
     std::vector<std::pair<std::array<float, 3>, Particle>> kine;
     std::array<float, 3> pvtx{0.f, 0.f, 0.f};
+    int lastNucleus{0}; /// keep track where the last nucleus is in the kinematics
     while (inputEntry < kineTree->GetEntries())
     {
       if (newEvent)
@@ -396,6 +402,9 @@ void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
       if (std::abs(pdg) == kPDGofInterest || particles.find(std::abs(pdg)) == particles.end()) {
         continue;
       }
+      if (std::abs(pdg) <= 1000010020 && lastNucleus == 0) {
+        lastNucleus = kine.size();
+      }
       auto& prop = particles[std::abs(pdg)];
       TLorentzVector mom(px, py, pz, p0);
       if (prop.isStable()) {
@@ -407,10 +416,18 @@ void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
         }
       }
     }
+
+    if (inputEntry >= kineTree->GetEntries()) {
+      std::cout << "Exiting at event " << iev << " as we don't have anymore input events." << std::flush;
+      break;
+    }
     std::vector<KMCProbeFwd> nuclei[2], tracks[2];
+    int kineInt{0};
     int nTracks{0};
     for (auto& part : kine) {
       auto& p = part.second;
+      if (kineInt++ > lastNucleus && nuclei[0].empty() && nuclei[1].empty())
+        break;
       if (!det->SolveSingleTrack(p.mom.Pt(), p.mom.Rapidity() + rapidity, p.mom.Phi(), p.mass, p.charge, part.first[0], part.first[1], part.first[2], 0, 1, 99))
         continue;
       KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
@@ -420,7 +437,7 @@ void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
       hDCAx.Fill(trw->GetX());
       hDCAy.Fill(trw->GetY());
       hDCA.Fill(std::hypot(trw->GetY(), trw->GetX()) * (1.f - 2.f * (trw->GetX() < 0)));
-      if (std::abs(trw->GetY()) < 80.e-4 || std::abs(trw->GetX()) < 60.e-4) {
+      if ((std::abs(trw->GetY()) < 60.e-4 || std::abs(trw->GetX()) < 45.e-4) && std::abs(p.charge) == 1) {
         continue;
       }
       if (std::abs(p.charge) == 1) {
@@ -472,7 +489,7 @@ void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
             hyper.eta = tot.Eta();
             hyper.phi = tot.Phi();
             hyper.cosPA = (tot.Px() * xV + tot.Py() * yV + tot.Pz() * zV) / std::hypot(xV, yV ,zV) / tot.P();
-            hyper.ct = std::hypot(xV, yV, zV) * kMassOfInterest / tot.P();
+            hyper.ct = std::hypot(xV, yV, zV) * kHyperMass / tot.P();
             hyper.m = tot.M();
             tree.Fill();
           }
@@ -480,7 +497,7 @@ void runHyperNucleiBackgroundCandidates(int nevents = 14000000,
       }
     }
   }
-
+  std::cout << std::endl;
   fnt.cd();
   hDCAx.Write();
   hDCAy.Write();
