@@ -45,6 +45,7 @@ cp $fileDir/setup-$Resolution-itssa.txt $localdir/setup.txt
 
 aliroot <<EOF >runDiMuGenLMR.out 2>runDiMuGenLMR.err
   gROOT->ProcessLine(".L ./KMCUtils.cxx+g");
+  gROOT->ProcessLine(".L ./NaMaterial.cxx+g");
   gROOT->ProcessLine(".L ./KMCProbeFwd.cxx+g");
   gROOT->ProcessLine(".L ./KMCClusterFwd.cxx+g");
   gROOT->ProcessLine(".L ./KMCLayerFwd.cxx+g");
