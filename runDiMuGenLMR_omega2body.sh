@@ -36,7 +36,7 @@ cp $fileDir/KMCLayerFwd.{h,cxx} ./
 cp $fileDir/KMCClusterFwd.{h,cxx} ./
 cp $fileDir/GenMUONLMR.{h,cxx} ./
 cp $fileDir/NaMaterial.{h,cxx} ./
-cp $fileDir/runDiMuGenLMR.C . 
+cp $fileDir/macros/runDiMuGenLMR.C . 
 
 #cp $fileDir/setup-$Resolution-toroid-$Wall.txt $localdir/setup.txt
 cp $fileDir/setup-$Resolution-itssa.txt $localdir/setup.txt
