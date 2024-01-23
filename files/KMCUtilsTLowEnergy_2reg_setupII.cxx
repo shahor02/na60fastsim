@@ -1,18 +1,33 @@
 #include "KMCUtils.h"
 #include <TMath.h>
 //---------------------------------
-
-const double MagField::fZMin[MagField::kNReg] = {0., 380.};// cm, cm
-
-const double MagField::fZMax[MagField::kNReg] = {40.,680.};//cm cm
-const double MagField::fBVal[MagField::kNReg][3] = {{-30,0,0},{1.e2,30.,300.}}; //
-//const double MagField::fZMax[MagField::kNReg] = {40.,830.};//cm cm 
+ClassImp(MagField)
 
 
+MagField::MagField(UInt_t id) {
+  SetUniqueID(id);
 
-//const double MagField::fBVal[MagField::kNReg][3] = {{-30,0,0},{1.e2,30.,160.}};
+  const double kZMin[MagField::kNReg] = {0., 380.};// cm, cm
+  const double kZMax[MagField::kNReg] = {40.,680.};//cm cm
+  const double kBVal[MagField::kNReg][3] = {{-30,0,0},{1.e2,30.,300.}}; //
+  //const double kZMax[MagField::kNReg] = {40.,830.};//cm cm 
+  //const double kBVal[MagField::kNReg][3] = {{-30,0,0},{1.e2,30.,160.}};
 
+  
+  fZMin[0] = kZMin[0];
+  fZMax[0] = kZMax[0];
+ 
+  if (MagField::kNReg>1) {
+    fZMin[1] = kZMin[1];
+    fZMax[1] = kZMax[0];
+  }
 
+  for (int i=0; i<MagField::kNReg; i++) {
+    for (int j=0; j<3; j++) {
+      fBVal[i][j] = kBVal[i][j];
+    }
+  }
+}
 
 
 //__________________________________________________
