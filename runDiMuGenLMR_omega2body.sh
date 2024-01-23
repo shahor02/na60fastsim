@@ -30,16 +30,12 @@ mkdir $localdir
 cd $localdir
 cp $fileDir/KMCUtilsTLowEnergy_2reg_setupII.cxx $localdir/KMCUtils.cxx
 cp $fileDir/KMCUtils.h $localdir/KMCUtils.h 
-cp $fileDir/KMCDetectorFwd.h .
-cp $fileDir/KMCDetectorFwd.cxx . 
-cp $fileDir/KMCProbeFwd.h .
-cp $fileDir/KMCProbeFwd.cxx .
-cp $fileDir/KMCLayerFwd.h .
-cp $fileDir/KMCLayerFwd.cxx .
-cp $fileDir/KMCClusterFwd.h .
-cp $fileDir/KMCClusterFwd.cxx .
-cp $fileDir/GenMUONLMR.h .
-cp $fileDir/GenMUONLMR.cxx .
+cp $fileDir/KMCDetectorFwd.{h,cxx} ./
+cp $fileDir/KMCProbeFwd.{h,cxx} ./
+cp $fileDir/KMCLayerFwd.{h,cxx} ./
+cp $fileDir/KMCClusterFwd.{h,cxx} ./
+cp $fileDir/GenMUONLMR.{h,cxx} ./
+cp $fileDir/NaMaterial.{h,cxx} ./
 cp $fileDir/runDiMuGenLMR.C . 
 
 #cp $fileDir/setup-$Resolution-toroid-$Wall.txt $localdir/setup.txt
