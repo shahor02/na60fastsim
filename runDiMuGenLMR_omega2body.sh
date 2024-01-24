@@ -51,9 +51,10 @@ aliroot <<EOF >runDiMuGenLMR.out 2>runDiMuGenLMR.err
   gROOT->ProcessLine(".L ./KMCMagnetBuilder.cxx+g");
   gROOT->ProcessLine(".L ./GenMUONLMR.cxx+g");
 
-  gROOT->ProcessLine(".L LocLog.cxx+g");
-  gROOT->ProcessLine(".L TrackPar.cxx+g");
-  gROOT->ProcessLine(".L TLocTreeStream.cxx+g");
+  // line below are needed only in case there is no aliroot available, in this case 
+  // gROOT->ProcessLine(".L LocLog.cxx+g");
+  // gROOT->ProcessLine(".L TrackPar.cxx+g");
+  // gROOT->ProcessLine(".L TLocTreeStream.cxx+g");
     
 
 .L runDiMuGenLMR.C+g
