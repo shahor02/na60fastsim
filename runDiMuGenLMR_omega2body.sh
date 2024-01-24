@@ -28,14 +28,9 @@ localdir=$baseDir/runDiMu-$ProcType-$Resolution-$Chi2Cut-$nev-ev-${Energy}GeV-$M
 
 mkdir $localdir
 cd $localdir
+cp $fileDir/*.{h,cxx} ./
+# overwrite magnetic field implementation
 cp $fileDir/KMCUtilsTLowEnergy_2reg_setupII.cxx $localdir/KMCUtils.cxx
-cp $fileDir/KMCUtils.h $localdir/KMCUtils.h 
-cp $fileDir/KMCDetectorFwd.{h,cxx} ./
-cp $fileDir/KMCProbeFwd.{h,cxx} ./
-cp $fileDir/KMCLayerFwd.{h,cxx} ./
-cp $fileDir/KMCClusterFwd.{h,cxx} ./
-cp $fileDir/GenMUONLMR.{h,cxx} ./
-cp $fileDir/NaMaterial.{h,cxx} ./
 cp $fileDir/macros/runDiMuGenLMR.C . 
 
 #cp $fileDir/setup-$Resolution-toroid-$Wall.txt $localdir/setup.txt
@@ -49,9 +44,18 @@ aliroot <<EOF >runDiMuGenLMR.out 2>runDiMuGenLMR.err
   gROOT->ProcessLine(".L ./KMCProbeFwd.cxx+g");
   gROOT->ProcessLine(".L ./KMCClusterFwd.cxx+g");
   gROOT->ProcessLine(".L ./KMCLayerFwd.cxx+g");
+  gROOT->ProcessLine(".L ./KMCPolyLayer.cxx+g");
+  gROOT->ProcessLine(".L ./KMCMSStation.cxx+g");
   gROOT->ProcessLine(".L ./KMCDetectorFwd.cxx+g");
+  gROOT->ProcessLine(".L ./KMCFlukaParser.cxx+g");
+  gROOT->ProcessLine(".L ./KMCMagnetBuilder.cxx+g");
   gROOT->ProcessLine(".L ./GenMUONLMR.cxx+g");
-  
+
+  gROOT->ProcessLine(".L LocLog.cxx+g");
+  gROOT->ProcessLine(".L TrackPar.cxx+g");
+  gROOT->ProcessLine(".L TLocTreeStream.cxx+g");
+    
+
 .L runDiMuGenLMR.C+g
 runDiMuGenLMR($nev,"$ProcType",$seed,$Energy) 
 

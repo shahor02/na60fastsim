@@ -41,10 +41,10 @@ void NaMaterial::Print(Option_t* option) const
   if (option[0] != 'h' && option[0] != 'H' ) //header is not suppressed
     printf("%-20s %7s %7s %7s %10s %10s %10s %10s %10s\n",
 	   "Material","   A   ","   Z   ","Density","  Rad.L  ",
-	   "  Inter.L "," ELossC0 "," ELossC1 "," ELossC2 ");
-  printf("%-20s %7.3f %7.3f %7.3f %10.3e %10.3e %10.3e %10.3e %10.3e\n",
+	   "  Inter.L "," ELossC0 "," ELossC1 ");
+  printf("%-20s %7.3f %7.3f %7.3f %10.3e %10.3e %10.3e %10.3e\n",
 	 GetName(),a,z,rho,rl,il,fELossPar[0],
-	 fELossPar[1],fELossPar[2]);
+	 fELossPar[1]);
   //
 }
 //----------------------------------------------------------------
@@ -178,10 +178,10 @@ void NaMixture::Print(Option_t* option) const
   if (option[0] != 'h' && option[0] != 'H' ) //header is not suppressed
     printf("%-20s %7s %7s %7s %10s %10s %10s %10s %10s\n",
 	   "Material","   A   ","   Z   ","Density","  Rad.L  ",
-	   "  Inter.L "," ELossC0 "," ELossC1 "," ELossC2 ");
-  printf("%-20s %7.3f %7.3f %7.3f %10.3e %10.3e %10.3e %10.3e %10.3e %6s %6s %6s\n",
+	   "  Inter.L "," ELossC0 "," ELossC1 ");
+  printf("%-20s %7.3f %7.3f %7.3f %10.3e %10.3e %10.3e %10.3e %6s %6s %6s\n",
 	 GetName(),a,z,rho,rl,il,fELossPar[0],
-	 fELossPar[1],fELossPar[2],"  A  ","  Z  ","  W  ");
+	 fELossPar[1],"  A  ","  Z  ","  W  ");
   for (int i=0;i<TMath::Abs(fNMix);i++) 
     printf("%107s %6.2f %6.2f %6.4f\n"," ",fAMix[i],fZMix[i],fWMix[i]);
   //

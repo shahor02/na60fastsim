@@ -1,5 +1,5 @@
 #if !defined(__CINT__) || defined(__MAKECINT__)
-#define _NOALIROOT_
+//#define _NOALIROOT_
 #include "KMCDetectorFwd.h"
 #include "KMCProbeFwd.h"
 #include "KMCFlukaParser.h"
@@ -14,7 +14,12 @@
 #include "GenMUONLMR.h"
 #include "TStopwatch.h"
 #include "TTree.h"
+#ifdef _NOALIROOT_
 #include "TLocTreeStream.h"
+using TTreeSRedirector = TLocTreeSRedirector;
+#else
+#include "TTreeStream.h"
+#endif
 #endif
 
 //TRandom *rnd;
@@ -122,7 +127,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   gRandom->SetSeed(Seed);
 
   CalcBkgPar(Eint);
-  TLocTreeSRedirector outStream("dimuGenLMR.root"); // the output stream trees will go here
+  TTreeSRedirector outStream("dimuGenLMR.root"); // the output stream trees will go here
   TString flukaBG = flukaBGList;
 
   MagField *mag = new MagField(1);
