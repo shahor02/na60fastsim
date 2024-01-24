@@ -30,7 +30,7 @@ mkdir $localdir
 cd $localdir
 cp $fileDir/*.{h,cxx} ./
 # overwrite magnetic field implementation
-cp $fileDir/KMCUtilsTLowEnergy_2reg_setupII.cxx $localdir/KMCUtils.cxx
+cp KMCUtilsTLowEnergy_2reg_setupII.cxx KMCUtils.cxx
 cp $fileDir/macros/runDiMuGenLMR.C . 
 
 #cp $fileDir/setup-$Resolution-toroid-$Wall.txt $localdir/setup.txt
