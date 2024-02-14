@@ -36,6 +36,7 @@ struct KMCPolygon
     int n = poly.size(), c = 0;
     for (int i = 0, j = n-1; i < n; j = i++) {
       if ( ((poly[i].y>y) != (poly[j].y>y)) && (x < (poly[j].x-poly[i].x) * (y-poly[i].y) / (poly[j].y-poly[i].y) + poly[i].x) ) c = !c;
+      printf("line %d -> %d\n", i, c);
     }
     return c;
   }
@@ -46,7 +47,7 @@ struct KMCPolygon
 struct KMCPolyLayer : public KMCLayerFwd
 {
   std::vector<KMCPolygon> pieces;
-  float minX=9999, maxX=-9999, minY=9999, maxY=-9999, minR2=9999,maxR2=-9999;
+  float minX=9999, maxX=-9999, minY=9999, maxY=-9999, maxR2=-9999;
 
   KMCPolygon& addPolygon(int nv, const float* x, const float* y, float _x2x0=0., float _xdens=0.);
   void setNSectorsPhiStart(int n, float phi);
@@ -70,10 +71,12 @@ struct KMCPolyLayer : public KMCLayerFwd
     getMatBudget(getPolygonID(x,y), _x2x0, _xrho);
   }
 
+  void setXYOffsets(float x, float y);
+  
   ///////////////////////////
  private :
-  float sectorOffsX = 8.28;  // sector outlines in lab is obtained by shifting local outline by offsX, 
-  float sectorOffsY = -15.72;  // offsY and rotating by phiStart + n*sectorCoverage, n = 0 : nSectors - 1
+  float sectorOffsX = 0.f;  // sector outlines in lab is obtained by shifting local outline by offsX, 
+  float sectorOffsY = 0.f;  // offsY and rotating by phiStart + n*sectorCoverage, n = 0 : nSectors - 1
   float sectorCoverage = 0;
   float sectorCoverageInv = 0;
   int nSectors = 1;

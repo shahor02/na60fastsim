@@ -15,6 +15,9 @@
 #pragma link C++ class KMCPolyLayer+;
 #pragma link C++ class KMCMagnetBuilder+;
 
+#pragma link C++ class KMCVTCoolingPlane+;
+#pragma link C++ class KMCPixelPlane+;
+
 #pragma link C++ class NaCardsInput+;
 #pragma link C++ class NaMixture+;
 #pragma link C++ class NaMaterial+;

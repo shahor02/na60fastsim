@@ -11,6 +11,9 @@
 #include "KMCProbeFwd.h"
 #include "KMCClusterFwd.h"
 #include "KMCLayerFwd.h"
+#include "KMCPixelPlane.h"
+#include "KMCVTCoolingPlane.h"
+
 #include "KMCMSStation.h"
 #include "KMCPolyLayer.h"
 #include "NaMaterial.h"
@@ -20,6 +23,7 @@
 #include <TString.h>
 #include <stdio.h>
 #include "KMCFlukaParser.h"
+
 
 
 class NaCardsInput;
@@ -46,7 +50,10 @@ class KMCDetectorFwd : public TNamed {
   KMCPolyLayer* AddPolyLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density,  Float_t thickness);
   KMCLayerFwd* AddLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density,
                         Float_t thickness, Float_t xRes=999999, Float_t yRes=999999, Float_t eff=1, NaMaterial* mat=0);
-  void         AddLayer(KMCLayerFwd* lr, const char* type);
+  KMCLayerFwd* AddPixelPlaneLayer(const char *name, Float_t zPos, Float_t radL, Float_t density, 
+				  Float_t thickness, Float_t xRes, Float_t yRes, Float_t eff, NaMaterial* mat);
+  KMCLayerFwd* AddVTCoolingLayer(const char *name, Float_t zPos, Float_t radL, Float_t density, Float_t thickness, NaMaterial* mat);
+  void         AddLayer(KMCLayerFwd* lr, const char* type = 0);
   void         AddBeamPipe(Float_t r, Float_t dr, Float_t radL, Float_t density, NaMaterial* mat=0);
   BeamPipe*    GetBeamPipe() const {return fBeamPipe;}
 
