@@ -29,7 +29,16 @@ public:
     x2x0 = GetX2X0();
     xrho = GetXTimesRho();
   }
-
+  
+  virtual bool isInAcc(float x, float y, float r=-1) const // determine if x,y (or r if > 0) is in the acceptance
+  {
+    if (r>0) {
+      return r < GetRMin() && r > GetRMax();
+    }
+    float r2 = x*x + y*y;
+    return r2 < GetRMin()*GetRMin() && r2 > GetRMax()*GetRMax();
+  }
+  
   Float_t GetX2X0()      const {return fx2X0;}
   Float_t GetXTimesRho() const {return fXRho;}
   int GetAccRegion(float r) const {

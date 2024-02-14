@@ -27,6 +27,7 @@ SRC = 	GenMUONLMR.cxx  KMCClusterFwd.cxx  KMCDetectorFwd.cxx  KMCFlukaParser.cxx
 	KMCLayerFwd.cxx  KMCProbeFwd.cxx  KMCUtils.cxx NaMaterial.cxx \
         KMCPolyLayer.cxx KMCMagnetBuilder.cxx \
         KMCMSStation.cxx \
+        KMCVTCoolingPlane.cxx KMCPixelPlane.cxx \
         LocLog.cxx TrackPar.cxx TLocTreeStream.cxx
 
 HDR =	$(SRC:.cxx=.h) 

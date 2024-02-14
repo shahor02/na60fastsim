@@ -1,5 +1,14 @@
 #include "KMCPolyLayer.h"
 
+void KMCPolyLayer::setXYOffsets(float x, float y)
+{
+  if (pieces.size() > 0) {
+    AliFatal("setXYOffsets must be called before adding polygons");
+  }
+  sectorOffsX = x;
+  sectorOffsY = y;
+}
+
 KMCPolygon& KMCPolyLayer::addPolygon(int nv, const float* x, const float* y, float _x2x0, float _xrho)
 {
   pieces.emplace_back(nv, x, y, _x2x0, _xrho);
@@ -12,7 +21,6 @@ KMCPolygon& KMCPolyLayer::addPolygon(int nv, const float* x, const float* y, flo
     auto ylab = y[i]+sectorOffsY;    
     auto r2 = xlab*xlab + ylab*ylab;
     if (maxR2<r2) maxR2 = r2;
-    if (minR2>r2) minR2 = r2;
   }
   return pieces.back();
 }
@@ -36,17 +44,20 @@ int KMCPolyLayer::getPolygonID(float x,float y) const {
   // determine in which sector we are
   //  int pieceID = -1;
   auto r2 = x*x+y*y;
-  if (r2<minR2 || r2>maxR2) return -1;
+  //  printf("here0\n");
+  if (r2>maxR2) return -1;
   for (int isec=0;isec<nSectors;isec++) {
     float xloc = sincosSec[isec].second*x + sincosSec[isec].first*y - sectorOffsX;
     float yloc = -sincosSec[isec].first*x + sincosSec[isec].second*y - sectorOffsY;
-
+    //printf("here1 sec%d %f %f [%f %f] [%f %f]\n", isec, xloc, yloc, minX, maxX, minY, maxY);
     if (xloc<minX || xloc>maxX || yloc<minY || yloc>maxY) {
       continue;
     }
     // are we inside the polygons?
     for (int i=pieces.size();i--;) {
+      //printf("here2 %d\n", i);
       if (pieces[i].isInside(xloc,yloc)) {
+	//printf("here3 -> %d\n", isec*10+i);
 	return isec*10+i;
       }
     }

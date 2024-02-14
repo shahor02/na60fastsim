@@ -272,14 +272,20 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   }
   //
   //
-  // dummy material (not the official absorber
+  // dummy material (not the official absorber)
   inp->Rewind();
-  while ( (narg=inp->FindEntry("dummy","","aaff|",0,1))>0 ) {
+  while ( (narg=inp->FindEntry("dummy",0,"aaff|",0,1))>0 ) {
     mat = GetMaterial(inp->GetArg(1,"U"));
     if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
-    KMCLayerFwd* lr = AddLayer("dummy", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
-    lr->SetMaterial(mat);
-    lr->SetDead(kTRUE);
+    TString types = inp->GetModifier();
+    KMCLayerFwd* lr = 0;
+    if (types == "") {
+      lr = AddLayer("dummy", inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3));
+      lr->SetMaterial(mat);
+      lr->SetDead(kTRUE);
+    } else if (types == "vtcooling") {
+      lr = AddVTCoolingLayer(inp->GetArg(0,"U"),  inp->GetArgF(2), mat->GetRadLength(), mat->GetDensity(), inp->GetArgF(3), mat);
+    }
   }
   //
   // Absorber
@@ -443,39 +449,76 @@ KMCLayerFwd* KMCDetectorFwd::AddLayer(const char* type, const char *name, Float_
   if (!newLayer) {
     TString types = type;
     types.ToLower();
-    newLayer = new KMCLayerFwd(name);
-    newLayer->SetZ(zPos);
-    newLayer->SetThickness(thickness);
-    newLayer->SetX2X0( radL>0 ? thickness*density/radL : 0);
-    newLayer->SetXTimesRho(thickness*density);
-    newLayer->SetXRes(xRes);
-    newLayer->SetYRes(yRes);
-    newLayer->SetLayerEff(eff);
-    if      (types=="vt")   newLayer->SetType(KMCLayerFwd::kITS);
-    else if (types=="ms")   newLayer->SetType(KMCLayerFwd::kMS);
-    else if (types=="tr")   newLayer->SetType(KMCLayerFwd::kTRIG);
-    else if (types=="vtx")  {newLayer->SetType(KMCLayerFwd::kVTX); }
-    else if (types=="abs")  {newLayer->SetType(KMCLayerFwd::kABS); newLayer->SetDead(kTRUE); }
-    else if (types=="dummy")  {newLayer->SetType(KMCLayerFwd::kDUMMY); newLayer->SetDead(kTRUE); }
+    if (types=="vtchips") {
+      newLayer = AddPixelPlaneLayer(name, zPos, radL, density, thickness, xRes, yRes, eff, mat);
+      newLayer->SetType(KMCLayerFwd::kITS);
+    } else {
+      newLayer = new KMCLayerFwd(name);
+      newLayer->SetZ(zPos);
+      newLayer->SetThickness(thickness);
+      newLayer->SetX2X0( radL>0 ? thickness*density/radL : 0);
+      newLayer->SetXTimesRho(thickness*density);
+      newLayer->SetXRes(xRes);
+      newLayer->SetYRes(yRes);
+      newLayer->SetLayerEff(eff);
+      if      (types=="vt")   newLayer->SetType(KMCLayerFwd::kITS);
+      else if (types=="ms")   newLayer->SetType(KMCLayerFwd::kMS);
+      else if (types=="tr")   newLayer->SetType(KMCLayerFwd::kTRIG);
+      else if (types=="vtx")  {newLayer->SetType(KMCLayerFwd::kVTX); }
+      else if (types=="abs")  {newLayer->SetType(KMCLayerFwd::kABS); newLayer->SetDead(kTRUE); }
+      else if (types=="dummy")  {newLayer->SetType(KMCLayerFwd::kDUMMY); newLayer->SetDead(kTRUE); }
+      newLayer->SetMaterial(mat);
+      AddLayer(newLayer);
+    }
     if (newLayer->GetType()>=0) {
       newLayer->SetRPhiError( fUseRPhiErr[ newLayer->GetType() ] );
     }
     //
     if (!newLayer->IsDead()) newLayer->SetDead( xRes>=kVeryLarge && yRes>=kVeryLarge);
     //
-    if (fLayers.GetEntries()==0) fLayers.Add(newLayer);
-    else {      
-      for (Int_t i = 0; i<fLayers.GetEntries(); i++) {
-	KMCLayerFwd *l = GetLayer(i);
-	if (zPos<l->GetZ()) { fLayers.AddBefore(l,newLayer); break; }
-	if (zPos>l->GetZ() && (i+1)==fLayers.GetEntries() ) { fLayers.Add(newLayer); } // even bigger then last one
-      }      
-    }
-    //
   } else printf("Layer with the name %s does already exist\n",name);
-  newLayer->SetMaterial(mat);
   //
   return newLayer;
+}
+
+//__________________________________________________________________________
+KMCLayerFwd* KMCDetectorFwd::AddVTCoolingLayer(const char *name, Float_t zPos, Float_t radL, Float_t density,
+					       Float_t thickness, NaMaterial* mat) 
+{
+  NaMaterial* air = GetMaterial("AIR");
+  if (!air) {
+    AliFatal("Did not find AIR material");
+  }
+  KMCVTCoolingPlane* lr = new KMCVTCoolingPlane(name, zPos, thickness,
+						air->GetRadLength(), air->GetDensity(), air, // substrate
+						radL, density, mat); // cooling pipes
+  AddLayer(lr);
+  return lr;
+}
+
+//__________________________________________________________________________
+KMCLayerFwd* KMCDetectorFwd::AddPixelPlaneLayer(const char *name, Float_t zPos, Float_t radL, Float_t density, 
+						Float_t thickness, Float_t xRes, Float_t yRes, Float_t eff, NaMaterial* mat)
+{
+
+  NaMaterial* air = GetMaterial("AIR");
+  if (!air) {
+    AliFatal("Did not find AIR material");
+  }
+  // Define here chip parameters
+  float sizeSX = 15.0;
+  float sizeSY = 15.0;
+  float offsX = 0.0; // X offset of the 1st quadrant chip inner corner from 0,0
+  float offsY = 0.5; // Y offset of the 1st quadrant chip inner corner from 0,0
+  // chips in other quadrants are obtained by rotating the 1st quadrant by miltiples of pi/2 
+  
+  KMCPixelPlane* lr = new KMCPixelPlane(name, zPos, thickness, air->GetRadLength(), air->GetDensity(), air, // substrate
+					radL, density, mat, // sensor
+					sizeSX, sizeSY, // single sensor size in X, and Y
+					offsX, offsY,   // offset of the inner corner of the 1st quadrant chip
+					xRes, yRes, eff);
+  AddLayer(lr);
+  return lr;
 }
 
 //__________________________________________________________________________
@@ -486,16 +529,18 @@ void KMCDetectorFwd::AddLayer(KMCLayerFwd* newLayer, const char* type)
   //
   KMCLayerFwd *old = GetLayer(newLayer->GetName());
   if (old) {
-    printf("Error: Layer with the name %s does already exist\n",old->GetName());
+    printf("Error: Layer with the name %s already exist\n",old->GetName());
     exit(1);
   }
-  TString types = type;
-  types.ToLower();
-  if (types=="ms")   newLayer->SetType(KMCLayerFwd::kMS);
-  else if (types=="tr")   newLayer->SetType(KMCLayerFwd::kTRIG);
-  else {
-    printf("Error: 3x1D layer is allowed only for MS and TR layers\n");
-    exit(1);
+  if (type) {
+    TString types = type;
+    types.ToLower();
+    if (types=="ms")   newLayer->SetType(KMCLayerFwd::kMS);
+    else if (types=="tr")   newLayer->SetType(KMCLayerFwd::kTRIG);
+    else {
+      printf("Error: 3x1D layer is allowed only for MS and TR layers\n");
+      exit(1);
+    }
   }
   //
   if (fLayers.GetEntries()==0) fLayers.Add(newLayer);
@@ -538,17 +583,9 @@ KMCPolyLayer* KMCDetectorFwd::AddPolyLayer(const char* type, const char *name, F
     if  (types=="mag")  newLayer->SetType(KMCLayerFwd::kMAG);
     else newLayer->SetType(KMCLayerFwd::kDUMMY);
     newLayer->SetDead(kTRUE);
-    //
-    if (fLayers.GetEntries()==0) fLayers.Add(newLayer);
-    else {      
-      for (Int_t i = 0; i<fLayers.GetEntries(); i++) {
-	KMCLayerFwd *l = GetLayer(i);
-	if (zPos<l->GetZ()) { fLayers.AddBefore(l,newLayer); break; }
-	if (zPos>l->GetZ() && (i+1)==fLayers.GetEntries() ) { fLayers.Add(newLayer); } // even bigger then last one
-      }      
-    }
-    //
     newLayer->SetMaterial(0);
+    //
+    AddLayer(newLayer);
     return newLayer;
   }
   printf("Layer with the name %s does already exist\n",name);

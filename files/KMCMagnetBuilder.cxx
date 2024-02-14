@@ -41,6 +41,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   
   float zl = zIn + barSect/2;
   KMCPolyLayer* lrIn0 = det->AddPolyLayer("mag","magIn0", zl, defRadL, defDens, barSect);
+  lrIn0->setXYOffsets(8.28, -15.72);
   auto& pin00 = lrIn0->addPolygon(nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   pin00.poly[0].x = 52;
   pin00.poly[1].x = 52;
@@ -50,6 +51,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   //-----------------
   zl += spacing + barSect;
   KMCPolyLayer* lrIn1 = det->AddPolyLayer("mag","magIn1", zl, defRadL, defDens, barSect);
+  lrIn1->setXYOffsets(8.28, -15.72);
   auto& pin10 = lrIn1->addPolygon(nvMagenta, dataMagenta[0],dataMagenta[1], x2x0, xrho);
   auto& pin11 = lrIn1->addPolygon(nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   pin11.poly[0].x = 67.570;
@@ -60,6 +62,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   //-----------------  
   zl += spacing + barSect;
   KMCPolyLayer* lrIn2 = det->AddPolyLayer("mag","magIn2", zl, defRadL, defDens, barSect);
+  lrIn2->setXYOffsets(8.28, -15.72);
   auto& pin20 = lrIn2->addPolygon(nvBlue, dataBlue[0],dataBlue[1], x2x0, xrho);
   auto& pin21 = lrIn2->addPolygon(nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   pin21.poly[0].x = 61.3400;
@@ -68,6 +71,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn3 = det->AddPolyLayer("mag","magIn3", zl, defRadL, defDens, barSect);
+  lrIn3->setXYOffsets(8.28, -15.72);
   auto& pin30 = lrIn3->addPolygon(nvBlue, dataBlue[0],dataBlue[1], x2x0, xrho);
   pin30.poly[0].x += spacing + barSect;
   pin30.poly[1].x += spacing + barSect;  
@@ -79,6 +83,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   //-----------------  
   zl += spacing + barSect;
   KMCPolyLayer* lrIn4 = det->AddPolyLayer("mag","magIn4", zl, defRadL, defDens, barSect);
+  lrIn4->setXYOffsets(8.28, -15.72);
   auto& pin40 = lrIn4->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   auto& pin41 = lrIn4->addPolygon(nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   pin41.poly[0].x = 54.201;
@@ -87,6 +92,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn5 = det->AddPolyLayer("mag","magIn5", zl, defRadL, defDens, barSect);
+  lrIn5->setXYOffsets(8.28, -15.72);
   auto& pin50 = lrIn5->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   pin50.poly[0].x += spacing + barSect;
   pin50.poly[1].x += spacing + barSect;  
@@ -97,6 +103,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn6 = det->AddPolyLayer("mag","magIn6", zl, defRadL, defDens, barSect);
+  lrIn6->setXYOffsets(8.28, -15.72);
   auto& pin60 = lrIn6->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   pin60.poly[0].x += 2*(spacing + barSect);
   pin60.poly[1].x += 2*(spacing + barSect);  
@@ -107,6 +114,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn7 = det->AddPolyLayer("mag","magIn7", zl, defRadL, defDens, barSect);
+  lrIn7->setXYOffsets(8.28, -15.72);
   auto& pin70 = lrIn7->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   pin70.poly[0].x += 3*(spacing + barSect);
   pin70.poly[1].x += 3*(spacing + barSect);  
@@ -118,11 +126,13 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   //-----------------  
   zl += spacing + barSect;
   KMCPolyLayer* lrIn8 = det->AddPolyLayer("mag","magIn8", zl, defRadL, defDens, barSect);
+  lrIn8->setXYOffsets(8.28, -15.72);
   auto& pin80 = lrIn8->addPolygon( nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   lrIn8->setNSectorsPhiStart(nSectors, phi0);
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn9 = det->AddPolyLayer("mag","magIn9", zl, defRadL, defDens, barSect);
+  lrIn9->setXYOffsets(8.28, -15.72);
   auto& pin90 = lrIn9->addPolygon( nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   //  pin90.poly[0].x += (spacing + barSect);
   //  pin90.poly[1].x += (spacing + barSect);
@@ -130,6 +140,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn10 = det->AddPolyLayer("mag","magIn10", zl, defRadL, defDens, barSect);
+  lrIn10->setXYOffsets(8.28, -15.72);
   auto& pin100 = lrIn10->addPolygon( nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   //  pin100.poly[0].x += 2*(spacing + barSect);
   //  pin100.poly[1].x += 2*(spacing + barSect);
@@ -137,6 +148,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn11 = det->AddPolyLayer("mag","magIn11", zl, defRadL, defDens, barSect);
+  lrIn11->setXYOffsets(8.28, -15.72);
   auto& pin110 = lrIn11->addPolygon( nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   //  pin110.poly[0].x += 3*(spacing + barSect);
   //  pin110.poly[1].x += 3*(spacing + barSect);
@@ -144,6 +156,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl += spacing + barSect;
   KMCPolyLayer* lrIn12 = det->AddPolyLayer("mag","magIn12", zl, defRadL, defDens, barSect);
+  lrIn12->setXYOffsets(8.28, -15.72);
   auto& pin120 = lrIn12->addPolygon( nvCyan, dataCyan[0],dataCyan[1], x2x0, xrho);
   //  pin120.poly[0].x += 4*(spacing + barSect);
   //  pin120.poly[1].x += 4*(spacing + barSect);
@@ -166,6 +179,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   zl = zIn - barSect/2;
   // zl -= spacing + barSect;
   KMCPolyLayer* lrOut1 = det->AddPolyLayer("mag","magOut1", zl, defRadL, defDens, barSect);
+  lrOut1->setXYOffsets(8.28, -15.72);
   auto& pout10 = lrOut1->addPolygon(nvMagenta, dataMagenta[0],dataMagenta[1], x2x0, xrho);
   auto& pout11 = lrOut1->addPolygon(nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   pout11.poly[0].x = 67.570;
@@ -175,7 +189,8 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   //-----------------  
   zl -= spacing + barSect;
-  KMCPolyLayer* lrOut2 = det->AddPolyLayer("mag","magOut2", zl, defRadL, defDens, barSect);
+  KMCPolyLayer* lrOut2 = det->AddPolyLayer("mag","magOut2", zl, defRadL, defDens, barSect); 
+  lrOut2->setXYOffsets(8.28, -15.72);
   auto& pout20 = lrOut2->addPolygon(nvBlue, dataBlue[0],dataBlue[1], x2x0, xrho);
   auto& pout21 = lrOut2->addPolygon(nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   pout21.poly[0].x = 61.3400;
@@ -184,6 +199,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut3 = det->AddPolyLayer("mag","magOut3", zl, defRadL, defDens, barSect);
+  lrOut3->setXYOffsets(8.28, -15.72);
   auto& pout30 = lrOut3->addPolygon(nvBlue, dataBlue[0],dataBlue[1], x2x0, xrho);
   pout30.poly[0].x += spacing + barSect;
   pout30.poly[1].x += spacing + barSect;  
@@ -195,6 +211,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   //-----------------  
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut4 = det->AddPolyLayer("mag","magOut4", zl, defRadL, defDens, barSect);
+  lrOut4->setXYOffsets(8.28, -15.72);
   auto& pout40 = lrOut4->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   auto& pout41 = lrOut4->addPolygon(nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   pout41.poly[0].x = 54.201;
@@ -203,6 +220,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut5 = det->AddPolyLayer("mag","magOut5", zl, defRadL, defDens, barSect);
+  lrOut5->setXYOffsets(8.28, -15.72);
   auto& pout50 = lrOut5->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   pout50.poly[0].x += spacing + barSect;
   pout50.poly[1].x += spacing + barSect;  
@@ -213,6 +231,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut6 = det->AddPolyLayer("mag","magOut6", zl, defRadL, defDens, barSect);
+  lrOut6->setXYOffsets(8.28, -15.72);
   auto& pout60 = lrOut6->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   pout60.poly[0].x += 2*(spacing + barSect);
   pout60.poly[1].x += 2*(spacing + barSect);  
@@ -223,6 +242,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut7 = det->AddPolyLayer("mag","magOut7", zl, defRadL, defDens, barSect);
+  lrOut7->setXYOffsets(8.28, -15.72);
   auto& pout70 = lrOut7->addPolygon(nvGreen, dataGreen[0],dataGreen[1], x2x0, xrho);
   pout70.poly[0].x += 3*(spacing + barSect);
   pout70.poly[1].x += 3*(spacing + barSect);  
@@ -234,11 +254,13 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
   //-----------------  
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut8 = det->AddPolyLayer("mag","magOut8", zl, defRadL, defDens, barSect);
+  lrOut8->setXYOffsets(8.28, -15.72);
   auto& pout80 = lrOut8->addPolygon( nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   lrOut8->setNSectorsPhiStart(nSectors, phi0);
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut9 = det->AddPolyLayer("mag","magOut9", zl, defRadL, defDens, barSect);
+  lrOut9->setXYOffsets(8.28, -15.72);
   auto& pout90 = lrOut9->addPolygon( nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   //  pout90.poly[0].x += (spacing + barSect);
   //  pout90.poly[1].x += (spacing + barSect);
@@ -246,6 +268,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut10 = det->AddPolyLayer("mag","magOut10", zl, defRadL, defDens, barSect);
+  lrOut10->setXYOffsets(8.28, -15.72);
   auto& pout100 = lrOut10->addPolygon( nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   //  pout100.poly[0].x += 2*(spacing + barSect);
   //  pout100.poly[1].x += 2*(spacing + barSect);
@@ -253,6 +276,7 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut11 = det->AddPolyLayer("mag","magOut11", zl, defRadL, defDens, barSect);
+  lrOut11->setXYOffsets(8.28, -15.72);
   auto& pout110 = lrOut11->addPolygon( nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   //  pout110.poly[0].x += 3*(spacing + barSect);
   //  pout110.poly[1].x += 3*(spacing + barSect);
@@ -260,11 +284,10 @@ KMCMagnetBuilder::KMCMagnetBuilder(KMCDetectorFwd* det, float zIn, float dZ,
 
   zl -= spacing + barSect;
   KMCPolyLayer* lrOut12 = det->AddPolyLayer("mag","magOut12", zl, defRadL, defDens, barSect);
+  lrOut12->setXYOffsets(8.28, -15.72);
   auto& pout120 = lrOut12->addPolygon( nvCyan, dataCyanO[0],dataCyanO[1], x2x0, xrho);
   //  pout120.poly[0].x += 4*(spacing + barSect);
   //  pout120.poly[1].x += 4*(spacing + barSect);
   pout120.poly[2].x = pout120.poly[3].x = 92.0; // fix edges
-  lrOut12->setNSectorsPhiStart(nSectors, phi0);
- 
-  
+  lrOut12->setNSectorsPhiStart(nSectors, phi0); 
 }
