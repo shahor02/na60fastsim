@@ -36,7 +36,6 @@ struct KMCPolygon
     int n = poly.size(), c = 0;
     for (int i = 0, j = n-1; i < n; j = i++) {
       if ( ((poly[i].y>y) != (poly[j].y>y)) && (x < (poly[j].x-poly[i].x) * (y-poly[i].y) / (poly[j].y-poly[i].y) + poly[i].x) ) c = !c;
-      printf("line %d -> %d\n", i, c);
     }
     return c;
   }

@@ -33,10 +33,10 @@ public:
   virtual bool isInAcc(float x, float y, float r=-1) const // determine if x,y (or r if > 0) is in the acceptance
   {
     if (r>0) {
-      return r < GetRMin() && r > GetRMax();
+      return r > GetRMin() && r < GetRMax();
     }
     float r2 = x*x + y*y;
-    return r2 < GetRMin()*GetRMin() && r2 > GetRMax()*GetRMax();
+    return r2 > GetRMin()*GetRMin() && r2 < GetRMax()*GetRMax();
   }
   
   Float_t GetX2X0()      const {return fx2X0;}
