@@ -49,7 +49,7 @@ int KMCPolyLayer::getPolygonID(float x,float y) const {
   for (int isec=0;isec<nSectors;isec++) {
     float xloc = sincosSec[isec].second*x + sincosSec[isec].first*y - sectorOffsX;
     float yloc = -sincosSec[isec].first*x + sincosSec[isec].second*y - sectorOffsY;
-    //printf("here1 sec%d %f %f [%f %f] [%f %f]\n", isec, xloc, yloc, minX, maxX, minY, maxY);
+    // printf("here1 sec%d %f %f -> %f %f [%f %f] [%f %f]\n", isec, x, y, xloc, yloc, minX, maxX, minY, maxY);
     if (xloc<minX || xloc>maxX || yloc<minY || yloc>maxY) {
       continue;
     }

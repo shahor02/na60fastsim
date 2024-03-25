@@ -31,7 +31,7 @@ KMCPixelPlane::KMCPixelPlane(const char *name, float zpos, float thickness,
   contourY[1] = 0;
   contourX[2] = sizeSX; // top right corrner
   contourY[2] = sizeSY;
-  contourX[3] = sizeSX; // top lefy corrner
+  contourX[3] = 0;      // top lefy corrner
   contourY[3] = sizeSY;  
   addPolygon(4, contourX, contourY, (radLS>0 && densityS>0) ? thickness/(radLS/densityS) : 0, thickness*densityS);
   setNSectorsPhiStart(4, 0.0); // define full set of chips as rotated copies of the 1st one
