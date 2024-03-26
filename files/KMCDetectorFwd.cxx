@@ -1350,18 +1350,18 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     double y = cl->GetY(); // ! tracking frame coordinates: Ylab
     double x = cl->GetX(); //                               XLab, sorted in decreasing order
     //
-    //AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)",
-    //		    icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetY(),y,yMin,yMax,probe->GetX(),x,xMin,xMax));
+    //    AliInfo(Form("Check against cl#%d(%d) out of %d at layer %s | y: Tr:%+8.4f Cl:%+8.4f (%+8.4f:%+8.4f) z: Tr:%+8.4f Cl: %+8.4f (%+8.4f:%+8.4f)",
+    //    		    icl,cl->GetTrID(),nCl,lrP->GetName(), probe->GetY(),y,yMin,yMax,probe->GetX(),x,xMin,xMax));
     //
-    if (x>xMax) {if (icl==-1) continue; else break;} // all other x will be even smaller, no chance to match
-    if (x<xMin) continue;
+    if (x<xMin) {if (icl==-1) continue; else break;} // all other x will be even smaller, no chance to match
+    if (x>xMax) continue;
     if (y<yMin || y>yMax) continue; 
     //
     meas[0] = y; meas[1] = -x;
     double chi2 = probe->GetPredictedChi2(meas,measErr2);
     //
     //    AliInfo(Form("Seed-to-cluster chi2 = Chi2=%.2f for cl:",chi2));
-    //      cl->Print("lc");
+    //    cl->Print("lc");
     //    AliDebug(2,Form("Seed-to-cluster chi2 = Chi2=%.2f",chi2));
     if (icl<0 && fHChi2LrCorr) fHChi2LrCorr->Fill(lrP->GetActiveID(), chi2);
     if (chi2>fMaxChi2Cl) continue;
@@ -1635,7 +1635,7 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
   int maxLr = fLastActiveLayerITS + offset;
   if (maxLr > fLastActiveLayer) maxLr = fLastActiveLayer;
   //
-  for (int ilr=fLastActiveLayer;ilr--;) {
+  for (int ilr=fLastActiveLayer+1;ilr--;) {
     KMCLayerFwd* lr = GetLayer(ilr);
     if (lr->IsDead()) continue;
     lr->ResetBgClusters();
@@ -1695,10 +1695,17 @@ void KMCDetectorFwd::GenBgEvent(double x, double y, double z, int offset)
     TransportKalmanTrackWithMS(&bgtr, maxLr,kTRUE);
   }
   //
-  for (int ilr=maxLr;ilr--;) {
+  for (int ilr=maxLr+1;ilr--;) {
     KMCLayerFwd* lr = GetLayer(ilr);
     if (lr->IsDead()) continue;
     lr->SortBGClusters();
+    /*
+      AliInfo(Form("Clusters after sorting on Lr%d", ilr));
+      for (int i=0;i<lr->GetNBgClusters();i++) {
+      KMCClusterFwd *cl = lr->GetBgCluster(i);
+      cl->Print("lc");
+      }
+    */
   }
   fDecMode = decMode;
   //  
@@ -2015,7 +2022,7 @@ bool KMCDetectorFwd::ImposeFlukaBackground(KMCFlukaParser* fp, const TString& in
 {
   if (!fp->GetNextBackgroundEvent(interactionSource, allowRewind)) return false;
   const std::vector<FlukaHit>& hits = fp->GetHits();
-  for (int ilr=fLastActiveLayer;ilr--;) {
+  for (int ilr=fLastActiveLayer+1;ilr--;) {
     KMCLayerFwd* lr = GetLayer(ilr);
     lr->ResetBgClusters();
     if (lr->InheritsFrom(KMCMSStation::Class())) {
