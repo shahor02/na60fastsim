@@ -44,6 +44,7 @@ aliroot <<EOF >runDiMuGenLMR.out 2>runDiMuGenLMR.err
   gROOT->ProcessLine(".L ./KMCProbeFwd.cxx+g");
   gROOT->ProcessLine(".L ./KMCClusterFwd.cxx+g");
   gROOT->ProcessLine(".L ./KMCLayerFwd.cxx+g");
+  gROOT->ProcessLine(".L ./KMCLayerRect.cxx+g");
   gROOT->ProcessLine(".L ./KMCPolyLayer.cxx+g");
   gROOT->ProcessLine(".L ./KMCVTCoolingPlane.cxx+g");
   gROOT->ProcessLine(".L ./KMCPixelPlane.cxx+g");

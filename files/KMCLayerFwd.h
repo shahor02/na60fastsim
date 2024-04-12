@@ -41,9 +41,13 @@ public:
   
   Float_t GetX2X0()      const {return fx2X0;}
   Float_t GetXTimesRho() const {return fXRho;}
-  int GetAccRegion(float r) const {
+  virtual int GetAccRegion(float r) const {
     for (int rid=0;rid<fNAccReg;rid++) if (r>=fRMin[rid] && r<fRMax[rid]) return rid;
     return -1;
+  }
+  virtual int GetAccRegion(const KMCProbeFwd* tr) const {
+    float r = tr->GetR();
+    return GetAccRegion(r);
   }
 
   Float_t GetXResId(int i)  const {return fXRes[i];}
@@ -51,11 +55,19 @@ public:
     int id = r<0 ? 0 : GetAccRegion(r);
     return (id<0) ? fXRes[0] : fXRes[id];
   }
+  virtual Float_t GetXRes(const KMCProbeFwd* tr)  const {
+    return GetXRes(tr->GetR());
+  }
 
   Float_t GetYResId(int i)  const {return fYRes[i];}
+
   Float_t GetYRes(float r=-1)  const {
     int id = r<0 ? 0 : GetAccRegion(r);
     return (id<0) ? fYRes[0] : fYRes[id];
+  }
+
+  virtual Float_t GetYRes(const KMCProbeFwd* tr)  const {
+    return GetYRes(tr->GetR());
   }
 
   Float_t GetLayerEff()  const {

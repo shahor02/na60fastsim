@@ -11,6 +11,7 @@
 #include "KMCProbeFwd.h"
 #include "KMCClusterFwd.h"
 #include "KMCLayerFwd.h"
+#include "KMCLayerRect.h"
 #include "KMCPixelPlane.h"
 #include "KMCVTCoolingPlane.h"
 
@@ -50,6 +51,7 @@ class KMCDetectorFwd : public TNamed {
   KMCPolyLayer* AddPolyLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density,  Float_t thickness);
   KMCLayerFwd* AddLayer(const char *type, const char *name, Float_t zPos, Float_t radL, Float_t density,
                         Float_t thickness, Float_t xRes=999999, Float_t yRes=999999, Float_t eff=1, NaMaterial* mat=0);
+  KMCLayerFwd* AddLayerRect(const char *type, const char *name, Float_t radL, Float_t density, Float_t zPos, Float_t thickness, Float_t xRes, Float_t yRes, Float_t xHole, Float_t yHole, float xHSide, float yHSide, Float_t eff);
   KMCLayerFwd* AddPixelPlaneLayer(const char *name, Float_t zPos, Float_t radL, Float_t density, 
 				  Float_t thickness, Float_t xRes, Float_t yRes, Float_t eff, NaMaterial* mat);
   KMCLayerFwd* AddVTCoolingLayer(const char *name, Float_t zPos, Float_t radL, Float_t density, Float_t thickness, NaMaterial* mat);

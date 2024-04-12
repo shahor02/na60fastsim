@@ -9,6 +9,7 @@
 #pragma link C++ class KMCDetectorFwd+;
 #pragma link C++ class KMCFlukaParser+;
 #pragma link C++ class KMCLayerFwd+;
+#pragma link C++ class KMCLayerRect+;
 #pragma link C++ class KMCProbeFwd+;
 
 #pragma link C++ class KMCPolygon+;

@@ -350,6 +350,55 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     }
     
   }
+  //
+  // active layers of KMCLayerRect types
+  //
+  inp->Rewind();
+  fmtAct = "aafffffffff*";
+  for (int i=0;i<KMCLayerFwd::kMaxAccReg-1;i++) fmtAct += "ffff";
+  while ( (narg=inp->FindEntry("activelayerRect",0,fmtAct.Data(),0,1))>0 ) {
+    // expect format "activelayerRect:type NAME MATERIAL Z DZ sigmaX sigmaZ eff holeXhalf holeYhalf XHalf YHalf [sigmaX1 sigmaY1 XHalf1 YHalf1] ...  
+    // the optional [sigmaXk sigmaYk XHalfk YHalfk] allow to define regions with different resolutions and eff, max possible N is 
+    // KMCLayerFwd::kMaxAccReg-1
+    mat = GetMaterial(inp->GetArg(1,"U"));
+    if (!mat) {printf("Material %s is not defined\n",inp->GetArg(1,"U")); exit(1);}
+    double z = inp->GetArgF(2), dz = inp->GetArgF(3), sx = inp->GetArgF(4), sy = inp->GetArgF(5), eff = inp->GetArgF(6), holeX = inp->GetArgF(7), holeY = inp->GetArgF(8);
+    double xsideH = inp->GetArgF(9), ysideH = inp->GetArgF(10);
+    KMCLayerRect* lr = (KMCLayerRect*)AddLayerRect(inp->GetModifier(), inp->GetArg(0,"U"), mat->GetRadLength(), mat->GetDensity(), z, dz, sx, sy, holeX, holeY, xsideH, ysideH, eff);
+    lr->SetMaterial(mat);
+    int nExtra = narg - 11; // are there extra settings
+    if (nExtra>0) {
+      if ( (nExtra%4) ) {
+	printf("ReadSetup: %d extra values provided for activelayer are not multiple of 4\n",nExtra);
+	printf("%s\n",inp->GetLastBuffer());
+	exit(1);
+      }
+      int nBloc = nExtra/4;
+      if (nBloc>=KMCLayerFwd::kMaxAccReg) {
+	printf("ReadSetup: number of extra regions in activelayer %d should not exceed %d\n",nBloc,KMCLayerFwd::kMaxAccReg-1);
+	printf("%s\n",inp->GetLastBuffer());
+	exit(1);
+      }
+      lr->SetNAccRegions(nBloc+1);
+      for (int i=0;i<nBloc;i++) {
+	double sigxE = inp->GetArgF(11+4*i+0);
+	double sigyE = inp->GetArgF(11+4*i+1);	
+	double xsH = inp->GetArgF(11+4*i+2);
+	double ysH = inp->GetArgF(11+4*i+3);
+	if (xsH <= lr->getXSideHalf(i)) {
+	  printf("ReadSetup: halfX=%.3f of %d-th extra region in activelayer must exceed halfX=%.3f of previous region\n",xsH, i+1, lr->getXSideHalf(i));
+	  printf("%s\n",inp->GetLastBuffer());
+	  exit(1);
+	}
+	if (ysH <= lr->getYSideHalf(i)) {
+	  printf("ReadSetup: halfY=%.3f of %d-th extra region in activelayer must exceed halfY=%.3f of previous region\n",ysH, i+1, lr->getYSideHalf(i));
+	  printf("%s\n",inp->GetLastBuffer());
+	  exit(1);
+	}
+	lr->setRegionData(i+1, xsH, ysH, sigxE, sigyE);
+      }      
+    }    
+  }
   Add3x1DMSStations(inp);
   //-------------------------------------
   //
@@ -435,6 +484,25 @@ void KMCDetectorFwd::Add3x1DMSStations(NaCardsInput *inp)
     lr->SetRPhiError(true);
     AddLayer(lr, inp->GetModifier());
   }
+}
+
+//__________________________________________________________________________
+KMCLayerFwd* KMCDetectorFwd::AddLayerRect(const char *type, const char *name, Float_t radL, Float_t density, Float_t zPos, Float_t thickness, Float_t xRes, Float_t yRes, Float_t xHole, Float_t yHole, float xHSide, float yHSide, Float_t eff)
+{
+  KMCLayerFwd *newLayer = GetLayer(name);
+  if (!newLayer) {
+    TString types = type;
+    types.ToLower();
+    newLayer = new KMCLayerRect(name, radL, density, zPos, thickness, xRes, yRes, xHole, yHole, xHSide, yHSide, eff);
+    if (types=="vt") newLayer->SetType(KMCLayerFwd::kITS);
+    else if (types=="ms")   newLayer->SetType(KMCLayerFwd::kMS);
+    else if (types=="tr")   newLayer->SetType(KMCLayerFwd::kTRIG);
+    else if (types=="abs")  {newLayer->SetType(KMCLayerFwd::kABS); newLayer->SetDead(kTRUE); }
+    else if (types=="dummy")  {newLayer->SetType(KMCLayerFwd::kDUMMY); newLayer->SetDead(kTRUE); }
+    AddLayer(newLayer);
+  } else printf("Layer with the name %s does already exist\n",name);
+  //
+  return newLayer;  
 }
 
 //__________________________________________________________________________
@@ -911,8 +979,6 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalman(double pt, double yrap, double 
 	if (!UpdateTrack(currTr,lrP,cl))  return kFALSE;
 	nupd++;
       }
-      //      printf("After update on %d (%+e %+e) : ",j, lrP->GetXRes(),lrP->GetYRes()); currTr->Print("etp");
-
     }
 
     if (!PropagateToLayer(currTr,lrP,lr,-1)) return kFALSE;      // propagate to current layer
@@ -1072,8 +1138,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
     for (int i=15;i--;) covMS[i] = covIdeal[i];
   }
   else { // ITS SA: randomize the starting point
-    double r = currTr->GetR();
-    currTr->ResetCovariance( kErrScale*TMath::Sqrt(lr->GetXRes(r)*lr->GetYRes(r)) ); // RS: this is the coeff to play with
+    currTr->ResetCovariance( kErrScale*TMath::Sqrt(lr->GetXRes(currTr)*lr->GetYRes(currTr)) ); // RS: this is the coeff to play with
   }
   //
   int fst = 0;
@@ -1321,8 +1386,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   static KMCProbeFwd propVtx;
   //
   int nCl = lrP->GetNBgClusters();
-  double rad = probe->GetR();
-  double sgy = lrP->GetYRes(rad), sgx = lrP->GetXRes(rad); 
+  double sgy = lrP->GetYRes(probe), sgx = lrP->GetXRes(probe); 
   double measErr2[3] = { sgy*sgy, 0, sgx*sgx}; 
   double meas[2] = {0,0};
   double tolerY = probe->GetTrack()->GetSigmaY2() + measErr2[0];
