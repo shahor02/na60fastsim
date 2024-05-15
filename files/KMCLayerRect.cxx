@@ -45,6 +45,8 @@ bool KMCLayerRect::isInAcc(float x, float y, float r) const
 	float r2 = (r>0.) ? r*r : x*x + y*y;
 	if (r2 < fHole[0]*fHole[0]) return false;
       } 
+    } else {
+      if (TMath::Abs(x)<fHole[0] && TMath::Abs(y)<fHole[1]) return false;
     }
   }
   if (x<-fHalfX[fNAccReg-1] || x>fHalfX[fNAccReg-1] || y<-fHalfY[fNAccReg-1] || y>fHalfY[fNAccReg-1]) {
