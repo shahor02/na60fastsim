@@ -83,6 +83,7 @@ class KMCDetectorFwd : public TNamed {
   KMCLayerFwd* GetLayerITS(int i)          const {return (KMCLayerFwd*)fLayersITS[i];}
   KMCLayerFwd* GetLayerMS(int i)           const {return (KMCLayerFwd*)fLayersMS[i];}
   KMCLayerFwd* GetLayerTR(int i)           const {return (KMCLayerFwd*)fLayersTR[i];}
+  KMCLayerFwd* GetActiveLayer(int i)       const {return (KMCLayerFwd*)fLayersActive[i];}
   KMCLayerFwd* GetActiveLayer(int i, int type) const;
   //
   void         SetUseRPhiErrorITS(bool v) { SetUseRPhiError(v, KMCLayerFwd::kITS); }
@@ -186,7 +187,7 @@ class KMCDetectorFwd : public TNamed {
   void     PerformDecay(KMCProbeFwd* trc);
   //
   float GetChi2MuAtVtx() const {return fChi2MuVtx;}
-  
+  bool  GetMSOK() const { return fMSOK; }
   TH1*     GetHChi2Branson()    const {return fHChi2Branson;}
   TH2*     GetHChi2LrCorr()    const {return fHChi2LrCorr;}
   TH2*     GetHChi2NDFCorr()   const {return fHChi2NDFCorr;}
@@ -226,6 +227,7 @@ class KMCDetectorFwd : public TNamed {
   TObjArray fLayersITS;          // vertex tracker layers
   TObjArray fLayersMS;           // MS layers
   TObjArray fLayersTR;           // Trigger layers
+  TObjArray fLayersActive;
   BeamPipe* fBeamPipe;           // special object - beam pipe
   KMCLayerFwd* fVtx;             // special layer: vertex
   TObjArray fMaterials;                                 // defined materials
@@ -237,7 +239,8 @@ class KMCDetectorFwd : public TNamed {
   KMCProbeFwd fMuTrackLastITS;  
   KMCProbeFwd fMuTrackBCVertex;
   KMCProbeFwd fMuTrackBCLastITS;  
-  
+
+  Bool_t   fMSOK;
   Bool_t   fExternalInput; // MC particles are set externally
   Bool_t   fIncludeVertex;
   float    fApplyBransonPCorrection; // if >=0, apply BP correction with additional error on the vertex

@@ -693,6 +693,7 @@ void KMCDetectorFwd::ClassifyLayers()
     if (!lr->IsDead()) {
       fLastActiveLayer = il; 
       lr->SetActiveID(fNActiveLayers++);
+      fLayersActive.AddLast(lr);
       if (lr->IsITS()) {
 	fLastActiveLayerITS = il;
 	fNActiveLayersITS++;
@@ -777,6 +778,7 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
   //
   // propagate to last layer
   fLastActiveLayerTracked = 0;
+  fMSOK = false;
   int resp=0;
   KMCLayerFwd* lr=0,*lrP=0;
   for (Int_t j=0; j<=fLastActiveLayer; j++) {
@@ -788,11 +790,8 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     if (!(resp=PropagateToLayer(probe,lrP,lr,1))) return 0;
     double r = probe->GetR();
     //    printf("L%2d %f %f %f\n",j,r, lr->GetRMin(),lr->GetRMax());
-    if (r<lr->GetRMax() && r>lr->GetRMin()) {
-      if (resp>0) {
-	lr->AddCluster(probe->GetX(), probe->GetY(), probe->GetZ(),probe->GetTrID(), -1);
-      }
-      else lr->GetCorCluster()->Kill();
+    if (resp>0) {
+      lr->AddCluster(probe->GetX(), probe->GetY(), probe->GetZ(),probe->GetTrID(), -1);
     }
     else lr->GetCorCluster()->Kill();
     //
@@ -946,6 +945,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalman(double pt, double yrap, double 
     printf("Redefined request of min N ITS hits to %d\n",fMinITSHits);
   }
   //
+  fChi2MuVtx = -1;
   KMCProbeFwd* probe = PrepareProbe(pt,yrap,phi,mass,charge,x,y,z);
   if (!probe) return kFALSE;
   //
@@ -1204,9 +1204,12 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       if (checkMS) {
 	checkMS = kFALSE;
 	// check if muon track is well defined
+	fChi2MuVtx = -20 - currTrP->GetNTRHits();
 	if (currTrP->GetNTRHits()<fMinTRHits) {currTrP->Kill(); continue;}
+	fChi2MuVtx = -30 - currTrP->GetNMSHits();
 	if (currTrP->GetNMSHits()<fMinMSHits) {currTrP->Kill(); continue;}
 	//
+	fMSOK = true;
 	//	printf("Check %d of %d at lr%d Nhits:%d NTR:%d NMS:%d\n",
 	//       itrP,ntPrev,j, currTrP->GetNHits(),currTrP->GetNTRHits(),currTrP->GetNMSHits());
 	if (fHChi2MS) fHChi2MS->Fill(currTr->GetChi2(),currTr->GetNHits());      
@@ -1215,7 +1218,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
       // Are we entering to the last ITS layer? Apply Branson plane correction if requested
       if (lrP->GetID() == fLastActiveLayerITS && fVtx && !fVtx->IsDead() && fApplyBransonPCorrection>=0) {
 	//	printf("%e -> %e (%d %d) | %e\n",lrP->GetZ(),lr->GetZ(), lrP->GetID(),j, currTr->GetZ());
-
+	fChi2MuVtx = -2;
 	trcConstr = *currTrP;
 	fMuTrackLastITS = trcConstr;
 	if (!PropagateToLayer(&trcConstr,lrP,fVtx,-1))  {currTrP->Kill();continue;} // propagate to vertex
@@ -1234,13 +1237,14 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	//	printf("Muon@Vtx:  "); trcConstr.Print("etp");
 
 	fMuTrackVertex = trcConstr;
+	fChi2MuVtx = -3;
 	if (!trcConstr.Update(measCV,errCV)) {currTrP->Kill();continue;}
 	//	printf("Truth@VTX: "); fProbe.Print("etp");
 	//	printf("Constraint@VTX: "); trcConstr.Print("etp");
 	fMuTrackBCVertex = trcConstr;
 	fMuTrackBCVertex.SetUniqueID(0);
 	
-	
+	fChi2MuVtx = -4;
 	if (!PropagateToLayer(&trcConstr,fVtx,lrP,1)) {currTrP->Kill();continue;}
 	// constrain Muon Track
 	//	printf("Constraint: "); trcConstr.Print("etp");
@@ -1256,7 +1260,7 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	fMuTrackBCLastITS.SetUniqueID(0);
 	(*currTrP->GetTrack()) = *trcConstr.GetTrack(); // override with constraint
 	//	printf("After  constraint: "); currTrP->Print("etp");
-	//	printf("MuTruth "); lrP->GetAnProbe()->Print("etp");
+	// printf("MuTruth "); lrP->GetAnProbe()->Print("etp");
       }
       
       currTr = lr->AddMCTrack( currTrP );
