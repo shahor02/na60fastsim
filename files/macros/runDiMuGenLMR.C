@@ -243,6 +243,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   float chiGlo[2] = {999.,999.};
   TParticle mupart[2];
 
+  TFile *fout = new TFile("Matching-histos.root","recreate");
   TTree *t1 = new TTree("t1","TLorentzVectorMuons");
   TClonesArray *arr = new TClonesArray("TParticle");
   TClonesArray &ar = *arr;
@@ -466,7 +467,7 @@ void runDiMuGenLMR(int nev=30000,     // n events to generate
   hMassFake->SetLineColor(kRed);
   hMassFake->Draw("same");
 
-  TFile *fout = new TFile("Matching-histos.root","recreate");
+  fout->cd();
   hY0   ->Write();
   hY1   ->Write();
   hY0Y1 ->Write();
