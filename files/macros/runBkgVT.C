@@ -49,6 +49,11 @@ void runBkgVT(Int_t nevents = 100,
   TH3F *h3DPiBkg = new TH3F("h3DPiBkg", "pt,y,phi pions", 50, 0., 5., 50, 0., 5., 50, 0, 2 * TMath::Pi());
   TH3F *h3DKBkg = new TH3F("h3DKBkg", "pt,y,phi pions", 50, 0., 5., 50, 0., 5., 50, 0, 2 * TMath::Pi());
   TH3F *h3DPBkg = new TH3F("h3DPBkg", "pt,y,phi pions", 50, 0., 5., 50, 0., 5., 50, 0, 2 * TMath::Pi());
+  TH2F* hResidPVsP = new TH2F("hResidPVsP","",100,0.,10.,100,-0.5,0.5);
+  TH2F* hResidPtVsPt = new TH2F("hResidPtVsPt","",100,0.,10.,100,-0.5,0.5);
+  TH2F* hResidPzVsPt = new TH2F("hResidPzVsPt","",100,0.,10.,100,-0.5,0.5);
+  TH2F* hResidPzVsPz = new TH2F("hResidPzVsPz","",100,0.,10.,100,-0.5,0.5);
+ 
   TH1F *hNevents = new TH1F("hNevents", "", 1, 0, 1);
   TH1F* hGenStat = new TH1F("hGenStat","",18,0.5,18.5);
   hGenStat->GetXaxis()->SetBinLabel(1,"#pi to gen");
@@ -166,6 +171,9 @@ void runBkgVT(Int_t nevents = 100,
       mass = KMCDetectorFwd::kMassPi;
       h3DPiBkg->Fill(pt, yrap, phi);
       double pxyz[3] = {pt * TMath::Cos(phi), pt * TMath::Sin(phi), TMath::Sqrt(pt * pt + mass * mass) * TMath::SinH(yrap)};
+      double ptotgen=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]+pxyz[2]*pxyz[2]);
+      double ptgen=pt;
+      double pzgen=pxyz[2];
       hGenStat->Fill(1);
 
       TLorentzVector *ppi = new TLorentzVector(0., 0., 0., 0.);
@@ -188,6 +196,13 @@ void runBkgVT(Int_t nevents = 100,
       new (aarrtr[icount]) KMCProbeFwd(*trw);
       hGenStat->Fill(5);
       if(trw->GetNFakeITSHits()>0) hGenStat->Fill(6);
+      double ptotrec=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]+pxyz[2]*pxyz[2]);
+      double ptrec=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]);
+      double pzrec=pxyz[2];
+      hResidPVsP->Fill(ptotgen,ptotrec-ptotgen);
+      hResidPtVsPt->Fill(ptgen,ptrec-ptgen);
+      hResidPzVsPt->Fill(ptgen,pzrec-pzgen);
+      hResidPzVsPz->Fill(pzgen,pzrec-pzgen);
       icount++;
     }
 
@@ -204,7 +219,10 @@ void runBkgVT(Int_t nevents = 100,
       h3DKBkg->Fill(pt, yrap, phi);
       double pxyz[3] = {pt * TMath::Cos(phi), pt * TMath::Sin(phi), TMath::Sqrt(pt * pt + mass * mass) * TMath::SinH(yrap)};
       hGenStat->Fill(7);
-      
+      double ptotgen=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]+pxyz[2]*pxyz[2]);
+      double ptgen=pt;
+      double pzgen=pxyz[2];
+     
       TLorentzVector *pk = new TLorentzVector(0., 0., 0., 0.);
       pk->SetXYZM(pxyz[0], pxyz[1], pxyz[2], mass);
       if (!det->SolveSingleTrack(pk->Pt(), pk->Rapidity(), pk->Phi(), mass, charge, vX, vY, vZ, 0, 1, 99)){
@@ -225,6 +243,13 @@ void runBkgVT(Int_t nevents = 100,
       new (aarrtr[icount]) KMCProbeFwd(*trw2);
       hGenStat->Fill(11);
       if(trw2->GetNFakeITSHits()>0) hGenStat->Fill(12);
+      double ptotrec=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]+pxyz[2]*pxyz[2]);
+      double ptrec=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]);
+      double pzrec=pxyz[2];
+      hResidPVsP->Fill(ptotgen,ptotrec-ptotgen);
+      hResidPtVsPt->Fill(ptgen,ptrec-ptgen);
+      hResidPzVsPt->Fill(ptgen,pzrec-pzgen);
+      hResidPzVsPz->Fill(pzgen,pzrec-pzgen);
       icount++;
     }
     
@@ -240,7 +265,10 @@ void runBkgVT(Int_t nevents = 100,
       h3DPBkg->Fill(pt, yrap, phi);
       double pxyz[3] = {pt * TMath::Cos(phi), pt * TMath::Sin(phi), TMath::Sqrt(pt * pt + mass * mass) * TMath::SinH(yrap)};
       hGenStat->Fill(13);
-      
+      double ptotgen=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]+pxyz[2]*pxyz[2]);
+      double ptgen=pt;
+      double pzgen=pxyz[2];
+     
       TLorentzVector *pp = new TLorentzVector(0., 0., 0., 0.);
       pp->SetXYZM(pxyz[0], pxyz[1], pxyz[2], mass);
       if (!det->SolveSingleTrack(pp->Pt(), pp->Rapidity(), pp->Phi(), mass, charge, vX, vY, vZ, 0, 1, 99)){
@@ -261,6 +289,13 @@ void runBkgVT(Int_t nevents = 100,
       new (aarrtr[icount]) KMCProbeFwd(*trw3);
       hGenStat->Fill(17);
       if(trw3->GetNFakeITSHits()>0) hGenStat->Fill(18);
+      double ptotrec=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]+pxyz[2]*pxyz[2]);
+      double ptrec=TMath::Sqrt(pxyz[0]*pxyz[0]+pxyz[1]*pxyz[1]);
+      double pzrec=pxyz[2];
+      hResidPVsP->Fill(ptotgen,ptotrec-ptotgen);
+      hResidPtVsPt->Fill(ptgen,ptrec-ptgen);
+      hResidPzVsPt->Fill(ptgen,pzrec-pzgen);
+      hResidPzVsPz->Fill(pzgen,pzrec-pzgen);
       icount++;
     }
     printf("Pions+Kaons+Protons in array = %d out of %.0f \n",icount,ntrPi+ntrK+ntrP);
@@ -277,5 +312,9 @@ void runBkgVT(Int_t nevents = 100,
   h3DPiBkg->Write();
   h3DKBkg->Write();
   h3DPBkg->Write();
+  hResidPVsP->Write();
+  hResidPtVsPt->Write();
+  hResidPzVsPt->Write();
+  hResidPzVsPz->Write();
   outfile->Close();
 }
