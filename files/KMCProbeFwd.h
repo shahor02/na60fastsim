@@ -17,7 +17,7 @@ class KMCProbeFwd: public TObject {
 
  public:
   enum {kBitKilled=BIT(14)};
-  enum {kNDOF=5,kMaxITSLr=32};
+  enum {kNDOF=5,kMaxITSLr=16};
   enum {kY2=0,kZ2=2,kSnp2=5,kTgl2=9,kPtI2=14};
   enum {kY,kZ,kSnp,kTgl,kPtI};
   //
@@ -114,6 +114,11 @@ class KMCProbeFwd: public TObject {
   static void Trk2Lab(const double *vTrk, double *vLab); 
   //
   // protected:
+  void setChi2CorrCl(float chi, int i) { fChi2CorrCl[i] = chi; }
+  void setChi2WinCl(float chi, int i) { fChi2WinCl[i] = chi; }
+  float getChi2CorrCl(int i) const { return fChi2CorrCl[i]; }
+  float getChi2WinCl(int i) const { return fChi2WinCl[i]; }
+
   Bool_t Update(Double_t p[2],Double_t cov[3]);
   Bool_t NegDir()                     const {return TMath::Abs(fTrack.GetAlpha())>TMath::Pi()/2;}
   Bool_t IsZero(double val, double tol=1e-9) const {return TMath::Abs(val)<tol;}
@@ -134,6 +139,8 @@ class KMCProbeFwd: public TObject {
   Int_t    fNHitsITSFake; // number of fake ITS hits
   UInt_t   fInnLrCheck;   // lowest active layer where update was checked
   Int_t    fClID[kMaxITSLr]; // id's of attached clusters
+  Float_t  fChi2CorrCl[kMaxITSLr]; // track-cluster chi2 for correct clusters
+  Float_t  fChi2WinCl[kMaxITSLr]; // track-cluster chi2 for winner clusters  
   AliExternalTrackParam fTrack;  // track params
   //
   static Int_t    fgNITSLayers;

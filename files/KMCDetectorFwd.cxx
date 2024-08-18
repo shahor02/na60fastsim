@@ -789,8 +789,6 @@ KMCProbeFwd* KMCDetectorFwd::PrepareProbe(double pt, double yrap, double phi, do
     if (!lrP) continue;
     //
     if (!(resp=PropagateToLayer(probe,lrP,lr,1))) return 0;
-    double r = probe->GetR();
-    //    printf("L%2d %f %f %f\n",j,r, lr->GetRMin(),lr->GetRMax());
     if (resp>0) {
       lr->AddCluster(probe->GetX(), probe->GetY(), probe->GetZ(),probe->GetTrID(), -1);
     }
@@ -1439,6 +1437,9 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     //	   lrP->GetActiveID(),icl,chi2, (zMin+zMax)/2,(yMin+yMax)/2, z,y, tolerX/TMath::Sqrt(fMaxChi2Cl),tolerY/TMath::Sqrt(fMaxChi2Cl));
     // update track copy
     KMCProbeFwd* newTr = lr->AddMCTrack( probe );
+    if (icl==-1) {
+      newTr->setChi2CorrCl(chi2, lrP->GetActiveID());
+    }
     if (!newTr->Update(meas,measErr2)) {
       AliDebug(2,Form("Layer %s: Failed to update the track by measurement {%.3f,%3f} err {%.3e %.3e %.3e}",
 		      lrP->GetName(),meas[0],meas[1], measErr2[0],measErr2[1],measErr2[2]));
@@ -1456,7 +1457,6 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
       }
     }
     newTr->AddHit(lrP, chi2, cl->GetTrID());
-
     //////////////////// check chi2 to vertex
     if (fVtx && !fVtx->IsDead() && fMaxChi2Vtx>0) {
       double measVErr2[3] = {fVtx->GetYRes()*fVtx->GetYRes(),0,fVtx->GetXRes()*fVtx->GetXRes()}; // we work in tracking frame here!

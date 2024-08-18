@@ -46,7 +46,10 @@ KMCProbeFwd::KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose)
 {
   // create track
   Init(xyz,pxyz,sign,errLoose);
-  for (int i=kMaxITSLr;i--;) fClID[i]=-2; 
+  for (int i=kMaxITSLr;i--;) {
+    fClID[i]=-2;
+    fChi2CorrCl[i] = fChi2WinCl[i] = -1.;
+  }
   if (AliLog::GetGlobalDebugLevel()>=2) {
     AliDebug(2,Form("XYZ: %+e %+e %+e PXYZ: %+e %+e %+e Q=%d",xyz[0],xyz[1],xyz[2],pxyz[0],pxyz[1],pxyz[2],sign));
     Print("etp");
@@ -71,7 +74,11 @@ KMCProbeFwd::KMCProbeFwd(const KMCProbeFwd& src)
   ,fInnLrCheck(src.fInnLrCheck)
   ,fTrack( src.fTrack )
 {
-  for (int i=kMaxITSLr;i--;) fClID[i]=-src.fClID[i]; 
+  for (int i=kMaxITSLr;i--;) {
+    fClID[i]=-src.fClID[i];
+    fChi2CorrCl[i] = src.fChi2CorrCl[i];
+    fChi2WinCl[i] = src.fChi2WinCl[i];
+  }
 }
 
 //_______________________________________________________________________
@@ -93,7 +100,11 @@ KMCProbeFwd& KMCProbeFwd::operator=(const KMCProbeFwd& src)
   fNHitsITSFake = src.fNHitsITSFake;
   fInnLrCheck = src.fInnLrCheck;
   fTrack = src.fTrack;
-  for (int i=kMaxITSLr;i--;) fClID[i] = src.fClID[i];
+  for (int i=kMaxITSLr;i--;) {
+    fClID[i] = src.fClID[i];
+    fChi2CorrCl[i] = src.fChi2CorrCl[i];
+    fChi2WinCl[i] = src.fChi2WinCl[i];
+  }
   return *this;
 }
   
@@ -108,7 +119,10 @@ void KMCProbeFwd::Reset()
   fHits=fFakes=0;  
   fTrack.Reset();
   ResetCovariance();
-  for (int i=kMaxITSLr;i--;) fClID[i]=-2; 
+  for (int i=kMaxITSLr;i--;) {
+    fClID[i]=-2;
+    fChi2CorrCl[i] = fChi2WinCl[i] = -1.;
+  }
   fNHits = fNHitsITS = fNHitsMS = fNHitsTR = fNHitsITSFake;
   fTrack.Reset();
 }
@@ -410,7 +424,7 @@ void KMCProbeFwd::Print(Option_t* opt) const
   TString opts = opt; opts.ToLower();
   if (opts.Contains("clid")) {
     for (int ilr=0;ilr<fgNITSLayers;ilr++) {
-      printf("%4d|",fClID[ilr]);
+      printf("%4d %f.2/%.2f|",fClID[ilr], fChi2CorrCl[ilr], fChi2WinCl[ilr]);
     }
   }
   printf("\n");
@@ -433,6 +447,7 @@ void KMCProbeFwd::AddHit(const KMCLayerFwd* lr, double chi2, Int_t clID) {
       fNHitsITSFake++;
     }
     fClID[lrID] = clID;
+    fChi2WinCl[lrID] = chi2;
     //else ResetWBit(fFakes,lr);
   }
   else if (lr->IsMS()) fNHitsMS++;
