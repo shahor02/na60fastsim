@@ -26,7 +26,6 @@
 #endif
 
 // Track Chi2Tot cut
-double ChiTot = 1.5;
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
 
@@ -37,6 +36,7 @@ void runBkgVT(Int_t nevents = 100,
 	      double Eint = 160.,
 	      const char *setup = "setup-10um-itssa_Eff1.txt",
 	      int minITShits=4,
+	      double chi2Cut = 1.5,
 	      bool simulateBg=kTRUE)
 {
 
@@ -187,7 +187,7 @@ void runBkgVT(Int_t nevents = 100,
 	hGenStat->Fill(3);
 	continue;
       }
-      if (trw->GetNormChi2(kTRUE) > ChiTot){
+      if (trw->GetNormChi2(kTRUE) > chi2Cut){
 	hGenStat->Fill(4);
 	continue;
       }
@@ -234,7 +234,7 @@ void runBkgVT(Int_t nevents = 100,
 	hGenStat->Fill(9);
 	continue;
       }
-      if (trw2->GetNormChi2(kTRUE) > ChiTot){
+      if (trw2->GetNormChi2(kTRUE) > chi2Cut){
 	hGenStat->Fill(10);
 	continue;
       }
@@ -280,7 +280,7 @@ void runBkgVT(Int_t nevents = 100,
 	hGenStat->Fill(15);
 	continue;
       }
-      if (trw3->GetNormChi2(kTRUE) > ChiTot){
+      if (trw3->GetNormChi2(kTRUE) > chi2Cut){
 	hGenStat->Fill(16);
 	continue;
       }

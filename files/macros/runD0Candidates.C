@@ -30,8 +30,8 @@
 #include "./HFUtils.C"
 #endif
 
-// Track Chi2Tot cut
-double ChiTot = 1.5;
+
+
 
 // settings for signal generation
 double yminSG = -10.; // min y to generate
@@ -52,6 +52,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 				const char *privateDecayTable = "/home/prino/na60plus/decaytables/USERTABD0.DEC",
 				int optPartAntiPart=3,
 				int minITShits=4,
+				double chi2Cut = 1.5,
 				bool writeNtuple = kFALSE, 
 				bool simulateBg=kTRUE){
   
@@ -314,7 +315,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	if (!det->SolveSingleTrack(pDecDau->Pt(), pDecDau->Rapidity(), pDecDau->Phi(), iparticle1->GetMass(), crg, vX, vY, vZ, 0, 1, 99)) continue;
 	KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
 	if (!trw) continue;
-	if (trw->GetNormChi2(kTRUE) > ChiTot) continue;
+	if (trw->GetNormChi2(kTRUE) > chi2Cut) continue;
 	nrec++;
 	    
 	nfake += trw->GetNFakeITSHits();
