@@ -123,7 +123,7 @@ void KMCProbeFwd::Reset()
     fClID[i]=-2;
     fChi2CorrCl[i] = fChi2WinCl[i] = -1.;
   }
-  fNHits = fNHitsITS = fNHitsMS = fNHitsTR = fNHitsITSFake;
+  fNHits = fNHitsITS = fNHitsMS = fNHitsTR = fNHitsITSFake = 0;
   fTrack.Reset();
 }
   

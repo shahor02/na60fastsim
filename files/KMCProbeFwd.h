@@ -122,6 +122,7 @@ class KMCProbeFwd: public TObject {
   Bool_t Update(Double_t p[2],Double_t cov[3]);
   Bool_t NegDir()                     const {return TMath::Abs(fTrack.GetAlpha())>TMath::Pi()/2;}
   Bool_t IsZero(double val, double tol=1e-9) const {return TMath::Abs(val)<tol;}
+  int getClLabel(int i) { return i < kMaxITSLr ? fClID[i] : -2; }
   virtual void  Print(Option_t* option = "") const;
   //
  protected:
