@@ -34,6 +34,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   ,fMaterials()
   ,fMagFieldID(-1)
   ,fProbe()
+  ,fLastITSLayerClean(kFALSE)
   ,fMSOK(kFALSE)
   ,fExternalInput(kFALSE)
   ,fIncludeVertex(kTRUE)
@@ -1389,6 +1390,8 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   static KMCProbeFwd propVtx;
   //
   int nCl = lrP->GetNBgClusters();
+  bool imposeITSLayerClean = lrP->GetID() == fLastActiveLayerITS && fLastITSLayerClean;
+  if (imposeITSLayerClean) nCl = 0; // no background!
   double sgy = lrP->GetYRes(probe), sgx = lrP->GetXRes(probe); 
   double measErr2[3] = { sgy*sgy, 0, sgx*sgx}; 
   double meas[2] = {0,0};
@@ -1407,7 +1410,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
 		  lrP->GetActiveID(),lrP->GetName(),lr->GetActiveID(),lr->GetName(),probe->GetInnerLayerChecked()));
   for (int icl=-1;icl<nCl;icl++) {
     //
-    if (gRandom->Rndm() > lrP->GetLayerEff()) continue; // generate layer eff
+    if ((gRandom->Rndm() > lrP->GetLayerEff()) && !imposeITSLayerClean) continue; // generate layer eff
     //
     KMCClusterFwd *cl = icl<0 ? lrP->GetMCCluster() : lrP->GetBgCluster(icl);  // -1 is for true MC cluster
     if (cl->IsKilled()) {

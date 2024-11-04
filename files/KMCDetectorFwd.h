@@ -109,7 +109,9 @@ class KMCDetectorFwd : public TNamed {
   KMCProbeFwd* GetMuVtx()    const {
     return fMuTrackVertex.GetUniqueID()==0 ? (KMCProbeFwd*)&fMuTrackVertex : 0;
   }
-  
+  //
+  void setLastITSLayerClean(bool v = true) { fLastITSLayerClean = v; }
+  Bool_t getLastITSLayerClean() const { return fLastITSLayerClean; }
   //
   void         PrepareForTracking();
   Bool_t       UpdateTrack(KMCProbeFwd* trc, const KMCLayerFwd* lr, const KMCClusterFwd* cl) const;
@@ -239,7 +241,7 @@ class KMCDetectorFwd : public TNamed {
   KMCProbeFwd fMuTrackLastITS;  
   KMCProbeFwd fMuTrackBCVertex;
   KMCProbeFwd fMuTrackBCLastITS;  
-
+  Bool_t   fLastITSLayerClean;
   Bool_t   fMSOK;
   Bool_t   fExternalInput; // MC particles are set externally
   Bool_t   fIncludeVertex;
