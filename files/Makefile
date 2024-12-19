@@ -2,15 +2,21 @@
 
 #to compile w/o aliroot support call with `make DOPTS=-D_NOALIROOT_`
 #additionally, to compile it under root6 use `make DOPTS=-D_NOALIROOT_ C17=1`
+#or `make DOPTS=-D_NOALIROOT_ C20=1`
 
 CC = g++
 
+ifdef C20
+$(info compiling with c++20 support )
+CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++20 $(DOPTS)
+else
 ifdef C17
 $(info compiling with c++17 support )
 CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++17 $(DOPTS)
 else
 $(info compiling with c++14 support )
 CFLAGS = -g -O0 -Wall -fPIC -m64 -std=gnu++14 $(DOPTS)
+endif
 endif
 
 ifdef DOPTS
@@ -58,7 +64,7 @@ clean:
 	rm -f *.o *~ *.so *.pcm *.d *Dict.{h,cxx}
 
 $(DICT): $(HDR) KMCDetFwfLinkDef.h
-	rootcint $(DOPTS) -f $@ -c $(INC) $(HDR) $^
+	rootcint -f $@ $(DOPTS) $(INC) $(HDR) $^
 
 
 depend: $(SRC)
