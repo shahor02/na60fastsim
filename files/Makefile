@@ -64,7 +64,7 @@ clean:
 	rm -f *.o *~ *.so *.pcm *.d *Dict.{h,cxx}
 
 $(DICT): $(HDR) KMCDetFwfLinkDef.h
-	rootcint -f $@ $(DOPTS) $(INC) $(HDR) $^
+	rootcling -f $@ $(DOPTS) $(INC) $(HDR) $^
 
 
 depend: $(SRC)

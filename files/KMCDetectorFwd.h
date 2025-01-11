@@ -24,11 +24,9 @@
 #include <TString.h>
 #include <stdio.h>
 #include "KMCFlukaParser.h"
-
-
+#include <vector>
 
 class NaCardsInput;
-
 
 class KMCDetectorFwd : public TNamed {
  public:
@@ -212,7 +210,9 @@ class KMCDetectorFwd : public TNamed {
   //
   // ------------------------------
   //
- protected:
+  static std::vector<float> string2vector(const char* str);
+
+protected:
   Int_t  fNLayers;               // total number of layers in the model
   Int_t  fNActiveLayers;         // number of active layers in the model
   Int_t  fNActiveLayersITS;      // number of active ITS layers in the model
@@ -345,7 +345,7 @@ class NaCardsInput {
   char* GetLastComment() const {return (char*)fLastComment.Data();}
   char* GetLastBuffer()  const {return (char*)fbuffer;}
   virtual void Print();
-  //
+  //  
  protected:
   virtual void ClearArgs(); 
  protected:

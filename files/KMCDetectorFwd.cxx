@@ -4,6 +4,7 @@
 #include <TGenPhaseSpace.h>
 #include "KMCDetectorFwd.h"
 #include "KMCMagnetBuilder.h"
+#include <regex>
 
 ClassImp(KMCDetectorFwd)
 
@@ -240,7 +241,32 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   Double_t zmaxToroid  = narg > 5 ? inp->GetArgF(5) : -9999;  
   Double_t toroidField = narg > 6 ? inp->GetArgF(6) : -9999;  
   Double_t toroidRmin  = narg > 7 ? inp->GetArgF(7) : -9999;  
-  Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;  
+  Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;
+  std::vector<float> parsMagVT, parsMagMS;
+  std::string paramFunMagVT, paramFunMagMS;
+  if ( (narg=inp->FindEntry("define","magParamVT","dss",1,1))>0 ) { // VT dipole TF1 parametrization
+    int npar = inp->GetArgD(0);
+    paramFunMagVT = inp->GetArg(1);
+    paramFunMagVT = std::regex_replace(paramFunMagVT, std::regex("^\"+|\"+$"), "$1");
+    std::string tmps = inp->GetArg(2);
+    tmps = std::regex_replace(tmps, std::regex("^\"+|\"+$"), "$1");
+    parsMagVT = string2vector(tmps.c_str());
+    if ((int)parsMagVT.size() != npar) {
+      AliFatal(Form("line %s assumes %d function params, %d found", inp->GetLastBuffer(), npar, (int)parsMagVT.size()));      
+    }
+  }
+  if ( (narg=inp->FindEntry("define","magParamMS","dss",1,1))>0 ) { // MS dipole TF1 parametrization
+    int npar = inp->GetArgD(0);
+    paramFunMagMS = inp->GetArg(1);
+    paramFunMagMS = std::regex_replace(paramFunMagMS, std::regex("^\"+|\"+$"), "$1");
+    std::string tmps = inp->GetArg(2);
+    tmps = std::regex_replace(tmps, std::regex("^\"+|\"+$"), "$1");
+    parsMagMS = string2vector(tmps.c_str());
+    if ((int)parsMagMS.size() != npar) {
+      AliFatal(Form("line %s assumes %d function params, %d found", inp->GetLastBuffer(), npar, (int)parsMagMS.size()));      
+    }
+  }
+  
   // end modification
   // -------------------------------------------------------------------
   //====================================================================
@@ -407,7 +433,7 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   // init mag field
   if (TGeoGlobalMagField::Instance()->GetField()) printf("Magnetic Field is already initialized\n");
   else {
-    TVirtualMagField* fld = 0;
+    MagField* fld = 0;
     // -------------------------------------------------------------------
     // modified (adf 07/02/2019) to read magnets geometry and field from setup, 
     // with optional data  
@@ -420,9 +446,15 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     if (toroidField>-9999) ((MagField *) fld)->SetBVals(1,0,toroidField);
     if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
     if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
+    if (!paramFunMagVT.empty()) {
+      fld->SetMagVTParam(paramFunMagVT, parsMagVT);
+    }
+    if (!paramFunMagMS.empty()) {
+      fld->SetMagMSParam(paramFunMagMS, parsMagMS);
+    }    
     // end modification
     // -------------------------------------------------------------------
-    TGeoGlobalMagField::Instance()->SetField( fld );
+    TGeoGlobalMagField::Instance()->SetField( (TVirtualMagField*)fld );
     TGeoGlobalMagField::Instance()->Lock();
   }
   //
@@ -2585,4 +2617,16 @@ const char NaCardsInput::fgkDelimiter; // delimiter between keyword and modifier
 const char NaCardsInput::fgkContinuation; // delimiter between keyword and modifier
 const int  NaCardsInput::fgkMaxLen;  // max. length of the entry
 
-
+std::vector<float> KMCDetectorFwd::string2vector(const char* str)
+{
+  std::stringstream ss{str};
+  std::vector<float> v;
+  while (ss.good()) {
+    std::string substr;
+    getline(ss, substr, ',');
+    substr = std::regex_replace(substr, std::regex("^ +| +$|( ) +"), "$1");
+    v.push_back(std::stof(substr));
+  }
+  return v;
+}
+  
