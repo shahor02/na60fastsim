@@ -22,10 +22,11 @@ class MagField: public TVirtualMagField
   virtual void SetZMax(int nreg, double zmin) { fZMax[nreg] = zmin; }
   virtual void SetBVals(int nreg, int index, double val) { fBVal[nreg][index] = val; }
 
-  void SetMagVTParam(const std::string& paramString, const std::vector<float>& parVals);
-  void SetMagMSParam(const std::string& paramString, const std::vector<float>& parVals);
+  void SetMagVTParam(const std::string& paramString, const std::vector<float>& parVals, float zref);
+  void SetMagMSParam(const std::string& paramString, const std::vector<float>& parVals, float zref);
   
  protected:
+  double fZRef[kNReg] = {-1e6, -1e6};
   double fZMin[kNReg] = {0., 380.}; // min z of each field region
   double fZMax[kNReg] = {40.,680.}; // max z of each field region
   double fBVal[kNReg][3] = {{-30,0,0},{-20,0,0}}; // field values

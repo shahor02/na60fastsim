@@ -3,11 +3,13 @@
 #                ID zminDipole  zmaxDipole  Bdipole zminDipole zmaxDipole BDipole 
 define:magfield  0  -15.5	 84.5	    -15.	380.      510.	    5.7
 
-# This allows to define VT MS fields via TF1 of N parameters: the 1st argument is the number of parameters,
-# 2nd one: functional form, 3d one: comma-separated list of parameters. Internal spaces are not allowed!
+# This allows to define VT MS fields via TF1 of N parameters:
+# the 1st argumnt is the Zref wrt which the parametrization is defined. If <-1e5, then Zref = (Zmax + Zmin)/2
+# the 2nd argument is the number of parameters,
+# 3d one: functional form, 4th one: comma-separated list of parameters. Internal spaces are not allowed!
 # The extent of the field is defined by the field regions from the define:magfield record.
-# The function is evaluated at Z - (Zmax + Zmin)/2
-define:magParamMS 6 "10*(gaus(0)+gaus(3))" "0.0969435,0.,124.259,0.320486,0.,71.2661"
+# The function is evaluated at Z - Zref
+define:magParamMS 445. 6 "10*(gaus(0)+gaus(3))" "0.0969435,0.,124.259,0.320486,0.,71.2661"
 # idem for define:magParamVT ...
 
 # The field in the second dipole is the effective field seen between MS0 and MS3, which in this setup is 0.746 Tm

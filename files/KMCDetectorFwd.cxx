@@ -243,23 +243,26 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   Double_t toroidRmin  = narg > 7 ? inp->GetArgF(7) : -9999;  
   Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;
   std::vector<float> parsMagVT, parsMagMS;
+  float ZRefMagVT = -1e6, ZRefMagMS = -1e6;
   std::string paramFunMagVT, paramFunMagMS;
-  if ( (narg=inp->FindEntry("define","magParamVT","dss",1,1))>0 ) { // VT dipole TF1 parametrization
-    int npar = inp->GetArgD(0);
-    paramFunMagVT = inp->GetArg(1);
+  if ( (narg=inp->FindEntry("define","magParamVT","fdss",1,1))>0 ) { // VT dipole TF1 parametrization
+    ZRefMagVT = inp->GetArgF(0);
+    int npar = inp->GetArgD(1);
+    paramFunMagVT = inp->GetArg(2);
     paramFunMagVT = std::regex_replace(paramFunMagVT, std::regex("^\"+|\"+$"), "$1");
-    std::string tmps = inp->GetArg(2);
+    std::string tmps = inp->GetArg(3);
     tmps = std::regex_replace(tmps, std::regex("^\"+|\"+$"), "$1");
     parsMagVT = string2vector(tmps.c_str());
     if ((int)parsMagVT.size() != npar) {
       AliFatal(Form("line %s assumes %d function params, %d found", inp->GetLastBuffer(), npar, (int)parsMagVT.size()));      
     }
   }
-  if ( (narg=inp->FindEntry("define","magParamMS","dss",1,1))>0 ) { // MS dipole TF1 parametrization
-    int npar = inp->GetArgD(0);
-    paramFunMagMS = inp->GetArg(1);
+  if ( (narg=inp->FindEntry("define","magParamMS","fdss",1,1))>0 ) { // MS dipole TF1 parametrization
+    ZRefMagMS = inp->GetArgF(0);
+    int npar = inp->GetArgD(1);
+    paramFunMagMS = inp->GetArg(2);
     paramFunMagMS = std::regex_replace(paramFunMagMS, std::regex("^\"+|\"+$"), "$1");
-    std::string tmps = inp->GetArg(2);
+    std::string tmps = inp->GetArg(3);
     tmps = std::regex_replace(tmps, std::regex("^\"+|\"+$"), "$1");
     parsMagMS = string2vector(tmps.c_str());
     if ((int)parsMagMS.size() != npar) {
@@ -447,10 +450,10 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
     if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
     if (!paramFunMagVT.empty()) {
-      fld->SetMagVTParam(paramFunMagVT, parsMagVT);
+      fld->SetMagVTParam(paramFunMagVT, parsMagVT, ZRefMagVT);
     }
     if (!paramFunMagMS.empty()) {
-      fld->SetMagMSParam(paramFunMagMS, parsMagMS);
+      fld->SetMagMSParam(paramFunMagMS, parsMagMS, ZRefMagMS);
     }    
     // end modification
     // -------------------------------------------------------------------
