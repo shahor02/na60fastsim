@@ -23,7 +23,7 @@ KMCLayerRect::KMCLayerRect()
 
 int KMCLayerRect::GetRegionID(float x, float y, float r) const // determine if x,y (or r if > 0) is in the acceptance
 {
-  if (!isInAcc(x,y,r)) return -1;
+  if (isInAcc(x,y,r) == 0) return -1;
   for (int i=0;i<fNAccReg;i++) {
     if (x>-fHalfX[i] && x<fHalfX[i] && y>-fHalfY[i] && y<fHalfY[i]) return i;
   }
@@ -35,24 +35,24 @@ int KMCLayerRect::GetAccRegion(const KMCProbeFwd* tr) const
   return GetRegionID(tr->GetX(), tr->GetY());
 }
 
-bool KMCLayerRect::isInAcc(float x, float y, float r) const
+int KMCLayerRect::isInAcc(float x, float y, float r) const
 {	     
   if (fHole[0] > 0) { // there is a central hole
     if (fHole[1] <= 0.) { // it is round round 
       if (r > 0) {
-	if (r < fHole[0]) return false;
+	if (r < fHole[0]) return 0;
       } else {
 	float r2 = (r>0.) ? r*r : x*x + y*y;
-	if (r2 < fHole[0]*fHole[0]) return false;
+	if (r2 < fHole[0]*fHole[0]) return 0;
       } 
     } else {
-      if (TMath::Abs(x)<fHole[0] && TMath::Abs(y)<fHole[1]) return false;
+      if (TMath::Abs(x)<fHole[0] && TMath::Abs(y)<fHole[1]) return 0;
     }
   }
   if (x<-fHalfX[fNAccReg-1] || x>fHalfX[fNAccReg-1] || y<-fHalfY[fNAccReg-1] || y>fHalfY[fNAccReg-1]) {
-    return false;
+    return 0;
   }
-  return true;
+  return 1;
 }
 
 //__________________________________________________________________________
