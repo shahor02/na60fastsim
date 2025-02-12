@@ -26,17 +26,21 @@ public:
   }
 
   virtual void getMatBudget(float x, float y, float &x2x0, float &xrho) const {
-    x2x0 = GetX2X0();
-    xrho = GetXTimesRho();
+    x2x0 = 0;
+    xrho = 0;
+    if (isInAcc(x,y)) {
+      x2x0 = GetX2X0();
+      xrho = GetXTimesRho();
+    } 
   }
   
-  virtual bool isInAcc(float x, float y, float r=-1) const // determine if x,y (or r if > 0) is in the acceptance
+  virtual int isInAcc(float x, float y, float r=-1) const // determine if x,y (or r if > 0) is out of the physical acceptance (return 0) or in phisical acceptance (<0) or in the active zone acceptans (>0)
   {
     if (r>0) {
-      return r > GetRMin() && r < GetRMax();
+      return (r > GetRMin() && r < GetRMax()) ? 1 : 0;
     }
     float r2 = x*x + y*y;
-    return r2 > GetRMin()*GetRMin() && r2 < GetRMax()*GetRMax();
+    return (r2 > GetRMin()*GetRMin() && r2 < GetRMax()*GetRMax()) ? 1 : 0;
   }
   
   Float_t GetX2X0()      const {return fx2X0;}

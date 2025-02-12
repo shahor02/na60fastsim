@@ -93,10 +93,10 @@ bool KMCLayerFwd::AddCluster(double x,double y,double z, Int_t id, int clType)
 {
   // clTypes are: -1 : ideal MC cluster, 0: signal MC cluster, 1: bg MC clusters
   double r = TMath::Sqrt(x*x + y*y);
-  bool inAcc = isInAcc(x,y,r);
+  int inAcc = isInAcc(x,y,r);
   double measErr2[3]={}, sgY = GetYRes(r), sgX = GetXRes(r), sgY2 = sgY*sgY, sgX2 = sgX*sgX;
   double phi = TMath::ATan2(y,x), cs = TMath::Cos(phi), sn = TMath::Sin(phi), cs2 = cs*cs, sn2 = sn*sn, cssn = cs*sn;
-  if (clType==-1 || inAcc) {
+  if (clType==-1 || inAcc > 0) {
     if (IsRPhiError()) { // rotate error to angle phi
       measErr2[0] = sgX2*cs2+sgY2*sn2;
       measErr2[2] = sgX2*sn2+sgY2*cs2;
@@ -113,7 +113,7 @@ bool KMCLayerFwd::AddCluster(double x,double y,double z, Int_t id, int clType)
     cl->SetErr(measErr2[0], measErr2[1], measErr2[2]);
     return true;
   }
-  if (!inAcc) {
+  if (inAcc<=0) {
     return false;
   }
   // store randomized cluster local coordinates and phi

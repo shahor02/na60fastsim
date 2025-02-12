@@ -17,7 +17,7 @@ class KMCLayerRect : public KMCLayerFwd
   
   int GetRegionID(float x, float y, float r=-1) const; // determine if x,y (or r if > 0) is in the acceptance  
   virtual int GetAccRegion(const KMCProbeFwd* tr) const;
-  virtual bool isInAcc(float x, float y, float r=-1) const;
+  virtual int isInAcc(float x, float y, float r=-1) const;
   virtual Float_t GetXRes(const KMCProbeFwd* tr)  const {
     int id = GetRegionID(tr->GetX(), tr->GetY());
     return id<0 ? fXRes[0] : fXRes[id];
