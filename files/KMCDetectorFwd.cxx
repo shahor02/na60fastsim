@@ -610,11 +610,12 @@ KMCLayerFwd* KMCDetectorFwd::AddPixelPlaneLayer(const char *name, Float_t zPos, 
   if (!air) {
     AliFatal("Did not find AIR material");
   }
-  float offsX =-0.3; // X offset of the 1st quadrant chip inner corner from 0,0
-  float offsY = 0.3; // Y offset of the 1st quadrant chip inner corner from 0,0  
+  float offsX = 0.3; // X offset of the 1st quadrant chip inner corner from 0,0
+  float offsY =-0.3; // Y offset of the 1st quadrant chip inner corner from 0,0
+  float interChipGap = 0.02;
   KMCPixelPlane* lr = new KMCPixelPlane(name, zPos, thickness, air->GetRadLength(), air->GetDensity(), air, // substrate
 					radL, density, mat, // sensor
-					offsX, offsY,   // offset of the inner corner of the 1st quadrant chip
+					offsX, offsY,  interChipGap, // offset of the inner corner of the 1st quadrant chip
 					xRes, yRes, eff);
   AddLayer(lr);
   return lr;
