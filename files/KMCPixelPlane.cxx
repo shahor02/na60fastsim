@@ -2,8 +2,8 @@
 
 const float KMCPixelPlane::XSizeTot = 13.5996;
 const float KMCPixelPlane::YSizeTot = 13.6948; // readout side
-const float KMCPixelPlane::DeadXRight = 0.15;  // right end cap  (readout)
-const float KMCPixelPlane::DeadXLeft = 0.45;   // left end cap
+const float KMCPixelPlane::DeadXShort = 0.15;  // short end cap
+const float KMCPixelPlane::DeadXLong = 0.45;   // long end cap   (readout)
 const float KMCPixelPlane::DeadYBottom = 0.0525; // bottom dead zone
 const float KMCPixelPlane::DeadYTop = 0.0525; // top dead zone
 const float KMCPixelPlane::DeadTopBotHalves = 0.012; // dead space between top and bottom halves
@@ -12,15 +12,15 @@ const float KMCPixelPlane::DeadXDataBackbone = 0.006; // dead space between segm
 const int   KMCPixelPlane::NXTiles = 36;
 const int   KMCPixelPlane::NXSegments = 12; // group of 3 tiles
 const int   KMCPixelPlane::NYSensors = 7;
-const float KMCPixelPlane::DYSens = (YSizeTot - DeadYBottom - DeadYTop) / NYSensors;
-const float KMCPixelPlane::DXSegment = (XSizeTot - DeadXRight - DeadXLeft) / NXSegments;
+const float KMCPixelPlane::DYSens = YSizeTot / NYSensors;
+const float KMCPixelPlane::DXSegment = (XSizeTot - DeadXShort - DeadXLong) / NXSegments;
 const float KMCPixelPlane::DXTile = (DXSegment - DeadXDataBackbone) / 3;
 
 
 KMCPixelPlane::KMCPixelPlane(const char *name, float zpos, float thickness,
 			     float radL, float density, NaMaterial* mat, // substrate
 			     float radLS, float densityS, NaMaterial* matS, // sensor
-			     float offsX_, float offsY_, // offset of the inner corner of the 1st quadrant chip
+			     float offsX_, float offsY_, float interChipGap_, // offset of the inner corner of the 1st quadrant chip
 			     float xRes, Float_t yRes, Float_t eff
 			     ) : KMCPolyLayer(name)
 {
@@ -42,9 +42,11 @@ KMCPixelPlane::KMCPixelPlane(const char *name, float zpos, float thickness,
   // define 2-chip contour
   offsX = offsX_;
   offsY = offsY_;
-  float contourX[8] = {}, contourY[9] = {};
-  contourX[0] = XSizeTot + offsX;
-  contourY[0] = YSizeTot + offsY;
+  interChipGap = interChipGap_;
+  
+  float contourX[8] = {}, contourY[8] = {};
+  contourX[0] = XSizeTot + interChipGap/2 + offsX;
+  contourY[0] = YSizeTot + offsY + interChipGap/2;
   contourX[1] = contourX[0];
   contourY[1] = contourY[0] - YSizeTot;
   contourX[2] = contourX[1] - XSizeTot;
@@ -52,7 +54,7 @@ KMCPixelPlane::KMCPixelPlane(const char *name, float zpos, float thickness,
   contourX[3] = contourX[2];
   contourY[3] = contourY[2] - offsY - offsY;
 
-  contourX[4] = contourX[3] - XSizeTot;
+  contourX[4] = contourX[3] - (XSizeTot + interChipGap);
   contourY[4] = contourY[3];
   contourX[5] = contourX[4];
   contourY[5] = contourY[4] + YSizeTot;
@@ -82,16 +84,16 @@ int KMCPixelPlane::isInAcc(float x, float y, float) const
   x -= offsX;
   if (x < 0.) {
     module = 1;
-    y += offsY;
-    x += XSizeTot; // relate to chip local left/bottom corner
+    y += offsY - interChipGap/2;
+    x += XSizeTot + interChipGap/2; // relate to chip local left/bottom corner
   } else {    
-    y -= offsY;
+    y -= offsY + interChipGap/2;
     y = YSizeTot - y;
-    x = XSizeTot - x; // relate to chip local left/bottom corner
+    x = (XSizeTot + interChipGap/2) - x; // relate to chip local left/bottom corner
   }
-  if (x < DeadXLeft || x > XSizeTot - DeadXRight || y < DeadYBottom || y > YSizeTot - DeadYTop) return res;
-  x -= DeadXLeft;
-  y -= DeadYBottom;
+  if (x < DeadXLong || x > XSizeTot - DeadXShort || y < DeadYBottom || y > YSizeTot - DeadYTop) return res;
+  x -= DeadXLong;
+  //  y -= DeadYBottom;
   int sens = int(y/DYSens);
   y -= sens*DYSens;
   if (y < DeadYBottom || y > DYSens - DeadYTop) return res;
