@@ -25,24 +25,24 @@ vertex:		      		0.	0.		500e-4	500e-4
 
 # pixel planes with rectangular chips defined. RMin and RMax are irrelevant
 
-dummy:vtcooling         VT1Cooling      ALUMINUM        6.915   0.2             # 2mm thick pipe glued on the opposite side of the subtrate
+dummy:vtcooling         VT1Cooling      ALUMINUM        6.975   0.2             # 2mm thick pipe glued on the opposite side of the subtrate
 dummy:	       	    	VT1Plane	CARBON		7.095	400e-4
 activelayer:vtchips	VT1		SILICON		7.1175	50e-4 		5.e-4	5.e-4   0.99	0.3   25.
 
-dummy:vtcooling         VT2Cooling      ALUMINUM        14.915  0.2             # 2mm thick pipe glued on the opposite side of the subtrate
+dummy:vtcooling         VT2Cooling      ALUMINUM        14.975  0.2             # 2mm thick pipe glued on the opposite side of the subtrate
 dummy:	       	    	VT2Plane	CARBON		15.095	400e-4
 activelayer:vtchips	VT2		SILICON		15.1175	50e-4		5.e-4	5.e-4	0.99	0.3   25.
 
-dummy:vtcooling         VT3Cooling      ALUMINUM        19.915  0.2             # 2mm thick pipe glued on the opposite side of the subtrate
-dummy:	       	    	VT3Plane	CARBON		20.095	500e-4
+dummy:vtcooling         VT3Cooling      ALUMINUM        19.975  0.2             # 2mm thick pipe glued on the opposite side of the subtrate
+dummy:	       	    	VT3Plane	CARBON		20.095	400e-4
 activelayer:vtchips	VT3		SILICON		20.1175	50e-4		5.e-4	5.e-4	0.99	0.3   25.
 
-dummy:vtcooling         VT4Cooling      ALUMINUM        24.915  0.2             # 2mm thick pipe glued on the opposite side of the subtrate
-dummy:	       	    	VT4Plane	CARBON		25.095	1000e-4
+dummy:vtcooling         VT4Cooling      ALUMINUM        24.975  0.2             # 2mm thick pipe glued on the opposite side of the subtrate
+dummy:	       	    	VT4Plane	CARBON		25.095	400e-4
 activelayer:vtchips	VT4		SILICON		25.1175	50e-4		5.e-4	5.e-4	0.99	0.3   25.
 
-dummy:vtcooling         VT5Cooling      ALUMINUM        37.915    0.2             # 2mm thick pipe glued on the opposite side of the subtrate
-dummy:	       	    	VT5Plane	CARBON		38.095	1000e-4
+dummy:vtcooling         VT5Cooling      ALUMINUM        37.975    0.2           # 2mm thick pipe glued on the opposite side of the subtrate
+dummy:	       	    	VT5Plane	CARBON		38.095	400e-4
 activelayer:vtchips	VT5		SILICON		38.1175	50e-4		5.e-4	5.e-4	0.99	0.3   25.
 
 # tracking chambers
