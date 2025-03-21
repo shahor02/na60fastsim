@@ -47,7 +47,7 @@ KMCDetectorFwd::KMCDetectorFwd(const char *name, const char *title)
   ,fMinITSHits(0)
   ,fMinMSHits(0)
   ,fMinTRHits(0)
-  ,fMinP2Propagate(1.)
+  ,fMinP2Propagate(0.01)
   ,fMaxChi2ClSQ(0)
   ,fMaxSeedToPropagate(0)
    //
