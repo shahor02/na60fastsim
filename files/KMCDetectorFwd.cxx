@@ -612,7 +612,11 @@ KMCLayerFwd* KMCDetectorFwd::AddPixelPlaneLayer(const char *name, Float_t zPos, 
   }
   float offsX = 0.3; // X offset of the 1st quadrant chip inner corner from 0,0
   float offsY =-0.3; // Y offset of the 1st quadrant chip inner corner from 0,0
+#ifdef _NOVTPLANEGAPS_
+  float interChipGap = 0.0;
+#else
   float interChipGap = 0.02;
+#endif
   KMCPixelPlane* lr = new KMCPixelPlane(name, zPos, thickness, air->GetRadLength(), air->GetDensity(), air, // substrate
 					radL, density, mat, // sensor
 					offsX, offsY,  interChipGap, // offset of the inner corner of the 1st quadrant chip

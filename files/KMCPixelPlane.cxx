@@ -1,14 +1,24 @@
 #include "KMCPixelPlane.h"
 
-const float KMCPixelPlane::XSizeTot = 13.5996;
-const float KMCPixelPlane::YSizeTot = 13.6948; // readout side
+#ifdef _NOVTPLANEGAPS_
+const float KMCPixelPlane::DeadXShort = 0;// 0.15;  // short end cap
+const float KMCPixelPlane::DeadXLong = 0;//0.45;   // long end cap   (readout)
+const float KMCPixelPlane::DeadYBottom = 0;//0.0525; // bottom dead zone
+const float KMCPixelPlane::DeadYTop = 0;//0.0525; // top dead zone
+#else
 const float KMCPixelPlane::DeadXShort = 0.15;  // short end cap
 const float KMCPixelPlane::DeadXLong = 0.45;   // long end cap   (readout)
 const float KMCPixelPlane::DeadYBottom = 0.0525; // bottom dead zone
 const float KMCPixelPlane::DeadYTop = 0.0525; // top dead zone
+#endif
+
+
+
 const float KMCPixelPlane::DeadTopBotHalves = 0.012; // dead space between top and bottom halves
 const float KMCPixelPlane::DeadXTile = 0.002; // dead space between tiles in X (apart from DeadXDataBackbone after each 3 tiles)
 const float KMCPixelPlane::DeadXDataBackbone = 0.006; // dead space between segments
+const float KMCPixelPlane::XSizeTot = 12.9996 + DeadXShort +  DeadXLong;// 13.5996;
+const float KMCPixelPlane::YSizeTot = 13.5898 + DeadYBottom + DeadYTop; // 13.6948; // readout side
 const int   KMCPixelPlane::NXTiles = 36;
 const int   KMCPixelPlane::NXSegments = 12; // group of 3 tiles
 const int   KMCPixelPlane::NYSensors = 7;

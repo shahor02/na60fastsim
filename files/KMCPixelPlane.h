@@ -3,6 +3,7 @@
 
 #include "KMCPolyLayer.h"
 
+#define _NOVTPLANEGAPS_
 
 
 struct KMCPixelPlane : public KMCPolyLayer
