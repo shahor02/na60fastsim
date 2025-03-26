@@ -53,8 +53,10 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 				int optPartAntiPart=3,
 				int minITShits=4,
 				double chi2Cut = 1.5,
+				double minTrackP = 1.,
 				bool writeNtuple = kFALSE, 
-				bool simulateBg=kTRUE){
+				bool simulateBg=kTRUE,
+				bool optLastLayClean=kFALSE){
   
   // Generate D0->Kpi signals and simulate detector response for decay tracks
   // Need input D0 pt and y ditribution from POWHEG
@@ -95,6 +97,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   }
   TH2F *hptK = new TH2F("hptK", "kaons from D0 decays", 50,0.,10.,50, 0., 10.);
   TH2F *hptPi = new TH2F("hptPi", "pions from D0 decays", 50, 0.,10.,50,0., 10.);
+  TH2F *hmomK = new TH2F("hmomK", "kaons from D0 decays ; #eta ; p (GeV/c)", 50,0.,5.,50, 0., 20.);
+  TH2F *hmomPi = new TH2F("hmomPi", "pions from D0 decays ; #eta ; p (GeV/c)", 50, 0.,5.,50,0., 20.);
   TH1D *hyK = new TH1D("hyK", "y kaons from D0 decays", 50, 0., 5.);
   TH1D *hyPi = new TH1D("hyPi", "y pions from D0 decays", 50, 0., 5.);
   TH2F *hyPiK = new TH2F("hyPiK", "y pions vs y Kaons from D0 decays", 50, 0., 5., 50, 0., 5.);
@@ -109,7 +113,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   det->ReadSetup(setup, setup);
   det->InitBkg(Eint);
   det->ForceLastActiveLayer(det->GetLastActiveLayerITS()); // will not propagate beyond VT
-
+  if(optLastLayClean) det->setLastITSLayerClean(true);
+    
   det->SetMinITSHits(TMath::Min(minITShits,det->GetNumberOfActiveLayersITS())); //NA60+
   //det->SetMinITSHits(det->GetNumberOfActiveLayersITS()-1); //NA60
   det->SetMinMSHits(0); //NA60+
@@ -125,7 +130,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   det->SetMaxChi2Vtx(20);  // fiducial cut on chi2 of convergence to vtx  
   // IMPORTANT FOR NON-UNIFORM FIELDS
   det->SetDefStepAir(1);
-  det->SetMinP2Propagate(1); //NA60+
+  det->SetMinP2Propagate(0.01); //NA60+
   //det->SetMinP2Propagate(2); //NA60
   //
   det->SetIncludeVertex(kFALSE); // count vertex as an extra measured point
@@ -181,29 +186,29 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   // define mother particle
   Int_t pdgParticle = 421;
   
-  TH2F* hYPtGen = new TH2F("hYPtGen", "Y-Pt corr match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH2F* hYPtGen = new TH2F("hYPtGen", "Y-Pt corr match", 20, 1., 5., 40, ptminSG, ptmaxSG);
   TH1D* hPtGen = new TH1D("hPtGen", "Pt gen", 40, ptminSG, ptmaxSG);
-  TH1D* hYGen = new TH1D("hYGen", "Y full phase space", 80., 1., 5.4);
-  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH1D* hYGen = new TH1D("hYGen", "Y full phase space", 20, 1., 5.);
+  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 20, 1., 5., 40, ptminSG, ptmaxSG);
   TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Reconstructed Pt all match", 40, ptminSG, ptmaxSG);  
   TH1D* hPtGenRecoAll = new TH1D("hPtGenRecoAll", "Generated Pt all match", 40, ptminSG, ptmaxSG);
   TH2F* hPtRecoVsGenAll = new TH2F("hPtRecoVsGenAll"," ; Generated p_{T} ; Reconstructed p_{T}",40, ptminSG, ptmaxSG,40, ptminSG, ptmaxSG);
   TH2F* hDiffPtRecoGenAll = new TH2F("hDiffPtRecoGenAll"," ; Generated p_{T} ; Reco p_{T} - Gen p_{T}",40, ptminSG, ptmaxSG,100,-0.2,0.2);
 
-  TH1D* hYRecoAll = new TH1D("hYRecoAll", "Reconstructed Y all match", 80., 1., 5.4);
-  TH1D* hYGenRecoAll = new TH1D("hYGenRecoAll", "Generated Y all match", 80., 1., 5.4);
-  TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 80, 1.0, 5.4, 40, ptminSG, ptmaxSG);
+  TH1D* hYRecoAll = new TH1D("hYRecoAll", "Reconstructed Y all match", 20, 1., 5.);
+  TH1D* hYGenRecoAll = new TH1D("hYGenRecoAll", "Generated Y all match", 20, 1.,5.);
+  TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 20,1., 5., 40, ptminSG, ptmaxSG);
   TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 40, ptminSG, ptmaxSG);
   TH1D* hMassAll = new TH1D("hMassAll", "Mass all match", 200, 1., 3.5);
   TH1D* hMassFake = new TH1D("hMassFake", "Mass fake match", 200, 1., 3.5);
   TH1D* hMassRefl = new TH1D("hMassRefl", "Mass reflections", 200, 1., 3.5);
 
-  TH2D* hKaonDauClu = new TH2D("hKaonDauClu", "N hits kaon daughter ; N hits ; N fake hits", 11, -0.5, 10.5, 11, -0.5, 10.5);
-  TH2D* hPionDauClu = new TH2D("hPionDauClu", "N hits pion daughter ; N hits ; N fake hits", 11, -0.5, 10.5, 11, -0.5, 10.5);
+  TH2D* hKaonDauClu = new TH2D("hKaonDauClu", "N hits kaon daughter ; N hits ; N fake hits ", 11, -0.5, 10.5, 11, -0.5, 10.5);
+  TH2D* hPionDauClu = new TH2D("hPionDauClu", "N hits pion daughter ; N hits ; N fake hits ", 11, -0.5, 10.5, 11, -0.5, 10.5);
   TH1D* hPionDauHitPat = new TH1D("hPionDauHitPat", "Hits on layer ; Layer", 11, -0.5, 10.5);
   TH1D* hKaonDauHitPat = new TH1D("hKaonDauHitPat", "Hits on layer ; Layer", 11, -0.5, 10.5);
-  
-  TH2F *hDistXY = new TH2F("hDistXY", "", 100, 0, 0.1, 30, 0, 3);
+  TH2D* hDauChi2 = new TH2D("hDauChi2", " ;  N fake hits ; chi2", 11, -0.5, 10.5, 50,0.,5.);
+  TH2F *hDistXY = new TH2F("hDistXY", " ", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDist = new TH2F("hDist", "", 300, 0, 10, 30, 0, 3);
   TH2F *hDistgenXY = new TH2F("hDistgenXY", "", 100, 0, 0.1, 30, 0, 3);
   TH2F *hDistgen = new TH2F("hDistgen", "", 300, 0, 10, 30, 0, 3);
@@ -229,6 +234,11 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TH2F *hResVxVsY = new TH2F("hResVxVsY", "", 200, -1000., 1000., 50, 0, 5);
   TH2F *hResVyVsY = new TH2F("hResVyVsY", "", 200, -1000., 1000., 50, 0, 5);
   TH2F *hResVzVsY = new TH2F("hResVzVsY", "", 200, -1000., 1000., 50, 0, 5);
+  TH2F *hResVzVsYfake00 = new TH2F("hResVzVsYfake00", "", 200, -1000., 1000., 50, 0, 5);
+  TH2F *hResVzVsYfake10 = new TH2F("hResVzVsYfake10", "", 200, -1000., 1000., 50, 0, 5);
+  TH2F *hResVzVsYfake11 = new TH2F("hResVzVsYfake11", "", 200, -1000., 1000., 50, 0, 5);
+  TH2F *hResVzVsYfake5X = new TH2F("hResVzVsYfake5X", "", 200, -1000., 1000., 50, 0, 5);
+  TH2F *hResVzVsYfake55 = new TH2F("hResVzVsYfake55", "", 200, -1000., 1000., 50, 0, 5);
   TH2F *hResPxVsY = new TH2F("hResPxVsY", "", 100, -1, 1, 50, 0, 5); //for Kaons
   TH2F *hResPyVsY = new TH2F("hResPyVsY", "", 100, -1, 1, 50, 0, 5);
   TH2F *hResPzVsY = new TH2F("hResPzVsY", "", 100, -1, 1, 50, 0, 5);
@@ -316,6 +326,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	KMCProbeFwd *trw = det->GetLayer(0)->GetWinnerMCTrack();
 	if (!trw) continue;
 	if (trw->GetNormChi2(kTRUE) > chi2Cut) continue;
+	if (trw->GetP() < minTrackP) continue;
 	nrec++;
 	    
 	nfake += trw->GetNFakeITSHits();
@@ -325,6 +336,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	  ptK = iparticle1->Pt();
 	  yK = iparticle1->Y();
 	  hptK->Fill(ptGenD,ptK);
+	  hmomK->Fill(iparticle1->Eta(),iparticle1->P());
 	  hyK->Fill(iparticle1->Y());
 	  secvertgenK[0] = iparticle1->Vx();
 	  secvertgenK[1] = iparticle1->Vy();
@@ -338,6 +350,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	  ptPi = iparticle1->Pt();
 	  yPi = iparticle1->Y();
 	  hptPi->Fill(ptGenD,ptPi);
+	  hmomPi->Fill(iparticle1->Eta(),iparticle1->P());
 	  hyPi->Fill(iparticle1->Y());
 	  secvertgenPi[0] = iparticle1->Vx();
 	  secvertgenPi[1] = iparticle1->Vy();
@@ -384,7 +397,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hMassVsY->Fill(massRecD,yRecD);
     hMassReflVsPt->Fill(massRecReflD,ptRecD);
     hMassReflVsY->Fill(massRecReflD,yRecD);
-    
+    hDauChi2->Fill(recProbe[0].GetNFakeITSHits(),recProbe[0].GetNormChi2(kTRUE));
+    hDauChi2->Fill(recProbe[1].GetNFakeITSHits(),recProbe[1].GetNormChi2(kTRUE));
     hKaonDauClu->Fill(recProbe[0].GetNHits(),recProbe[0].GetNFakeITSHits());
     hPionDauClu->Fill(recProbe[1].GetNHits(),recProbe[1].GetNFakeITSHits());
     UInt_t hmap0=recProbe[0].GetHitsPatt();
@@ -418,7 +432,12 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hResVxVsY->Fill(residVx, yRecD);
     hResVyVsY->Fill(residVy, yRecD);
     hResVzVsY->Fill(residVz, yRecD);
-    
+    if(recProbe[0].GetNFakeITSHits()==0 && recProbe[1].GetNFakeITSHits()==0)  hResVzVsYfake00->Fill(residVz, yRecD);
+    else if((recProbe[0].GetNFakeITSHits()==1 && recProbe[1].GetNFakeITSHits()==0) || (recProbe[1].GetNFakeITSHits()==1 && recProbe[0].GetNFakeITSHits()==0))  hResVzVsYfake10->Fill(residVz, yRecD);
+    else if(recProbe[0].GetNFakeITSHits()==1 && recProbe[1].GetNFakeITSHits()==1)  hResVzVsYfake11->Fill(residVz, yRecD);
+    else if((recProbe[0].GetNFakeITSHits()==5 && recProbe[1].GetNFakeITSHits()<5) || (recProbe[1].GetNFakeITSHits()==5 && recProbe[0].GetNFakeITSHits()<5))  hResVzVsYfake5X->Fill(residVz, yRecD);
+    else if(recProbe[0].GetNFakeITSHits()==5 && recProbe[1].GetNFakeITSHits()==5)  hResVzVsYfake55->Fill(residVz, yRecD);
+
     hResPx->Fill(daurec[0].Px() - daugen[0].Px(), ptRecD);
     hResPy->Fill(daurec[0].Py() - daugen[0].Py(), ptRecD);
     hResPz->Fill(daurec[0].Pz() - daugen[0].Pz(), ptRecD);
@@ -543,6 +562,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hYRecoAll->Write();
   hYGenRecoAll->Write();
   hPtRecoFake->Write();
+  hDauChi2->Write();
   hKaonDauClu->Write();
   hPionDauClu->Write();
   hKaonDauHitPat->Write();
@@ -565,6 +585,12 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hResVxVsY->Write();
   hResVyVsY->Write();
   hResVzVsY->Write();
+  hResVzVsYfake00->Write();
+  hResVzVsYfake10->Write();
+  hResVzVsYfake11->Write();
+  hResVzVsYfake5X->Write();
+  hResVzVsYfake55->Write();
+
   hResPxVsY->Write();
   hResPyVsY->Write();
   hResPzVsY->Write();
@@ -600,6 +626,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hPtGen->Write();
   hptK->Write();
   hptPi->Write();
+  hmomK->Write();
+  hmomPi->Write();
   hyK->Write();
   hyPi->Write();
   hYGen->Write();
@@ -615,6 +643,8 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 			       const char* trackTreeFile="treeBkgEvents.root",
 			       Int_t nevents = 999999,
 			       int minITShits=4,
+			       double chi2Cut = 1.5,
+			       double minTrackP = 1.,
 			       Int_t writeNtuple = kFALSE){
 
   // Read the TTree of tracks produced with runBkgVT.C
@@ -689,6 +719,9 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   TH2F *hCospXY = new TH2F("hCospXY", "", 100, -1, 1, 30, 0, 3);
   TH2F *hCosThStVsMass = new TH2F("hCosThStVsMass", "", 50, 1.5, 2.5, 40, -1, 1);
   
+  TH2F *hmomK = new TH2F("hmomK", "kaons from D0 decays ; #eta ; p (GeV/c)", 50,0.,5.,50, 0., 20.);
+  TH2F *hmomPi = new TH2F("hmomPi", "pions from D0 decays ; #eta ; p (GeV/c)", 50, 0.,5.,50,0., 20.);
+
   TH2F *hd0 = new TH2F("hd0", "", 100, 0, 0.1, 30, 0, 3);
   
   TH1D *hcand = new TH1D("hcand", "", 1000, 0, 500000);
@@ -722,10 +755,14 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
       KMCProbeFwd *tr1 = (KMCProbeFwd *)arr->At(itr);
       // cout << "tr P=" << tr1->GetP() << endl;
       if(tr1->GetNHits()<minITShits) continue;
+      if (tr1->GetNormChi2(kTRUE) > chi2Cut) continue;
+      if (tr1->GetP() < minTrackP) continue;
       Float_t ch1 = tr1->GetCharge();
       for (Int_t itr2 = itr; itr2 < arrentr; itr2++){
 	KMCProbeFwd *tr2 = (KMCProbeFwd *)arr->At(itr2);
 	if(tr2->GetNHits()<minITShits) continue;
+	if (tr2->GetNormChi2(kTRUE) > chi2Cut) continue;
+	if (tr2->GetP() < minTrackP) continue;
 	Float_t ch2 = tr2->GetCharge();
 	if (ch1 * ch2 > 0) continue;
 	if (ch1 < 0){ //convention: first track negative
@@ -755,14 +792,17 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	  // mass hypothesis: Kpi, piK
 	  Int_t iKaon=-1;
+	  Int_t iPion=-1;
 	  if(iMassHyp==0){
 	    daurec[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2], KMCDetectorFwd::kMassK);
 	    daurec[1].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassPi);
 	    iKaon=0;
+	    iPion=1;
 	  }else{
 	    daurec[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2], KMCDetectorFwd::kMassPi);
 	    daurec[1].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassK);
 	    iKaon=1;
+	    iPion=0;
 	  }
 	  parent = daurec[0];
 	  parent += daurec[1];
@@ -799,6 +839,12 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	    Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
 	    Double_t cts = CosThetaStar(parent,daurec[iKaon]);
 	    Double_t ipD = ImpParXY(vprim, vsec, parent);
+	    Double_t momK=daurec[iKaon].P();
+	    Double_t momPi=daurec[iPion].P();
+	    Double_t etaK=daurec[iKaon].Eta();
+	    Double_t etaPi=daurec[iPion].Eta();
+	    hmomK->Fill(etaK,momK);
+	    hmomPi->Fill(etaPi,momPi);
 	    hCosp->Fill(cosp, ptD);
 	    hCospXY->Fill(cospxy, ptD);
 	    hCosThStVsMass->Fill(invMassD,cts);
@@ -869,6 +915,8 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   hMassAll->Write();
   hYPtRecoAll->Write();
   hPtRecoAll->Write();
+  hmomK->Write();
+  hmomPi->Write();
   hDistXY->Write();
   hDist->Write();
   hDCA->Write();

@@ -163,7 +163,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   det->SetMaxChi2Vtx(20);  // fiducial cut on chi2 of convergence to vtx  
   // IMPORTANT FOR NON-UNIFORM FIELDS
   det->SetDefStepAir(1);
-  det->SetMinP2Propagate(1); //NA60+
+  det->SetMinP2Propagate(0.01); //NA60+
   //det->SetMinP2Propagate(2); //NA60
   //
   det->SetIncludeVertex(kFALSE); // count vertex as an extra measured point
