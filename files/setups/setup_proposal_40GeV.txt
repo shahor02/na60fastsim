@@ -1,8 +1,7 @@
 # parameters from zminDipole onwards are optional (but you cannot omit one in the middle)
 # currently ID=0 and ID=1 is supported, 0 means both magnets provide dipole field (Bx), ID=1 leads to toroidal field in the MC, see KMCUtils for parameters
 #                ID zminDipole  zmaxDipole  Bdipole zminDipole zmaxDipole BDipole 
-define:magfield  0  -15.5	 84.5	    -15.	380.      510.	    5.7
-
+define:magfield  0  -15.5	 84.5	    -15.	84.5      790.	    445.
 # This allows to define VT MS fields via TF1 of N parameters:
 # the 1st argumnt is the Zref wrt which the parametrization is defined. If <-1e5, then Zref = (Zmax + Zmin)/2
 # the 2nd argument is the number of parameters,
@@ -49,14 +48,14 @@ activelayer:vtchips	VT5		SILICON		38.1175	50e-4		5.e-4	5.e-4	0.99	0.3   25.
 # activelayerRect defines rectangular acceptance chamber, format is
 # name material z dz sigX, sigY eff holeHalfX holeHalfY sideHalfX sideHalfY [optional extra rect. regions sigmaX1 sigmaY1 XHalf1 YHalf1 ...]
 # if holeHalfY<=0 then the hole is treated as circular with radius holeHalfX
-activelayerRect:ms	MS-CH0		SILICON		300.	610e-4		200e-4	200e-4	0.95	11. 11. 81.0  81.0
-activelayerRect:ms	MS-CH1		SILICON		340.	610e-4		200e-4	200e-4	0.95	0. 0. 120.0 120.0
-activelayerRect:ms	MS-CH2		SILICON		550.	700e-4		200e-4	200e-4	0.95	0. 0. 120.0 120.0
-activelayerRect:ms	MS-CH3		SILICON		590.	700e-4		200e-4	200e-4	0.95	0. 0. 159.0 159.0
+activelayerRect:ms	MS-CH0		SILICON		300.	610e-4		500e-4	100e-4	0.99	11. 11. 81.0  81.0
+activelayerRect:ms	MS-CH1		SILICON		340.	610e-4		500e-4	100e-4	0.99	0. 0. 120.0 120.0
+activelayerRect:ms	MS-CH2		SILICON		550.	700e-4		500e-4	100e-4	0.99	0. 0. 120.0 120.0
+activelayerRect:ms	MS-CH3		SILICON		590.	700e-4		500e-4	100e-4	0.99	0. 0. 159.0 159.0
 
 # trigger chambers without hole, angle 0.29 rad, MS4 20 cm after wall, MS5 40 cm after MS4
-activelayerRect:tr	MS-TR1		SILICON		810.	1330e-4		0.1	0.1	0.95	0.  0.  218.5   218.5
-activelayerRect:tr	MS-TR2		SILICON		850.  	1330e-4		0.1	0.1	0.95	0.  0.  229.0   229.0
+activelayerRect:tr	MS-TR1		SILICON		810.	1330e-4		1.0	1.0	0.99	0.  0.  218.5   218.5
+activelayerRect:tr	MS-TR2		SILICON		850. 1330e-4		1.0	1.0	0.99	0.  0.  229.0   229.0
 
 #		name		material	Zc	DZ
 absorber:	ABS_BEO_0	BEO		64.75	39.5
