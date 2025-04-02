@@ -253,7 +253,7 @@ void KMCMSStation::PrepareForTracking()
     nv--;
   }
   SortBGClusters();
-  printf("Lr:%s: Signal clusters: %d, Bb.clusters: %d | Primary background hits: U: %d V: %d W: %d\n",GetName(), fClMC.IsKilled() ? 0 : 1, fClBg.GetEntriesFast(), nu,nv,nw);
+  //  printf("Lr:%s: Signal clusters: %d, Bb.clusters: %d | Primary background hits: U: %d V: %d W: %d\n",GetName(), fClMC.IsKilled() ? 0 : 1, fClBg.GetEntriesFast(), nu,nv,nw);
 }
 
 void KMCMSStation::ClearPrimaryHits()
