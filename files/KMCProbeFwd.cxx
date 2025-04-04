@@ -321,7 +321,11 @@ Bool_t KMCProbeFwd::ApplyMSEL(double x2X0, double xTimesRho)
 {
   // simulate random modification of track params due to the MS
   // note: here we work directly in AliExternalTrackParam internal coordinates
-  if (x2X0<0 || xTimesRho>0) AliFatal(Form("Negative X/X0=%f or X*rho=%f",x2X0,xTimesRho));
+  if (x2X0<0 || xTimesRho>0) {
+    AliError(Form("Negative X/X0=%f or X*rho=%f",x2X0,xTimesRho));
+    Print("etp");
+    return kFALSE;
+  }
   if (x2X0<1e-7) return kTRUE;
   //  printf("Before %e: ",x2X0); fTrack.Print();
   double alpha = fTrack.GetAlpha(); // store original alpha
