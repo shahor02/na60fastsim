@@ -37,8 +37,9 @@
 int minITShits=5;
 double minTrackP = 1.;
 double chi2Cut = 1.5;
-double mind0xyDau=-9999;
+double mind0xyDauCut=-9999.;
 double cutCosPointCand=-1.01;
+double cutDecLenCand=0.;
 double cutMassKK=999.;
 double cutImpParProd=99999.;
 
@@ -261,6 +262,9 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
+  TH2F *hd0XYeta1 = new TH2F("hd0xyeta1", "", 20, 1., 5., 100, -0.1, 0.1);
+  TH2F *hd0XYeta2 = new TH2F("hd0xyeta2", "", 20, 1., 5., 100, -0.1, 0.1);
+  TH2F *hd0XYeta3 = new TH2F("hd0xyeta3", "", 20, 1., 5., 100, -0.1, 0.1);
   TH2F *hMassVsPt = new TH2F("hMassVsPt", "", 200, 1.5, 2.5, 6, 0, 3);
   TH2F *hMassVsY = new TH2F("hMassVsY", "", 200, 1.5, 2.5, 10, 0, 5);
   
@@ -433,20 +437,29 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
     if (d0x1 < 0)
       d0xy1 *= -1;
+    recProbe[0].GetPXYZ(pxyz);
+    double ptot1=recProbe[0].GetP();
+    double eta1=0.5*TMath::Log((ptot1+pxyz[2])/(ptot1-pxyz[2]));
     
     Double_t d0x2 = recProbe[1].GetX();
     Double_t d0y2 = recProbe[1].GetY();
     Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
     if (d0x2 < 0)
       d0xy2 *= -1;
+    recProbe[1].GetPXYZ(pxyz);
+    double ptot2=recProbe[1].GetP();
+    double eta2=0.5*TMath::Log((ptot2+pxyz[2])/(ptot2-pxyz[2]));
 
     Double_t d0x3 = recProbe[2].GetX();
     Double_t d0y3 = recProbe[2].GetY();
     Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
     if (d0x3 < 0)
       d0xy3 *= -1;
+    recProbe[2].GetPXYZ(pxyz);
+    double ptot3=recProbe[2].GetP();
+    double eta3=0.5*TMath::Log((ptot3+pxyz[2])/(ptot3-pxyz[2]));
 
-    if(TMath::Abs(d0xy1)<mind0xyDau || TMath::Abs(d0xy2)<mind0xyDau || TMath::Abs(d0xy3)<mind0xyDau) continue;
+    if(TMath::Abs(d0xy1)<mind0xyDauCut || TMath::Abs(d0xy2)<mind0xyDauCut || TMath::Abs(d0xy3)<mind0xyDauCut) continue;
  
     Double_t xV, yV, zV;
     Double_t sigmaVert;
@@ -556,7 +569,10 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     hd0XY1->Fill(d0xy1, ptRecD);
     hd0XY2->Fill(d0xy2, ptRecD);
     hd0XY3->Fill(d0xy3, ptRecD);
-    if(cosp>cutCosPointCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd){
+    hd0XYeta1->Fill(eta1,d0xy1);
+    hd0XYeta2->Fill(eta2,d0xy2);
+    hd0XYeta3->Fill(eta3,d0xy3);
+    if(cosp>cutCosPointCand && dist>cutDecLenCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd){
       arrsp[0] = massRecD;
       arrsp[1] = ptRecD;
       arrsp[2] = yRecD;
@@ -641,6 +657,9 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   hd0XY1->Write();
   hd0XY2->Write();
   hd0XY3->Write();
+  hd0XYeta1->Write();
+  hd0XYeta2->Write();
+  hd0XYeta3->Write();
   hNevents->Write();
   hsp->Write();
   if (ntDscand){
@@ -744,6 +763,9 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   TH2F *hd0XY1 = new TH2F("hd0xy1", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY2 = new TH2F("hd0xy2", "", 100, -0.1, 0.1, 30, 0, 3);
   TH2F *hd0XY3 = new TH2F("hd0xy3", "", 100, -0.1, 0.1, 30, 0, 3);
+  TH2F *hd0XYeta1 = new TH2F("hd0xyeta1", "", 20, 1., 5., 100, -0.1, 0.1);
+  TH2F *hd0XYeta2 = new TH2F("hd0xyeta2", "", 20, 1., 5., 100, -0.1, 0.1);
+  TH2F *hd0XYeta3 = new TH2F("hd0xyeta3", "", 20, 1., 5., 100, -0.1, 0.1);
 
   TH2F *hmomK = new TH2F("hmomK", "kaons in Ds candidates; #eta ; p (GeV/c)", 50,0.,5.,50, 0., 20.);
   TH2F *hmomPi = new TH2F("hmomPi", "pions in Ds candidates; #eta ; p (GeV/c)", 50, 0.,5.,50,0., 20.);
@@ -787,6 +809,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   KMCProbeFwd recProbe[3];
   TLorentzVector parent, kkpair, daurec[3];
 
+  
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -795,7 +818,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
     tree->GetEvent(iev);
     Int_t arrentr = arr->GetEntriesFast();
 
-    Double_t pxyz0[3],pxyz1[3],pxyz2[3];
+    Double_t pxyz1[3],pxyz2[3],pxyz3[3];
     for (Int_t itr = 0; itr < arrentr; itr++){
       KMCProbeFwd *tr1 = (KMCProbeFwd *)arr->At(itr);
       // cout << "tr P=" << tr1->GetP() << endl;
@@ -805,12 +828,14 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
       Float_t ch1 = tr1->GetCharge();
       recProbe[0] = *tr1;
       recProbe[0].PropagateToZBxByBz(vprim[2]);
-      recProbe[0].GetPXYZ(pxyz0);
+      recProbe[0].GetPXYZ(pxyz1);
       Double_t d0x1 = recProbe[0].GetX();
       Double_t d0y1 = recProbe[0].GetY();
       Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
       if (d0x1 < 0) d0xy1 *= -1;
-      if(TMath::Abs(d0xy1)<mind0xyDau) continue;
+      double ptot1=TMath::Sqrt(pxyz1[0]*pxyz1[0]+pxyz1[1]*pxyz1[1]+pxyz1[2]*pxyz1[2]);
+      double eta1=0.5*TMath::Log((ptot1+pxyz1[2])/(ptot1-pxyz1[2]));
+      if(TMath::Abs(d0xy1)<mind0xyDauCut) continue;
 	 
       for (Int_t itr2 = 0; itr2 < arrentr; itr2++){
 	if(itr2==itr) continue;
@@ -823,12 +848,14 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	if (ch1 * ch2 > 0) continue;
 	recProbe[1] = *tr2;
 	recProbe[1].PropagateToZBxByBz(vprim[2]);
-	recProbe[1].GetPXYZ(pxyz1);
+	recProbe[1].GetPXYZ(pxyz2);
 	Double_t d0x2 = recProbe[1].GetX();
 	Double_t d0y2 = recProbe[1].GetY();
 	Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
 	if (d0x2 < 0) d0xy2 *= -1;
-	if(TMath::Abs(d0xy2)<mind0xyDau) continue;
+	double ptot2=TMath::Sqrt(pxyz2[0]*pxyz2[0]+pxyz2[1]*pxyz2[1]+pxyz2[2]*pxyz2[2]);
+	double eta2=0.5*TMath::Log((ptot2+pxyz2[2])/(ptot2-pxyz2[2]));
+	if(TMath::Abs(d0xy2)<mind0xyDauCut) continue;
 	// recProbe[0].PropagateToDCA(&recProbe[1]);
 	// Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
 	// Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
@@ -848,14 +875,18 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	  if (ch3 * ch2 > 0) continue;
 	  recProbe[2] = *tr3;
 	  recProbe[2].PropagateToZBxByBz(vprim[2]);
-	  recProbe[2].GetPXYZ(pxyz2);
+	  recProbe[2].GetPXYZ(pxyz3);
 	  Double_t d0x3 = recProbe[2].GetX();
 	  Double_t d0y3 = recProbe[2].GetY();
 	  Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
 	  if (d0x3 < 0) d0xy3 *= -1;
 	  //printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
-	  if(TMath::Abs(d0xy3)<mind0xyDau) continue;
-
+	  double ptot3=TMath::Sqrt(pxyz3[0]*pxyz3[0]+pxyz3[1]*pxyz3[1]+pxyz3[2]*pxyz3[2]);
+	  double eta3=0.5*TMath::Log((ptot3+pxyz3[2])/(ptot3-pxyz3[2]));
+	  if(TMath::Abs(d0xy3)<mind0xyDauCut) continue;
+	  hd0XYeta1->Fill(eta1,d0xy1);
+	  hd0XYeta2->Fill(eta2,d0xy2);
+	  hd0XYeta3->Fill(eta3,d0xy3);
 	  for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	    // mass hypothesis: KKpi, piKK
 	    Double_t momPi=0;
@@ -865,9 +896,9 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	    Double_t etaK1=0;
 	    Double_t etaK2=0;
 	    if(iMassHyp==0){
-	      daurec[0].SetXYZM(pxyz0[0], pxyz0[1], pxyz0[2], KMCDetectorFwd::kMassK);
-	      daurec[1].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassK);
-	      daurec[2].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassPi);
+	      daurec[0].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassK);
+	      daurec[1].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassK);
+	      daurec[2].SetXYZM(pxyz3[0], pxyz3[1], pxyz3[2], KMCDetectorFwd::kMassPi);
 	      momPi=recProbe[2].GetTrack()->P();
 	      momK1=recProbe[1].GetTrack()->P();
 	      momK2=recProbe[0].GetTrack()->P();
@@ -877,9 +908,9 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	      kkpair = daurec[1];
 	      kkpair += daurec[0];
 	    }else{
-	      daurec[0].SetXYZM(pxyz0[0], pxyz0[1], pxyz0[2], KMCDetectorFwd::kMassPi);
-	      daurec[1].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassK);
-	      daurec[2].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassK);
+	      daurec[0].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassPi);
+	      daurec[1].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassK);
+	      daurec[2].SetXYZM(pxyz3[0], pxyz3[1], pxyz3[2], KMCDetectorFwd::kMassK);
 	      momPi=recProbe[0].GetTrack()->P();
 	      momK1=recProbe[1].GetTrack()->P();
 	      momK2=recProbe[2].GetTrack()->P();
@@ -917,7 +948,6 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	      Double_t xV, yV, zV;
 	      Double_t sigmaVert;
 	      ComputeVertex(recProbe[0],recProbe[1],recProbe[2],vprim[2],xV,yV,zV,sigmaVert);
-	      
 	      hVx->Fill(xV);
 	      hVy->Fill(yV);
 	      hVz->Fill(zV);
@@ -939,7 +969,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	      hd0XY1->Fill(d0xy1, ptD);
 	      hd0XY2->Fill(d0xy2, ptD);
 	      hd0XY3->Fill(d0xy3, ptD);
-	      if(cosp>cutCosPointCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd){
+	      if(cosp>cutCosPointCand && dist>cutDecLenCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd){
 		arrsp[0] = invMassD;
 		arrsp[1] = ptD;
 		arrsp[2] = yD;
@@ -978,6 +1008,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
     printf(" --> Event %d, tot Ds candidates = %.0f  in peak = %.0f\n",iev,countCand,countCandInPeak);
   }
   
+  
   fout->cd();
   hNevents->Write();
   hcand->Write();
@@ -998,6 +1029,9 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   hd0XY1->Write();
   hd0XY2->Write();
   hd0XY3->Write();
+  hd0XYeta1->Write();
+  hd0XYeta2->Write();
+  hd0XYeta3->Write();
   hmomPi->Write();
   hmomK->Write();
   hprongChi2->Write();
@@ -1066,11 +1100,15 @@ void ConfigureSelectionsAndAxes(const char *selectionFile){
     }
     if(strstr(line,"MinImpParXY")){
       readok=fscanf(confFil,"%f",&x);
-      mind0xyDau=x;
+      mind0xyDauCut=x;
     }
     if(strstr(line,"CosPointCut")){
       readok=fscanf(confFil,"%f",&x);
       cutCosPointCand=x;
+    }
+    if(strstr(line,"DecLenCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutDecLenCand=x;
     }
     if(strstr(line,"MassKKCut")){
       readok=fscanf(confFil,"%f",&x);
