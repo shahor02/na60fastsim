@@ -43,12 +43,6 @@ double cutDecLenCand=0.;
 double cutMassKK=999.;
 double cutImpParProd=99999.;
 
-// settings for signal generation
-double yminSG = -10.; // min y to generate
-double ymaxSG = 10.;  //
-double ptminSG = 0.;
-double ptmaxSG = 10; //Elena's change, it was 3 GeV/c
-
 double vX = 0, vY = 0, vZ = 0; // event vertex
 
 
@@ -228,19 +222,19 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   // define mother particle
   Int_t pdgParticle = 431;
   
-  TH2F* hYPtGen = new TH2F("hYPtGen", "Y-Pt corr match", 20, 1., 5., 40, ptminSG, ptmaxSG);
-  TH1D* hPtGen = new TH1D("hPtGen", "Pt gen", 40, ptminSG, ptmaxSG);
+  TH2F* hYPtGen = new TH2F("hYPtGen", "Y-Pt corr match", 20, 1., 5., 20, 0., 5.);
+  TH1D* hPtGen = new TH1D("hPtGen", "Pt gen", 20, 0., 5.);
   TH1D* hYGen = new TH1D("hYGen", "Y full phase space", 20, 1., 5.);
-  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 20, 1., 5., 40, ptminSG, ptmaxSG);
-  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Reconstructed Pt all match", 40, ptminSG, ptmaxSG);  
-  TH1D* hPtGenRecoAll = new TH1D("hPtGenRecoAll", "Generated Pt all match", 40, ptminSG, ptmaxSG);
-  TH2F* hPtRecoVsGenAll = new TH2F("hPtRecoVsGenAll"," ; Generated p_{T} ; Reconstructed p_{T}",40, ptminSG, ptmaxSG,40, ptminSG, ptmaxSG);
-  TH2F* hDiffPtRecoGenAll = new TH2F("hDiffPtRecoGenAll"," ; Generated p_{T} ; Reco p_{T} - Gen p_{T}",40, ptminSG, ptmaxSG,100,-0.2,0.2);
+  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 20, 1., 5., 20, 0., 5.);
+  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Reconstructed Pt all match", 20, 0., 5.);
+  TH1D* hPtGenRecoAll = new TH1D("hPtGenRecoAll", "Generated Pt all match", 20, 0., 5.);
+  TH2F* hPtRecoVsGenAll = new TH2F("hPtRecoVsGenAll"," ; Generated p_{T} ; Reconstructed p_{T}", 20, 0., 5., 20, 0., 5.);
+  TH2F* hDiffPtRecoGenAll = new TH2F("hDiffPtRecoGenAll"," ; Generated p_{T} ; Reco p_{T} - Gen p_{T}",20, 0., 5.,100,-0.2,0.2);
 
   TH1D* hYRecoAll = new TH1D("hYRecoAll", "Reconstructed Y all match", 20, 1., 5.);
   TH1D* hYGenRecoAll = new TH1D("hYGenRecoAll", "Generated Y all match", 20, 1.,5.);
-  TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 20,1., 5., 40, ptminSG, ptmaxSG);
-  TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 40, ptminSG, ptmaxSG);
+  TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 20,1., 5., 20, 0., 5.);
+  TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 20, 0., 5.);
   TH1D* hMassAll = new TH1D("hMassAll", "Mass all match", 200, 1., 3.5);
   TH1D* hMassFake = new TH1D("hMassFake", "Mass fake match", 200, 1., 3.5);
   TH2F* hMassKK = new TH2F("hMassKK", "KK Inv Mass : Gener : Reco", 200, 0.9, 2.9, 200, 0.9, 2.9);
@@ -664,6 +658,9 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   hsp->Write();
   if (ntDscand){
     fnt->cd();
+    hNevents->Write();
+    hYPtGen->Write();
+    hYPtRecoAll->Write();
     ntDscand->Write();
     fnt->Close();
   }
@@ -703,7 +700,8 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 			       const char* trackTreeFile="treeBkgEvents.root",
 			       const char *selectionFile="",
 			       Int_t nevents = 999999, 
-			       Int_t writeNtuple = kFALSE){
+			       bool doSparse = kTRUE,
+			       bool writeNtuple = kFALSE){
 
   // Read the TTree of tracks produced with runBkgVT.C
   // Create Ds combinatorial background candidates (= triplets of tracks)
@@ -970,18 +968,20 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	      hd0XY2->Fill(d0xy2, ptD);
 	      hd0XY3->Fill(d0xy3, ptD);
 	      if(cosp>cutCosPointCand && dist>cutDecLenCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd){
-		arrsp[0] = invMassD;
-		arrsp[1] = ptD;
-		arrsp[2] = yD;
-		arrsp[3] = dist;
-		arrsp[4] = cosp;
-		arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
-		arrsp[6] = d0xy1*d0xy3; // same sign daughters
-		arrsp[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
-		arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
-		arrsp[9] = TMath::Abs(ipD);	    
-		arrsp[10] = massRecKK-massPhi;
-		hsp->Fill(arrsp);
+		if(doSparse){
+		  arrsp[0] = invMassD;
+		  arrsp[1] = ptD;
+		  arrsp[2] = yD;
+		  arrsp[3] = dist;
+		  arrsp[4] = cosp;
+		  arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Min(TMath::Abs(d0xy2),TMath::Abs(d0xy3)));
+		  arrsp[6] = d0xy1*d0xy3; // same sign daughters
+		  arrsp[7] = sigmaVert;//TMath::Max(TMath::Abs(dca01),TMath::Max(TMath::Abs(dca12),TMath::Abs(dca02)));
+		  arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),TMath::Min(recProbe[1].GetTrack()->Pt(),recProbe[2].GetTrack()->Pt()));
+		  arrsp[9] = TMath::Abs(ipD);	    
+		  arrsp[10] = massRecKK-massPhi;
+		  hsp->Fill(arrsp);
+		}
 		if (ntDscand){
 		  arrnt[0] = invMassD;
 		  arrnt[1] = ptD;
@@ -1036,7 +1036,7 @@ void MakeDsCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   hmomK->Write();
   hprongChi2->Write();
   hprongClu->Write();
-  hsp->Write();
+  if(doSparse) hsp->Write();
   if (ntDscand){
     fnt->cd();
     hNevents->Write();
