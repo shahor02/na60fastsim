@@ -242,10 +242,11 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
   Double_t toroidField = narg > 6 ? inp->GetArgF(6) : -9999;  
   Double_t toroidRmin  = narg > 7 ? inp->GetArgF(7) : -9999;  
   Double_t toroidRmax  = narg > 8 ? inp->GetArgF(8) : -9999;
+  double magVTMaxX = 999., magVTMaxY = 999., magMSMaxX = 999., magMSMaxY = 999.;
   std::vector<float> parsMagVT, parsMagMS;
   float ZRefMagVT = -1e6, ZRefMagMS = -1e6;
   std::string paramFunMagVT, paramFunMagMS;
-  if ( (narg=inp->FindEntry("define","magParamVT","fdss",1,1))>0 ) { // VT dipole TF1 parametrization
+  if ( (narg=inp->FindEntry("define","magParamVT","fdss*ff",1,1))>0 ) { // VT dipole TF1 parametrization
     ZRefMagVT = inp->GetArgF(0);
     int npar = inp->GetArgD(1);
     paramFunMagVT = inp->GetArg(2);
@@ -256,8 +257,10 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     if ((int)parsMagVT.size() != npar) {
       AliFatal(Form("line %s assumes %d function params, %d found", inp->GetLastBuffer(), npar, (int)parsMagVT.size()));      
     }
+    if (narg>4) magVTMaxX = inp->GetArgF(4);
+    if (narg>5) magVTMaxY = inp->GetArgF(5);
   }
-  if ( (narg=inp->FindEntry("define","magParamMS","fdss",1,1))>0 ) { // MS dipole TF1 parametrization
+  if ( (narg=inp->FindEntry("define","magParamMS","fdss*ff",1,1))>0 ) { // MS dipole TF1 parametrization
     ZRefMagMS = inp->GetArgF(0);
     int npar = inp->GetArgD(1);
     paramFunMagMS = inp->GetArg(2);
@@ -268,6 +271,8 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     if ((int)parsMagMS.size() != npar) {
       AliFatal(Form("line %s assumes %d function params, %d found", inp->GetLastBuffer(), npar, (int)parsMagMS.size()));      
     }
+    if (narg>4) magMSMaxX = inp->GetArgF(4);
+    if (narg>5) magMSMaxY = inp->GetArgF(5);    
   }
   
   // end modification
@@ -450,10 +455,10 @@ void KMCDetectorFwd::ReadSetup(const char* setup, const char* materials)
     if (toroidRmin>-9999) ((MagField *) fld)->SetBVals(1,1,toroidRmin);
     if (toroidRmax>-9999) ((MagField *) fld)->SetBVals(1,2,toroidRmax);
     if (!paramFunMagVT.empty()) {
-      fld->SetMagVTParam(paramFunMagVT, parsMagVT, ZRefMagVT);
+      fld->SetMagVTParam(paramFunMagVT, parsMagVT, ZRefMagVT, magVTMaxX, magVTMaxY);
     }
     if (!paramFunMagMS.empty()) {
-      fld->SetMagMSParam(paramFunMagMS, parsMagMS, ZRefMagMS);
+      fld->SetMagMSParam(paramFunMagMS, parsMagMS, ZRefMagMS, magMSMaxX, magMSMaxY);
     }    
     // end modification
     // -------------------------------------------------------------------
@@ -920,7 +925,7 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
     if (!lrFrom->IsDead()) { // active layers are thin, no need for step by step tracking. The track is always in the middle
       float x2x0=0,xrho=0;
       lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
-      AliDebug(2,Form("Correcting for mat.in active layer: X/X0: %f X*rho:%f ", x2x0, xrho));
+      AliDebug(2,Form("Correcting for mat.in active layer: X/X0: %f X*rho:%f ", x2x0, dir*xrho));
       // note: for thin layer we ignore difference between the real BB and ETP eloss params
       double corrELoss = lrFrom->GetELoss2ETP(trc->GetP(), trc->GetMass() );
       if (!trc->CorrectForMeanMaterial(x2x0, -dir*xrho*corrELoss, modeMC)) return 0; 
@@ -1218,10 +1223,12 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
 	if (!clmc->IsKilled()) {
 	  //	  lrP->Print("");
 	  //	  printf("BeforeMS Update: "); currTr->Print("etp");
+	  //      clmc->Print();
 	  if (!UpdateTrack(currTr, lrP, clmc)) {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // update with correct MC cl.
 	  //	  printf("AfterMS Update: "); currTr->Print("etp");
 	}
-	if (!PropagateToLayer(currTr,lrP,lr,-1))            {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer	
+	if (!PropagateToLayer(currTr,lrP,lr,-1))            {currTr->Kill(); lr->GetMCTracks()->RemoveLast(); continue;} // propagate to current layer
+	//	printf("AfterMS Prop: "); currTr->Print("etp");
       }      
       //      currTr->Print("etp");
       continue;

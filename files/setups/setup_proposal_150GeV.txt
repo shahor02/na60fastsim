@@ -8,7 +8,9 @@ define:magfield  0  -15.5	 84.5	    -15.	414.5      1125.	    445.
 # 3d one: functional form, 4th one: comma-separated list of parameters. Internal spaces are not allowed!
 # The extent of the field is defined by the field regions from the define:magfield record.
 # The function is evaluated at Z - Zref
-define:magParamMS 775. 6 "10*(gaus(0)+gaus(3))" "0.0969435,0.,124.259,0.320486,0.,71.2661"
+# Optional 5th and 6th float parameters are max X and Y where the field is non-0 (by default: 999. cm)
+#define:magParamMS 775. 6 "10*(gaus(0)+gaus(3))" "0.0969435,0.,124.259,0.320486,0.,71.2661"
+define:magParamMS 445. 6 "-10*(gaus(0)+gaus(3))" "0.096944,0.,124.259034,0.3204086,0.,71.266101" 120. 160.
 # idem for define:magParamVT ...
 
 # The field in the second dipole is the effective field seen between MS0 and MS3, which in this setup is 0.746 Tm
