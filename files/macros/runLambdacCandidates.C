@@ -113,18 +113,18 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   printf("--> pt and y shape of Lc from %s\n",filNamPow);
   TFile *filPow=new TFile(filNamPow);
   TH3D* h3Dpow=(TH3D*)filPow->Get("hptyeta4122");
-  TH1D *hLcpt = (TH1D*)h3Dpow->ProjectionX("hLcpt");
-  TH1D *hLcy = (TH1D*)h3Dpow->ProjectionY("hLcy");
+  TH1D *hCharmHadPt = (TH1D*)h3Dpow->ProjectionX("hCharmHadPt");
+  TH1D *hCharmHadRap = (TH1D*)h3Dpow->ProjectionY("hCharmHadRap");
   TH3D* h3Dbarpow=(TH3D*)filPow->Get("hptyetam4122");
   if(h3Dbarpow){
-    TH1D *hLcbarpt = (TH1D*)h3Dbarpow->ProjectionX("hLcbarpt");
-    TH1D *hLcbary = (TH1D*)h3Dbarpow->ProjectionY("hLcbary");
+    TH1D *hCharmAntiHadPt = (TH1D*)h3Dbarpow->ProjectionX("hCharmAntiHadPt");
+    TH1D *hCharmAntiHadRap = (TH1D*)h3Dbarpow->ProjectionY("hCharmAntiHadRap");
     if(optPartAntiPart==3){
-      hLcpt->Add(hLcbarpt);
-      hLcy->Add(hLcbary);
+      hCharmHadPt->Add(hCharmAntiHadPt);
+      hCharmHadRap->Add(hCharmAntiHadRap);
     }else if(optPartAntiPart==2){
-      hLcpt=hLcbarpt;
-      hLcy=hLcbary;
+      hCharmHadPt=hCharmAntiHadPt;
+      hCharmHadRap=hCharmAntiHadRap;
     }
   }
 
@@ -305,8 +305,8 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     double pxyz[3];
     
     if (simulateBg && (iev%refreshBg)==0) det->GenBgEvent(0.,0.,0.);
-    Double_t ptGenD = hLcpt->GetRandom(); // get Lc distribution from file
-    Double_t yGenD = hLcy->GetRandom();
+    Double_t ptGenD = hCharmHadPt->GetRandom(); // get Lc distribution from file
+    Double_t yGenD = hCharmHadRap->GetRandom();
     Double_t phi = gRandom->Rndm() * 2 * TMath::Pi();
     Double_t pxGenD = ptGenD * TMath::Cos(phi);
     Double_t pyGenD = ptGenD * TMath::Sin(phi);
@@ -930,8 +930,8 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 	  Double_t sigmad0y3 = TMath::Sqrt(recProbe[2].GetSigmaY2());
 	  if(TMath::Abs(d0y3/sigmad0y3)<mind0ynSigDauCut) continue;
 	  Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
-	  Double_t sigmad0xy3 = (1./TMath::Abs(d0xy3)) * TMath::Sqrt(d0x3*d0x3*sigmad0x3*sigmad0x3 + d0y3*d0y3*sigmad0y3*sigmad0y3);
 	  if (d0x3 < 0) d0xy3 *= -1;
+	  Double_t sigmad0xy3 = (1./TMath::Abs(d0xy3)) * TMath::Sqrt(d0x3*d0x3*sigmad0x3*sigmad0x3 + d0y3*d0y3*sigmad0y3*sigmad0y3);
 	  if(TMath::Abs(d0xy3)<mind0xyDauCut) continue;
 	  //printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
 	  double ptot3=TMath::Sqrt(pxyz3[0]*pxyz3[0]+pxyz3[1]*pxyz3[1]+pxyz3[2]*pxyz3[2]);
