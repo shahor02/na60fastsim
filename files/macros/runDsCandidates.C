@@ -105,13 +105,6 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
   gSystem->Load("$ALICE_ROOT/lib/libTEvtGen.so");
   
 
-  //  PYTHIA input -> not used
-  // TFile *fin = new TFile("Mergedfkine.root");
-  // // TFile *fin = new TFile("fkineNew.root");
-  // TH1D *hD0pt = (TH1D *)fin->Get("hD0pt");
-  // TH1D *hD0y = (TH1D *)fin->Get("hD0y");
-  // hD0y->Rebin(4);
-  
   //  POWHEG+PYTHIA input 
   printf("--> pt and y shape of Ds from %s\n",filNamPow);
   TFile *filPow=new TFile(filNamPow);

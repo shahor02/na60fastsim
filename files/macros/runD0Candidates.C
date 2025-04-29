@@ -32,16 +32,21 @@
 
 
 
+// Track cuts
+int minITShits=5;
+double minTrackP = 1.;
+double chi2Cut = 1.5;
+double mind0xnSigDauCut=-9999.;
+double mind0ynSigDauCut=-9999.;
+double cutCosPointCand=-1.01;
+double cutDecLenCand=0.;
+double cutImpParProd=99999.;
 
-// settings for signal generation
-double yminSG = -10.; // min y to generate
-double ymaxSG = 10.;  //
-double ptminSG = 0.;
-double ptmaxSG = 10; //Elena's change, it was 3 GeV/c
 
 double vX = 0, vY = 0, vZ = 0; // event vertex
 
 THnSparseF* CreateSparse();
+void ConfigureSelectionsAndAxes(const char *selectionFile);
 TDatime dt;
 Double_t CosThetaStar(TLorentzVector &parent, TLorentzVector &dauk);
 
@@ -51,10 +56,9 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 				const char *filNamPow="/home/prino/na60plus/POWHEG/pp20/Charm1dot5/pp0_frag-PtSpectra-Boost.root",
 				const char *privateDecayTable = "/home/prino/na60plus/decaytables/USERTABD0.DEC",
 				int optPartAntiPart=3,
-				int minITShits=4,
-				double chi2Cut = 1.5,
-				double minTrackP = 1.,
+				const char *selectionFile="",
 				bool writeNtuple = kFALSE, 
+				bool useShrinkedNtuple = kTRUE,
 				bool simulateBg=kTRUE,
 				bool optLastLayClean=kFALSE){
   
@@ -70,31 +74,27 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   gSystem->Load("$ALICE_ROOT/lib/libTEvtGen.so");
   
 
-  //  PYTHIA input -> not used
-  // TFile *fin = new TFile("Mergedfkine.root");
-  // // TFile *fin = new TFile("fkineNew.root");
-  // TH1D *hD0pt = (TH1D *)fin->Get("hD0pt");
-  // TH1D *hD0y = (TH1D *)fin->Get("hD0y");
-  // hD0y->Rebin(4);
-  
   //  POWHEG+PYTHIA input 
   printf("--> pt and y shape of D0 from %s\n",filNamPow);
   TFile *filPow=new TFile(filNamPow);
   TH3D* h3Dpow=(TH3D*)filPow->Get("hptyeta421");
-  TH1D *hD0pt = (TH1D*)h3Dpow->ProjectionX("hD0pt");
-  TH1D *hD0y = (TH1D*)h3Dpow->ProjectionY("hD0y");
+  TH1D *hCharmHadPt = (TH1D*)h3Dpow->ProjectionX("hCharmHadPt");
+  TH1D *hCharmHadRap = (TH1D*)h3Dpow->ProjectionY("hCharmHadRap");
   TH3D* h3Dbarpow=(TH3D*)filPow->Get("hptyetam421");
   if(h3Dbarpow){
-    TH1D *hD0barpt = (TH1D*)h3Dbarpow->ProjectionX("hD0barpt");
-    TH1D *hD0bary = (TH1D*)h3Dbarpow->ProjectionY("hD0bary");
+    TH1D *hCharmAntiHadPt = (TH1D*)h3Dbarpow->ProjectionX("hCharmAntiHadPt");
+    TH1D *hCharmAntiHadRap = (TH1D*)h3Dbarpow->ProjectionY("hCharmAntiHadRap");
     if(optPartAntiPart==3){
-      hD0pt->Add(hD0barpt);
-      hD0y->Add(hD0bary);
+      hCharmHadPt->Add(hCharmAntiHadPt);
+      hCharmHadRap->Add(hCharmAntiHadRap);
     }else if(optPartAntiPart==2){
-      hD0pt=hD0barpt;
-      hD0y=hD0bary;
+      hCharmHadPt=hCharmAntiHadPt;
+      hCharmHadRap=hCharmAntiHadRap;
     }
   }
+
+  ConfigureSelectionsAndAxes(selectionFile);
+
   TH2F *hptK = new TH2F("hptK", "kaons from D0 decays", 50,0.,10.,50, 0., 10.);
   TH2F *hptPi = new TH2F("hptPi", "pions from D0 decays", 50, 0.,10.,50,0., 10.);
   TH2F *hmomK = new TH2F("hmomK", "kaons from D0 decays ; #eta ; p (GeV/c)", 50,0.,5.,50, 0., 20.);
@@ -162,6 +162,7 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   // prepare decays
   TGenPhaseSpace decay;
   TLorentzVector parentgen, daugen[2], parent, daurec[2], parentrefl, daurecswapmass[2]; 
+  Double_t daumass[2],daumasssw[2];
   KMCProbeFwd recProbe[2];  
   AliDecayerEvtGen *fDecayer = new AliDecayerEvtGen();
   fDecayer->Init(); //read the default decay table DECAY.DEC and particle table
@@ -186,19 +187,19 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   // define mother particle
   Int_t pdgParticle = 421;
   
-  TH2F* hYPtGen = new TH2F("hYPtGen", "Y-Pt corr match", 20, 1., 5., 40, ptminSG, ptmaxSG);
-  TH1D* hPtGen = new TH1D("hPtGen", "Pt gen", 40, ptminSG, ptmaxSG);
+  TH2F* hYPtGen = new TH2F("hYPtGen", "Y-Pt corr match", 20, 1., 5., 20, 0., 5.);
+  TH1D* hPtGen = new TH1D("hPtGen", "Pt gen", 20, 0., 5.);
   TH1D* hYGen = new TH1D("hYGen", "Y full phase space", 20, 1., 5.);
-  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 20, 1., 5., 40, ptminSG, ptmaxSG);
-  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Reconstructed Pt all match", 40, ptminSG, ptmaxSG);  
-  TH1D* hPtGenRecoAll = new TH1D("hPtGenRecoAll", "Generated Pt all match", 40, ptminSG, ptmaxSG);
-  TH2F* hPtRecoVsGenAll = new TH2F("hPtRecoVsGenAll"," ; Generated p_{T} ; Reconstructed p_{T}",40, ptminSG, ptmaxSG,40, ptminSG, ptmaxSG);
-  TH2F* hDiffPtRecoGenAll = new TH2F("hDiffPtRecoGenAll"," ; Generated p_{T} ; Reco p_{T} - Gen p_{T}",40, ptminSG, ptmaxSG,100,-0.2,0.2);
+  TH2F* hYPtRecoAll = new TH2F("hYPtRecoAll", "Y-Pt all match", 20, 1., 5., 20, 0., 5.);
+  TH1D* hPtRecoAll = new TH1D("hPtRecoAll", "Reconstructed Pt all match", 20, 0., 5.);  
+  TH1D* hPtGenRecoAll = new TH1D("hPtGenRecoAll", "Generated Pt all match", 20, 0., 5.);
+  TH2F* hPtRecoVsGenAll = new TH2F("hPtRecoVsGenAll"," ; Generated p_{T} ; Reconstructed p_{T}",20, 0., 5.,20, 0., 5.);
+  TH2F* hDiffPtRecoGenAll = new TH2F("hDiffPtRecoGenAll"," ; Generated p_{T} ; Reco p_{T} - Gen p_{T}",20, 0., 5.,100,-0.2,0.2);
 
   TH1D* hYRecoAll = new TH1D("hYRecoAll", "Reconstructed Y all match", 20, 1., 5.);
   TH1D* hYGenRecoAll = new TH1D("hYGenRecoAll", "Generated Y all match", 20, 1.,5.);
-  TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 20,1., 5., 40, ptminSG, ptmaxSG);
-  TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 40, ptminSG, ptmaxSG);
+  TH2F* hYPtRecoFake = new TH2F("hYPtRecoFake", "Y-Pt fake match", 20,1., 5., 20, 0., 5.);
+  TH1D* hPtRecoFake = new TH1D("hPtRecoFake", "Pt fake match", 20, 0., 5.);
   TH1D* hMassAll = new TH1D("hMassAll", "Mass all match", 200, 1., 3.5);
   TH1D* hMassFake = new TH1D("hMassFake", "Mass fake match", 200, 1., 3.5);
   TH1D* hMassRefl = new TH1D("hMassRefl", "Mass reflections", 200, 1., 3.5);
@@ -255,10 +256,11 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   TNtuple *ntD0cand = 0x0;
   if (writeNtuple)
     {
-      fnt = new TFile("fntSig.root", "recreate");
-      ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax:d0D:costhst", 32000);
+      fnt = new TFile("D0-Signal-ntuple.root", "recreate");
+      if(useShrinkedNtuple) ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:d0xy1xd0xy3:dca:ptMin:d0D:costhst", 32000);
+      else ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0y1:d0y2:d0xy1:d0xy2:sd0x1:sd0x2:sd0y1:sd0y2:sd0xy1:sd0xy2:dca:ptMin:ptMax:d0D:costhst", 32000);
     }
-  Float_t arrnt[13];
+  Float_t arrnt[30];
   for (Int_t iev = 0; iev < nevents; iev++){
     hNevents->Fill(0.5);
     Double_t vprim[3] = {0, 0, 0};
@@ -268,8 +270,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     double pxyz[3];
     
     if (simulateBg && (iev%refreshBg)==0) det->GenBgEvent(0.,0.,0.);
-    Double_t ptGenD = hD0pt->GetRandom(); // get D0 distribution from file
-    Double_t yGenD = hD0y->GetRandom();
+    Double_t ptGenD = hCharmHadPt->GetRandom(); // get D0 distribution from file
+    Double_t yGenD = hCharmHadRap->GetRandom();
     Double_t phi = gRandom->Rndm() * 2 * TMath::Pi();
     Double_t pxGenD = ptGenD * TMath::Cos(phi);
     Double_t pyGenD = ptGenD * TMath::Sin(phi);
@@ -330,7 +332,6 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	nrec++;
 	    
 	nfake += trw->GetNFakeITSHits();
-	trw->GetPXYZ(pxyz);
 	if (kf == 321){
 	  // Kaon daughter
 	  ptK = iparticle1->Pt();
@@ -342,8 +343,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	  secvertgenK[1] = iparticle1->Vy();
 	  secvertgenK[2] = iparticle1->Vz();
 	  daugen[0].SetXYZM(iparticle1->Px(), iparticle1->Py(), iparticle1->Pz(), iparticle1->GetMass());
-	  daurec[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2], iparticle1->GetMass());
-	  daurecswapmass[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2],massPion);
+	  daumass[0] = iparticle1->GetMass();
+	  daumasssw[0] = massPion;
 	  recProbe[0] = *trw;
 	}else if (kf == 211){
 	  // Pion daughter
@@ -356,8 +357,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 	  secvertgenPi[1] = iparticle1->Vy();
 	  secvertgenPi[2] = iparticle1->Vz();
 	  daugen[1].SetXYZM(iparticle1->Px(), iparticle1->Py(), iparticle1->Pz(), iparticle1->GetMass());
-	  daurec[1].SetXYZM(pxyz[0], pxyz[1], pxyz[2],  iparticle1->GetMass());
-	  daurecswapmass[1].SetXYZM(pxyz[0], pxyz[1], pxyz[2],massKaon);
+	  daumass[1] = iparticle1->GetMass();
+	  daumasssw[1] = massKaon;
 	  recProbe[1] = *trw;
 	}
       }
@@ -366,8 +367,44 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     if (nrec < 2) continue;
     hNevents->Fill(1.5);
     
+    recProbe[0].PropagateToZBxByBz(0);
+    Double_t d0x1 = recProbe[0].GetX();
+    Double_t sigmad0x1 = TMath::Sqrt(recProbe[0].GetSigmaX2());
+    if(TMath::Abs(d0x1/sigmad0x1)<mind0xnSigDauCut) continue;
+    Double_t d0y1 = recProbe[0].GetY();
+    Double_t sigmad0y1 = TMath::Sqrt(recProbe[0].GetSigmaY2());
+    if(TMath::Abs(d0y1/sigmad0y1)<mind0ynSigDauCut) continue;
+    Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
+    if (d0x1 < 0)
+      d0xy1 *= -1;
+    Double_t sigmad0xy1 = (1./TMath::Abs(d0xy1)) * TMath::Sqrt(d0x1*d0x1*sigmad0x1*sigmad0x1 + d0y1*d0y1*sigmad0y1*sigmad0y1);
+
+    recProbe[1].PropagateToZBxByBz(0);
+    Double_t d0x2 = recProbe[1].GetX();
+    Double_t sigmad0x2 = TMath::Sqrt(recProbe[1].GetSigmaX2());
+    if(TMath::Abs(d0x2/sigmad0x2)<mind0xnSigDauCut) continue;
+    Double_t d0y2 = recProbe[1].GetY();
+    Double_t sigmad0y2 = TMath::Sqrt(recProbe[1].GetSigmaY2());
+    if(TMath::Abs(d0y2/sigmad0y2)<mind0ynSigDauCut) continue;
+    Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
+    if (d0x2 < 0)
+      d0xy2 *= -1;
+    Double_t sigmad0xy2 = (1./TMath::Abs(d0xy2)) * TMath::Sqrt(d0x2*d0x2*sigmad0x2*sigmad0x2 + d0y2*d0y2*sigmad0y2*sigmad0y2);
+ 
     recProbe[0].PropagateToDCA(&recProbe[1]);
-    
+    Double_t xV, yV, zV;
+    ComputeVertex(recProbe[0],recProbe[1],xV,yV,zV);
+    Double_t residVx=10000.*(xV - secvertgenK[0]);
+    Double_t residVy=10000.*(yV - secvertgenK[1]);
+    Double_t residVz=10000.*(zV - secvertgenK[2]);
+    // Get daughter track momentum at decay vertex
+    for(int idau=0; idau<2; idau++){
+      recProbe[idau].PropagateToZBxByBz(zV);
+      recProbe[idau].GetPXYZ(pxyz);
+      daurec[idau].SetXYZM(pxyz[0], pxyz[1], pxyz[2], daumass[idau]);
+      daurecswapmass[idau].SetXYZM(pxyz[0], pxyz[1], pxyz[2], daumasssw[idau]);
+    }
+
     parent = daurec[0];
     parent += daurec[1];
     parentgen = daugen[0];
@@ -417,15 +454,6 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hDCAy->Fill(d2, ptRecD);
     hDCAz->Fill(d3, ptRecD);
     
-    //      Double_t xP = (recProbe[1].GetX() + recProbe[0].GetX()) / 2.;
-    //      Double_t yP = (recProbe[1].GetY() + recProbe[0].GetY()) / 2.;
-    //      Double_t zP = (recProbe[1].GetZ() + recProbe[0].GetZ()) / 2.;
-    
-    Double_t xP, yP, zP;
-    ComputeVertex(recProbe[0],recProbe[1],xP,yP,zP);
-    Double_t residVx=10000.*(xP - secvertgenK[0]);
-    Double_t residVy=10000.*(yP - secvertgenK[1]);
-    Double_t residVz=10000.*(zP - secvertgenK[2]);
     hResVx->Fill(residVx, ptRecD);
     hResVy->Fill(residVy, ptRecD);
     hResVz->Fill(residVz, ptRecD);
@@ -453,16 +481,16 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hResPzVsY->Fill(daurec[1].Pz() - daugen[1].Pz(), yRecD);
     
     // cout << "secvert generated Pion: " << secvertgenPi[0] << "  " << secvertgenPi[1] << "  " << secvertgenPi[2] << endl;
-    // cout << "Reco Vert  Pion: " << xP << "  " << yP << "  " << zP << endl;
+    // cout << "Reco Vert  Pion: " << xV << "  " << yV << "  " << zV << endl;
     
-    Float_t dist = TMath::Sqrt(xP * xP + yP * yP + zP * zP);
-    Float_t distXY = TMath::Sqrt(xP * xP + yP * yP);
+    Float_t dist = TMath::Sqrt(xV * xV + yV * yV + zV * zV);
+    Float_t distXY = TMath::Sqrt(xV * xV + yV * yV);
     Float_t distgen = TMath::Sqrt(secvertgenPi[0] * secvertgenPi[0] + secvertgenPi[1] * secvertgenPi[1] + secvertgenPi[2] * secvertgenPi[2]);
     Float_t distgenXY = TMath::Sqrt(secvertgenPi[0] * secvertgenPi[0] + secvertgenPi[1] * secvertgenPi[1]);
-    // printf("dist = %f , distXY=%f , dx=%f, dy=%f, dz=%f z1=%f, z2=%f \n", dist, distXY, xP, yP, zP, recProbe[0].GetZ(), recProbe[1].GetZ());
+    // printf("dist = %f , distXY=%f , dx=%f, dy=%f, dz=%f z1=%f, z2=%f \n", dist, distXY, xV, yV, zV, recProbe[0].GetZ(), recProbe[1].GetZ());
     // printf("distgen = %f , distgenXY=%f \n", distgen, distgenXY);
     
-    Double_t vsec[3] = {xP, yP, zP};
+    Double_t vsec[3] = {xV, yV, zV};
     Double_t cosp = CosPointingAngle(vprim, vsec, parent);
     Double_t cts = CosThetaStar(parent,daurec[0]);
     Double_t ipD = ImpParXY(vprim, vsec, parent);
@@ -485,54 +513,61 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
       
     //AliExternalTrackParam *track1 = (AliExternalTrackParam *)recProbe[0].GetTrack();
     //AliExternalTrackParam *track2 = (AliExternalTrackParam *)recProbe[1].GetTrack();
-    recProbe[0].PropagateToZBxByBz(0);
-    Double_t d0x1 = recProbe[0].GetX();
-    Double_t d0y1 = recProbe[0].GetY();
-    Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
-    if (d0x1 < 0)
-      d0xy1 *= -1;
-    
-    recProbe[1].PropagateToZBxByBz(0);
-    Double_t d0x2 = recProbe[1].GetX();
-    Double_t d0y2 = recProbe[1].GetY();
-    Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
-    if (d0x2 < 0)
-      d0xy2 *= -1;
-    
-    // printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
     
     hd0XYprod->Fill(d0xy1 * d0xy2, ptRecD);
     hd0XY1->Fill(d0xy1, ptRecD);
     hd0XY2->Fill(d0xy2, ptRecD);
-      
-    arrsp[0] = massRecD;
-    arrsp[1] = ptRecD;
-    arrsp[2] = yRecD;
-    arrsp[3] = dist;
-    arrsp[4] = cosp;
-    arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
-    arrsp[6] = d0xy1 * d0xy2;
-    arrsp[7] = dca;
-    arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-    arrsp[9] = TMath::Abs(ipD);	    
-    arrsp[10] = cts;      
-    hsp->Fill(arrsp);
     
-    if (ntD0cand){
-      arrnt[0] = massRecD;
-      arrnt[1] = ptRecD;
-      arrnt[2] = yRecD;
-      arrnt[3] = dist;
-      arrnt[4] = cosp;
-      arrnt[5] = d0xy1;
-      arrnt[6] = d0xy2;
-      arrnt[7] = d0xy1 * d0xy2;
-      arrnt[8] = dca;
-      arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-      arrnt[10] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-      arrnt[11] = TMath::Abs(ipD);
-      arrnt[12] = cts;
-      ntD0cand->Fill(arrnt);
+    if(cosp>cutCosPointCand && dist>cutDecLenCand && (d0xy1*d0xy2)<cutImpParProd){
+      arrsp[0] = massRecD;
+      arrsp[1] = ptRecD;
+      arrsp[2] = yRecD;
+      arrsp[3] = dist;
+      arrsp[4] = cosp;
+      arrsp[5] = TMath::Min(TMath::Abs(d0xy1),TMath::Abs(d0xy2));
+      arrsp[6] = d0xy1 * d0xy2;
+      arrsp[7] = dca;
+      arrsp[8] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+      arrsp[9] = TMath::Abs(ipD);	    
+      arrsp[10] = cts;      
+      hsp->Fill(arrsp);    
+      if (ntD0cand){
+	arrnt[0] = massRecD;
+	arrnt[1] = ptRecD;
+	arrnt[2] = yRecD;
+	arrnt[3] = dist;
+	arrnt[4] = cosp;
+	if(useShrinkedNtuple){
+	  arrnt[5] = TMath::Min(TMath::Abs(d0x1/sigmad0x1),TMath::Abs(d0x2/sigmad0x2));
+	  arrnt[6] = TMath::Min(TMath::Abs(d0y1/sigmad0y1),TMath::Abs(d0y2/sigmad0y2));
+	  arrnt[7] = d0x1 * d0x2;
+	  arrnt[8] = d0y1 * d0y2;
+	  arrnt[9] = d0xy1 * d0xy2;
+	  arrnt[10] = dca;
+	  arrnt[11] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	  arrnt[12] = TMath::Abs(ipD);
+	  arrnt[13] = cts;
+	}else{
+	  arrnt[5] = d0x1;
+	  arrnt[6] = d0x2;
+	  arrnt[7] = d0y1;
+	  arrnt[8] = d0y2;
+	  arrnt[9] = d0xy1;
+	  arrnt[10] = d0xy2;
+	  arrnt[11] = d0x1/sigmad0x1;
+	  arrnt[12] = d0x2/sigmad0x2;
+	  arrnt[13] = d0y1/sigmad0y1;
+	  arrnt[14] = d0y2/sigmad0y2;
+	  arrnt[15] = d0xy1/sigmad0xy1;
+	  arrnt[16] = d0xy2/sigmad0xy2;
+	  arrnt[17] = dca;
+	  arrnt[18] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	  arrnt[19] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+	  arrnt[20] = TMath::Abs(ipD);
+	  arrnt[21] = cts;
+	}
+	ntD0cand->Fill(arrnt);
+      }
     }
   } //event loop
   
@@ -603,6 +638,9 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
   hsp->Write();
   if (ntD0cand){
     fnt->cd();
+    hNevents->Write();
+    hYPtGen->Write();
+    hYPtRecoAll->Write();
     ntD0cand->Write();
     fnt->Close();
   }
@@ -641,11 +679,10 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
 
 void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 			       const char* trackTreeFile="treeBkgEvents.root",
+			       const char *selectionFile="",
 			       Int_t nevents = 999999,
-			       int minITShits=4,
-			       double chi2Cut = 1.5,
-			       double minTrackP = 1.,
-			       Int_t writeNtuple = kFALSE){
+			       Int_t writeNtuple = kFALSE,
+			       bool useShrinkedNtuple = kTRUE){
 
   // Read the TTree of tracks produced with runBkgVT.C
   // Create D0 combinatorial background candidates (= OS pairs of tracks)
@@ -674,6 +711,8 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
     }
   }
 
+  ConfigureSelectionsAndAxes(selectionFile);
+  
   TFile *filetree = new TFile(trackTreeFile);
   TTree *tree = (TTree *)filetree->Get("tree");
   TClonesArray *arr = 0;
@@ -734,10 +773,11 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 
   TFile *fnt = 0x0;
   TNtuple *ntD0cand = 0x0;
-  Float_t arrnt[13];
+  Float_t arrnt[30];
   if (writeNtuple){
-    fnt = new TFile("fntBkg.root", "recreate");
-    ntD0cand = new TNtuple("ntD0cand", "ntD0cand",  "mass:pt:y:dist:cosp:d01:d02:d0prod:dca:ptMin:ptMax:d0D:costhst", 32000);
+    fnt = new TFile("D0-Bkg-ntuple.root", "recreate");
+    if(useShrinkedNtuple) ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:d0xy1xd0xy3:dca:ptMin:d0D:costhst", 32000);
+    else ntD0cand = new TNtuple("ntD0cand", "ntD0cand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0y1:d0y2:d0xy1:d0xy2:sd0x1:sd0x2:sd0y1:sd0y2:sd0xy1:sd0xy2:dca:ptMin:ptMax:d0D:costhst", 32000);
   }
 
   KMCProbeFwd recProbe[2];
@@ -751,6 +791,7 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
     tree->GetEvent(iev);
     Int_t arrentr = arr->GetEntriesFast();
     
+    Double_t pxyz1[3],pxyz2[3];
     for (Int_t itr = 0; itr < arrentr; itr++){
       KMCProbeFwd *tr1 = (KMCProbeFwd *)arr->At(itr);
       // cout << "tr P=" << tr1->GetP() << endl;
@@ -772,34 +813,52 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	  recProbe[0] = *tr2;
 	  recProbe[1] = *tr1;
 	}
-	Bool_t ok=recProbe[0].PropagateToDCA(&recProbe[1]);
-	Double_t pxyz[3];
-	recProbe[0].GetPXYZ(pxyz);
-	
-	Double_t pxyz2[3];
+	recProbe[0].PropagateToZBxByBz(vprim[2]);
+	Double_t d0x1 = recProbe[0].GetX();
+	Double_t sigmad0x1 = TMath::Sqrt(recProbe[0].GetSigmaX2());
+	if(TMath::Abs(d0x1/sigmad0x1)<mind0xnSigDauCut) continue;
+	Double_t d0y1 = recProbe[0].GetY();
+	Double_t sigmad0y1 = TMath::Sqrt(recProbe[0].GetSigmaY2());
+	if(TMath::Abs(d0y1/sigmad0y1)<mind0ynSigDauCut) continue;
+	Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
+	if (d0x1 < 0) d0xy1 *= -1;
+	Double_t sigmad0xy1 = (1./TMath::Abs(d0xy1)) * TMath::Sqrt(d0x1*d0x1*sigmad0x1*sigmad0x1 + d0y1*d0y1*sigmad0y1*sigmad0y1);
+
+	recProbe[1].PropagateToZBxByBz(vprim[2]);
+	Double_t d0x2 = recProbe[1].GetX();
+	Double_t sigmad0x2 = TMath::Sqrt(recProbe[1].GetSigmaX2());
+	if(TMath::Abs(d0x2/sigmad0x2)<mind0xnSigDauCut) continue;
+	Double_t d0y2 = recProbe[1].GetY();
+	Double_t sigmad0y2 = TMath::Sqrt(recProbe[1].GetSigmaY2());
+	if(TMath::Abs(d0y2/sigmad0y2)<mind0ynSigDauCut) continue;	
+	Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
+	if (d0x2 < 0) d0xy2 *= -1;
+	Double_t sigmad0xy2 = (1./TMath::Abs(d0xy2)) * TMath::Sqrt(d0x2*d0x2*sigmad0x2*sigmad0x2 + d0y2*d0y2*sigmad0y2*sigmad0y2);
+
+	recProbe[0].PropagateToDCA(&recProbe[1]);
+	Double_t xV, yV, zV;
+	ComputeVertex(recProbe[0],recProbe[1],xV,yV,zV);
+	recProbe[0].PropagateToZBxByBz(zV);
+	recProbe[0].GetPXYZ(pxyz1);
+	recProbe[1].PropagateToZBxByBz(zV);
 	recProbe[1].GetPXYZ(pxyz2);
 
-	Double_t xP, yP, zP;
-	ComputeVertex(recProbe[0],recProbe[1],xP,yP,zP);
-	
 	Float_t d1 = recProbe[1].GetX() - recProbe[0].GetX();
 	Float_t d2 = recProbe[1].GetY() - recProbe[0].GetY();
 	Float_t d3 = recProbe[1].GetZ() - recProbe[0].GetZ();
+	Float_t dca = sqrt(d1 * d1 + d2 * d2 + d3 * d3);
 
-	recProbe[0].PropagateToZBxByBz(0);
-	recProbe[1].PropagateToZBxByBz(0);
-	
 	for(Int_t iMassHyp=0; iMassHyp<2; iMassHyp++){
 	  // mass hypothesis: Kpi, piK
 	  Int_t iKaon=-1;
 	  Int_t iPion=-1;
 	  if(iMassHyp==0){
-	    daurec[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2], KMCDetectorFwd::kMassK);
+	    daurec[0].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassK);
 	    daurec[1].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassPi);
 	    iKaon=0;
 	    iPion=1;
 	  }else{
-	    daurec[0].SetXYZM(pxyz[0], pxyz[1], pxyz[2], KMCDetectorFwd::kMassPi);
+	    daurec[0].SetXYZM(pxyz1[0], pxyz1[1], pxyz1[2], KMCDetectorFwd::kMassPi);
 	    daurec[1].SetXYZM(pxyz2[0], pxyz2[1], pxyz2[2], KMCDetectorFwd::kMassK);
 	    iKaon=1;
 	    iPion=0;
@@ -817,24 +876,23 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	    // range to fill histos
 	    if(invMassD>1.805 && invMassD<1.925) countCandInPeak++;
 
-	    Float_t dca = sqrt(d1 * d1 + d2 * d2 + d3 * d3);
 	    
 	    //printf(" DCA = %f\n", sqrt(d1 * d1 + d2 * d2 + d3 * d3));
 	    hDCA->Fill(dca, ptD);
 	    hDCAx->Fill(d1, ptD);
 	    hDCAy->Fill(d2, ptD);
 	    hDCAz->Fill(d3, ptD);
-	    // Float_t xP = (recProbe[1].GetX() + recProbe[0].GetX()) / 2.;
-	    // Float_t yP = (recProbe[1].GetY() + recProbe[0].GetY()) / 2.;
-	    // Float_t zP = (recProbe[1].GetZ() + recProbe[0].GetZ()) / 2.;
+	    // Float_t xV = (recProbe[1].GetX() + recProbe[0].GetX()) / 2.;
+	    // Float_t yV = (recProbe[1].GetY() + recProbe[0].GetY()) / 2.;
+	    // Float_t zV = (recProbe[1].GetZ() + recProbe[0].GetZ()) / 2.;
 
-	    hVx->Fill(xP);
-	    hVy->Fill(yP);
-	    hVz->Fill(zP);
+	    hVx->Fill(xV);
+	    hVy->Fill(yV);
+	    hVz->Fill(zV);
 
-	    Float_t dist = TMath::Sqrt(xP * xP + yP * yP + zP * zP);
-	    Float_t distXY = TMath::Sqrt(xP * xP + yP * yP);
-	    Double_t vsec[3] = {xP, yP, zP};
+	    Float_t dist = TMath::Sqrt(xV * xV + yV * yV + zV * zV);
+	    Float_t distXY = TMath::Sqrt(xV * xV + yV * yV);
+	    Double_t vsec[3] = {xV, yV, zV};
 	    Double_t cosp = CosPointingAngle(vprim, vsec, parent);
 	    Double_t cospxy = CosPointingAngleXY(vprim, vsec, parent);
 	    Double_t cts = CosThetaStar(parent,daurec[iKaon]);
@@ -852,22 +910,10 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	    hDistXY->Fill(distXY, ptD);
 	    hDist->Fill(dist, ptD);
     
-	    Double_t d0x1 = recProbe[0].GetX();
-	    Double_t d0y1 = recProbe[0].GetY();
-	    Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
-	    if (d0x1 < 0) d0xy1 *= -1;
-	    
-	    Double_t d0x2 = recProbe[1].GetX();
-	    Double_t d0y2 = recProbe[1].GetY();
-	    Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
-	    if (d0x2 < 0) d0xy2 *= -1;
-	  	      
-	    //printf("d0xy1 = %f, d0xy2 = %f \n", d0xy1, d0xy2);
-	    
 	    hd0XYprod->Fill(d0xy1 * d0xy2, ptD);
 	    hd0XY1->Fill(d0xy1, ptD);
 	    hd0XY2->Fill(d0xy2, ptD);
-	    if(cosp>0.97 && (d0xy1*d0xy2)<0.0001){
+	    if(cosp>cutCosPointCand && dist>cutDecLenCand && (d0xy1*d0xy2)<cutImpParProd){
 	      arrsp[0] = invMassD;
 	      arrsp[1] = ptD;
 	      arrsp[2] = yD;
@@ -880,24 +926,44 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
 	      arrsp[9] = TMath::Abs(ipD);	    
 	      arrsp[10] = cts;
 	      hsp->Fill(arrsp);
+	      if(ntD0cand){
+		arrnt[0] = invMassD;
+		arrnt[1] = ptD;
+		arrnt[2] = yD;
+		arrnt[3] = dist;
+		arrnt[4] = cosp;
+		if(useShrinkedNtuple){
+		  arrnt[5] = TMath::Min(TMath::Abs(d0x1/sigmad0x1),TMath::Abs(d0x2/sigmad0x2));
+		  arrnt[6] = TMath::Min(TMath::Abs(d0y1/sigmad0y1),TMath::Abs(d0y2/sigmad0y2));
+		  arrnt[7] = d0x1 * d0x2;
+		  arrnt[8] = d0y1 * d0y2;
+		  arrnt[9] = d0xy1 * d0xy2;
+		  arrnt[10] = dca;
+		  arrnt[11] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+		  arrnt[12] = TMath::Abs(ipD);
+		  arrnt[13] = cts;
+		}else{
+		  arrnt[5] = d0x1;
+		  arrnt[6] = d0x2;
+		  arrnt[7] = d0y1;
+		  arrnt[8] = d0y2;
+		  arrnt[9] = d0xy1;
+		  arrnt[10] = d0xy2;
+		  arrnt[11] = d0x1/sigmad0x1;
+		  arrnt[12] = d0x2/sigmad0x2;
+		  arrnt[13] = d0y1/sigmad0y1;
+		  arrnt[14] = d0y2/sigmad0y2;
+		  arrnt[15] = d0xy1/sigmad0xy1;
+		  arrnt[16] = d0xy2/sigmad0xy2;
+		  arrnt[17] = dca;
+		  arrnt[18] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+		  arrnt[19] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
+		  arrnt[20] = TMath::Abs(ipD);
+		  arrnt[21] = cts;
+		}
+		ntD0cand->Fill(arrnt);
+	      }
 	    }
-	    if (ntD0cand && cosp>0.97 && (d0xy1*d0xy2)<0.0001){
-	      arrnt[0] = invMassD;
-	      arrnt[1] = ptD;
-	      arrnt[2] = yD;
-	      arrnt[3] = dist;
-	      arrnt[4] = cosp;
-	      arrnt[5] = d0xy1;
-	      arrnt[6] = d0xy2;
-	      arrnt[7] = d0xy1 * d0xy2;
-	      arrnt[8] = dca;
-	      arrnt[9] = TMath::Min(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-	      arrnt[10] = TMath::Max(recProbe[0].GetTrack()->Pt(),recProbe[1].GetTrack()->Pt());
-	      arrnt[11] = TMath::Abs(ipD);	    
-	      arrnt[12] = cts;
-	      ntD0cand->Fill(arrnt);
-	    }
-	    
 	  } // check on inv mass
 	} // loop on mass hypothesis
       } // loop on first track
@@ -978,6 +1044,52 @@ THnSparseF* CreateSparse(){
   return hsp;
 }
 
-
+void ConfigureSelectionsAndAxes(const char *selectionFile){
+  if(strlen(selectionFile)==0) return;
+  if(gSystem->Exec(Form("ls -l %s",selectionFile)) !=0 ){
+    printf("File %s with configuration of selections not found\n",selectionFile);
+    return;
+  }
+  FILE* confFil=fopen(selectionFile,"r");
+  char line[50];
+  int n;
+  float x;
+  bool readok;
+  while(!feof(confFil)){
+    readok=fscanf(confFil,"%s:",line);
+    if(strstr(line,"MinVThits")){
+      readok=fscanf(confFil,"%d",&n);
+      minITShits=n;
+    }
+    if(strstr(line,"MinTrackMom")){
+      readok=fscanf(confFil,"%f",&x);
+      minTrackP=x;
+    }
+    if(strstr(line,"MaxTrackChi2")){
+      readok=fscanf(confFil,"%f",&x);
+      chi2Cut=x;
+    }
+    if(strstr(line,"MinImpParXnSigma")){
+      readok=fscanf(confFil,"%f",&x);
+      mind0xnSigDauCut=x;
+    }
+    if(strstr(line,"MinImpParYnSigma")){
+      readok=fscanf(confFil,"%f",&x);
+      mind0ynSigDauCut=x;
+    }
+    if(strstr(line,"CosPointCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutCosPointCand=x;
+    }
+    if(strstr(line,"DecLenCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutDecLenCand=x;
+    }
+    if(strstr(line,"ImpParProdCut")){
+      readok=fscanf(confFil,"%f",&x);
+      cutImpParProd=x;
+    }
+  }
+}
 
 

@@ -13,7 +13,8 @@
 
 void ComputeVertex(KMCProbeFwd &t0, KMCProbeFwd &t1, Double_t &xV, Double_t &yV, Double_t &zV){
   // Based on AliESDv0
-
+  
+  t0.PropagateToDCA(&t1);
   //Trivial estimation of the vertex parameters
   Double_t tmp[3];
   t0.GetXYZ(tmp);
