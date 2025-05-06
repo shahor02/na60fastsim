@@ -289,11 +289,17 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
   Double_t arrsp[nDim];
 
   TFile *fnt = 0x0;
+  TFile *fntG = 0x0;
   TNtuple *ntLccand = 0x0;
+  TNtuple *ntLcgen = 0x0;
   if (writeNtuple){
-    fnt = new TFile("Lc-Signal-ntuple.root", "recreate");
+    TString fntFilnam="Lc-Signal-ntuple.root";
+    if(!useShrinkedNtuple) fntFilnam="Lc-Signal-ntuple-full.root";
+    fnt = new TFile(fntFilnam.Data(), "recreate");
     if(useShrinkedNtuple) ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:sigvert:pPiOverpP", 32000);
     else ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0x3:d0y1:d0y2:d0y3:d0xy1:d0xy2:d0xy3:sd0x1:sd0x2:sd0x3:sd0y1:sd0y2:sd0y3:sd0xy1:sd0xy2:sd0xy3:sigvert:pP:pK:pPi:d0Lc", 32000);
+    fntG = new TFile("Lc-Generated-ntuple.root","recreate");
+    ntLcgen =  new TNtuple("ntLcgen","ntLcgen","pt:y");
   }
   Float_t arrnt[30];
   for (Int_t iev = 0; iev < nevents; iev++){
@@ -310,13 +316,13 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     Double_t phi = gRandom->Rndm() * 2 * TMath::Pi();
     Double_t pxGenD = ptGenD * TMath::Cos(phi);
     Double_t pyGenD = ptGenD * TMath::Sin(phi);
-    
     Double_t mass = TDatabasePDG::Instance()->GetParticle(pdgParticle)->Mass();
     Double_t mt = TMath::Sqrt(ptGenD * ptGenD + mass * mass);
     Double_t pzGenD = mt * TMath::SinH(yGenD);
     Double_t en = mt * TMath::CosH(yGenD);
-    
     mom->SetPxPyPzE(pxGenD, pyGenD, pzGenD, en);
+    if(ntLcgen) ntLcgen->Fill(ptGenD,yGenD);
+
     Int_t np;
     do{
       fDecayer->Decay(pdgParticle, mom);
@@ -703,6 +709,11 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     ntLccand->Write();
     fnt->Close();
   }
+  if(ntLcgen){
+    fntG->cd();
+    ntLcgen->Write();
+    fntG->Close();
+  }
   // TCanvas *ccdau = new TCanvas();
   // ccdau->Divide(3, 2);
   // ccdau->cd(1)->SetLogy();
@@ -841,7 +852,9 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
   TNtuple *ntLccand = 0x0;
   Float_t arrnt[30];
   if (writeNtuple){
-    fnt = new TFile("Lc-Bkg-ntuple.root", "recreate");
+    TString fntFilnam="Lc-Signal-ntuple.root";
+    if(!useShrinkedNtuple) fntFilnam="Lc-Signal-ntuple-full.root";
+    fnt = new TFile(fntFilnam.Data(), "recreate");
     if(useShrinkedNtuple) ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:sigvert:pPiOverpP", 32000);
     else ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0x3:d0y1:d0y2:d0y3:d0xy1:d0xy2:d0xy3:sd0x1:sd0x2:sd0x3:sd0y1:sd0y2:sd0y3:sd0xy1:sd0xy2:sd0xy3:sigvert:pP:pK:pPi:d0Lc", 32000);
   }
