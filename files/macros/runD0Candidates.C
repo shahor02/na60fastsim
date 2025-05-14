@@ -370,10 +370,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     recProbe[0].PropagateToZBxByBz(0);
     Double_t d0x1 = recProbe[0].GetX();
     Double_t sigmad0x1 = TMath::Sqrt(recProbe[0].GetSigmaX2());
-    if(TMath::Abs(d0x1/sigmad0x1)<mind0xnSigDauCut) continue;
     Double_t d0y1 = recProbe[0].GetY();
     Double_t sigmad0y1 = TMath::Sqrt(recProbe[0].GetSigmaY2());
-    if(TMath::Abs(d0y1/sigmad0y1)<mind0ynSigDauCut) continue;
     Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
     if (d0x1 < 0)
       d0xy1 *= -1;
@@ -382,10 +380,8 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     recProbe[1].PropagateToZBxByBz(0);
     Double_t d0x2 = recProbe[1].GetX();
     Double_t sigmad0x2 = TMath::Sqrt(recProbe[1].GetSigmaX2());
-    if(TMath::Abs(d0x2/sigmad0x2)<mind0xnSigDauCut) continue;
     Double_t d0y2 = recProbe[1].GetY();
     Double_t sigmad0y2 = TMath::Sqrt(recProbe[1].GetSigmaY2());
-    if(TMath::Abs(d0y2/sigmad0y2)<mind0ynSigDauCut) continue;
     Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
     if (d0x2 < 0)
       d0xy2 *= -1;
@@ -518,6 +514,10 @@ void GenerateD0SignalCandidates(Int_t nevents = 100000,
     hd0XY1->Fill(d0xy1, ptRecD);
     hd0XY2->Fill(d0xy2, ptRecD);
     
+    if(TMath::Abs(d0x1/sigmad0x1)<mind0xnSigDauCut) continue;
+    if(TMath::Abs(d0y1/sigmad0y1)<mind0ynSigDauCut) continue;
+    if(TMath::Abs(d0x2/sigmad0x2)<mind0xnSigDauCut) continue;
+    if(TMath::Abs(d0y2/sigmad0y2)<mind0ynSigDauCut) continue;
     if(cosp>cutCosPointCand && dist>cutDecLenCand && (d0xy1*d0xy2)<cutImpParProd){
       arrsp[0] = massRecD;
       arrsp[1] = ptRecD;
@@ -999,12 +999,15 @@ void MakeD0CombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.txt",
   hd0XY1->Write();
   hd0XY2->Write();
   hsp->Write();
-  fout->Close();
   if (ntD0cand){
     fnt->cd();
-    ntD0cand->Write();
+    hNevents->Write();
+    hcand->Write();
+    hcandpeak->Write();  
+    ntD0cand->Write("",TObject::kOverwrite);
     fnt->Close();
   }
+  fout->Close();
 }
 
 

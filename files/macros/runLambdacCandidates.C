@@ -296,8 +296,8 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
     TString fntFilnam="Lc-Signal-ntuple.root";
     if(!useShrinkedNtuple) fntFilnam="Lc-Signal-ntuple-full.root";
     fnt = new TFile(fntFilnam.Data(), "recreate");
-    if(useShrinkedNtuple) ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:sigvert:pPiOverpP", 32000);
-    else ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0x3:d0y1:d0y2:d0y3:d0xy1:d0xy2:d0xy3:sd0x1:sd0x2:sd0x3:sd0y1:sd0y2:sd0y3:sd0xy1:sd0xy2:sd0xy3:sigvert:pP:pK:pPi:d0Lc", 32000);
+    if(useShrinkedNtuple) ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:sigvert:pPiOverpP:true", 32000);
+    else ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0x3:d0y1:d0y2:d0y3:d0xy1:d0xy2:d0xy3:sd0x1:sd0x2:sd0x3:sd0y1:sd0y2:sd0y3:sd0xy1:sd0xy2:sd0xy3:sigvert:pP:pK:pPi:d0Lc:true", 32000);
     fntG = new TFile("Lc-Generated-ntuple.root","recreate");
     ntLcgen =  new TNtuple("ntLcgen","ntLcgen","pt:y");
   }
@@ -611,6 +611,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	  arrnt[8] = d0y1*d0y3;
 	  arrnt[9] = sigmaVert;
 	  arrnt[10] = momPi/momP;
+	  arrnt[11] = 1.;
 	}else{
 	  arrnt[5] = d0x1;
 	  arrnt[6] = d0x2;
@@ -635,6 +636,7 @@ void GenerateLambdacSignalCandidates(Int_t nevents = 100000,
 	  arrnt[25] = momK;
 	  arrnt[26] = momPi;
 	  arrnt[27] = TMath::Abs(ipD);
+	  arrnt[28] = 1.;
 	}
 	ntLccand->Fill(arrnt);
       }
@@ -852,11 +854,11 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
   TNtuple *ntLccand = 0x0;
   Float_t arrnt[30];
   if (writeNtuple){
-    TString fntFilnam="Lc-Signal-ntuple.root";
-    if(!useShrinkedNtuple) fntFilnam="Lc-Signal-ntuple-full.root";
+    TString fntFilnam="Lc-Bkg-ntuple.root";
+    if(!useShrinkedNtuple) fntFilnam="Lc-Bkg-ntuple-full.root";
     fnt = new TFile(fntFilnam.Data(), "recreate");
-    if(useShrinkedNtuple) ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:sigvert:pPiOverpP", 32000);
-    else ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0x3:d0y1:d0y2:d0y3:d0xy1:d0xy2:d0xy3:sd0x1:sd0x2:sd0x3:sd0y1:sd0y2:sd0y3:sd0xy1:sd0xy2:sd0xy3:sigvert:pP:pK:pPi:d0Lc", 32000);
+    if(useShrinkedNtuple) ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:minsd0x:minsd0y:d0x1xd0x3:d0y1xd0y3:sigvert:pPiOverpP:true", 32000);
+    else ntLccand = new TNtuple("ntLccand", "ntLccand", "mass:pt:y:dist:cosp:d0x1:d0x2:d0x3:d0y1:d0y2:d0y3:d0xy1:d0xy2:d0xy3:sd0x1:sd0x2:sd0x3:sd0y1:sd0y2:sd0y3:sd0xy1:sd0xy2:sd0xy3:sigvert:pP:pK:pPi:d0Lc:true", 32000);
   }
 
   // define mother particle
@@ -1079,6 +1081,7 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 		    arrnt[8] = d0y1*d0y3;
 		    arrnt[9] = sigmaVert;
 		    arrnt[10] = momPi/momP;
+		    arrnt[11] = 0.;
 		  }else{
 		    arrnt[5] = d0x1;
 		    arrnt[6] = d0x2;
@@ -1103,6 +1106,7 @@ void MakeLambdacCombinBkgCandidates(const char *setup = "setup-10um-itssa_Eff1.t
 		    arrnt[25] = momK;
 		    arrnt[26] = momPi;
 		    arrnt[27] = TMath::Abs(ipD);
+		    arrnt[28] = 0.;
 		  }
 		  ntLccand->Fill(arrnt);
 		}
