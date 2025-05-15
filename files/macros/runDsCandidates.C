@@ -426,10 +426,8 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
 
     Double_t d0x1 = recProbe[0].GetX();
     Double_t sigmad0x1 = TMath::Sqrt(recProbe[0].GetSigmaX2());
-    if(TMath::Abs(d0x1/sigmad0x1)<mind0xnSigDauCut) continue;
     Double_t d0y1 = recProbe[0].GetY();
     Double_t sigmad0y1 = TMath::Sqrt(recProbe[0].GetSigmaY2());
-    if(TMath::Abs(d0y1/sigmad0y1)<mind0ynSigDauCut) continue;
     Double_t d0xy1 = TMath::Sqrt(d0x1 * d0x1 + d0y1 * d0y1);
     if (d0x1 < 0)
       d0xy1 *= -1;
@@ -440,10 +438,8 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     
     Double_t d0x2 = recProbe[1].GetX();
     Double_t sigmad0x2 = TMath::Sqrt(recProbe[1].GetSigmaX2());
-    if(TMath::Abs(d0x2/sigmad0x2)<mind0xnSigDauCut) continue;
     Double_t d0y2 = recProbe[1].GetY();
     Double_t sigmad0y2 = TMath::Sqrt(recProbe[1].GetSigmaY2());
-    if(TMath::Abs(d0y2/sigmad0y2)<mind0ynSigDauCut) continue;
     Double_t d0xy2 = TMath::Sqrt(d0x2 * d0x2 + d0y2 * d0y2);
     if (d0x2 < 0)
       d0xy2 *= -1;
@@ -454,10 +450,8 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
 
     Double_t d0x3 = recProbe[2].GetX();
     Double_t sigmad0x3 = TMath::Sqrt(recProbe[2].GetSigmaX2());
-    if(TMath::Abs(d0x3/sigmad0x3)<mind0xnSigDauCut) continue;
     Double_t d0y3 = recProbe[2].GetY();
     Double_t sigmad0y3 = TMath::Sqrt(recProbe[2].GetSigmaY2());
-    if(TMath::Abs(d0y3/sigmad0y3)<mind0ynSigDauCut) continue;
     Double_t d0xy3 = TMath::Sqrt(d0x3 * d0x3 + d0y3 * d0y3);
     if (d0x3 < 0)
       d0xy3 *= -1;
@@ -466,8 +460,6 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     double ptot3=recProbe[2].GetP();
     double eta3=0.5*TMath::Log((ptot3+pxyz[2])/(ptot3-pxyz[2]));
 
-    if(TMath::Abs(d0xy1)<mind0xyDauCut || TMath::Abs(d0xy2)<mind0xyDauCut || TMath::Abs(d0xy3)<mind0xyDauCut) continue;
- 
     Double_t xV, yV, zV;
     Double_t sigmaVert;
     ComputeVertex(recProbe[0],recProbe[1],recProbe[2],vprim[2],xV,yV,zV,sigmaVert);
@@ -579,6 +571,16 @@ void GenerateDsSignalCandidates(Int_t nevents = 100000,
     hd0XYeta1->Fill(eta1,d0xy1);
     hd0XYeta2->Fill(eta2,d0xy2);
     hd0XYeta3->Fill(eta3,d0xy3);
+
+    if(TMath::Abs(d0x1/sigmad0x1)<mind0xnSigDauCut) continue;
+    if(TMath::Abs(d0y1/sigmad0y1)<mind0ynSigDauCut) continue;
+    if(TMath::Abs(d0x2/sigmad0x2)<mind0xnSigDauCut) continue;
+    if(TMath::Abs(d0y2/sigmad0y2)<mind0ynSigDauCut) continue;
+    if(TMath::Abs(d0x3/sigmad0x3)<mind0xnSigDauCut) continue;
+    if(TMath::Abs(d0y3/sigmad0y3)<mind0ynSigDauCut) continue;
+    if(TMath::Abs(d0xy1)<mind0xyDauCut || TMath::Abs(d0xy2)<mind0xyDauCut || TMath::Abs(d0xy3)<mind0xyDauCut) continue;
+ 
+
     if(cosp>cutCosPointCand && dist>cutDecLenCand && massRecKK<cutMassKK && d0xy1*d0xy3<cutImpParProd && sigmaVert<cutSigVert){
       arrsp[0] = massRecD;
       arrsp[1] = ptRecD;
