@@ -35,7 +35,7 @@
 #define LOCLOG_H
 /* Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
  * See cxx source for full Copyright notice                               */
-
+#ifdef _NOALIROOT_
 /* $Id$ */
 
 #include <TClass.h>
@@ -697,4 +697,6 @@ do { if (ALIROOT_UNLIKELY(LocLog::IsDebugEnabled() && LocLog::GetDebugLevel(MODU
  */
 #define AliFatalGeneralF(scope,message,...)  AliMessageGeneralF(scope, LocLog::kFatal, message, __VA_ARGS__)
 
+
+#endif // ifdef _NOALIROOT_
 #endif

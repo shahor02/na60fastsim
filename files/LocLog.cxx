@@ -49,7 +49,7 @@
 #include <stdexcept>
 #include <functional>
 
-
+#ifdef _NOALIROOT_
 
 using std::endl;
 using std::cout;
@@ -1249,3 +1249,5 @@ void LocLog::TestException(Int_t level){
     throw std::runtime_error("Test exception");
   }
 }
+
+#endif // ifdef _NOALIROOT_
