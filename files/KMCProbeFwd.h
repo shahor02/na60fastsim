@@ -21,6 +21,9 @@ class KMCProbeFwd: public TObject {
   enum {kY2=0,kZ2=2,kSnp2=5,kTgl2=9,kPtI2=14};
   enum {kY,kZ,kSnp,kTgl,kPtI};
   //
+  static bool DBG;
+
+
   KMCProbeFwd();
   KMCProbeFwd(double *xyz, double *pxyz, Int_t sign, double errLoose=-1);  
   KMCProbeFwd(const KMCProbeFwd& src);
@@ -256,19 +259,22 @@ inline void KMCProbeFwd::ResetHit(Int_t lr) {
 inline Bool_t KMCProbeFwd::CorrectForMeanMaterial(double xOverX0, double xTimesRho, Bool_t modeMC, Bool_t anglecorr)
 {
   Bool_t res;
+  AliExternalTrackParam track0(fTrack);
   if (modeMC) {
     if (!(res=ApplyMSEL(xOverX0,xTimesRho))) {
       AliDebug(2,Form("Failed to apply MS, %f",xOverX0));
       if (AliLog::GetGlobalDebugLevel()>2) fTrack.Print();
       return kFALSE;
     }
-    else xTimesRho = 0; // don't apply e.loss in the ETP
   }
-  res = fTrack.CorrectForMeanMaterial(xOverX0, xTimesRho, fMass, anglecorr);
+  res = fTrack.CorrectForMeanMaterial(modeMC ? 0.f : xOverX0, xTimesRho, fMass, anglecorr); // in modeMC==true more the eloss is applied by explicit random sampling
   if (!res) {
     AliDebug(2,Form("Failed to CorrectForMeanMaterial: %f %f",xOverX0,xTimesRho));
     if (AliLog::GetGlobalDebugLevel()>2) fTrack.Print();
     return res;
+  }
+  if (DBG) {
+    printf("DB: %.4f %.4f %.4f x2x0=%.3e xrho=%.3e MCMode=%d angleCorr=%d  P=%.3f dP=%.3e | %p\n", GetX(), GetY(), GetZ(), xOverX0, xTimesRho, modeMC, anglecorr, track0.GetP(), track0.GetP() - fTrack.GetP(), &fTrack);
   }
   return kTRUE;
 }

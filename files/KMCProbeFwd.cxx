@@ -7,7 +7,7 @@ ClassImp(KMCProbeFwd)
 
 Int_t    KMCProbeFwd::fgNITSLayers = 0;
 Double_t KMCProbeFwd::fgMissingHitPenalty = 2.;
-
+bool KMCProbeFwd::DBG = false;
 //_______________________________________________________________________
 KMCProbeFwd::KMCProbeFwd() 
   :fWeight(1) 

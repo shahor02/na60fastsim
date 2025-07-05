@@ -922,6 +922,10 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
   //
   if (lrFrom) {
     //
+    if (DBG) {
+      printf("DB prop z=%.4f From %s %.4f To %s %.4f ModeMC=%d\n", trc->GetZ(), lrFrom->GetName(), lrFrom->GetZ(), lrTo->GetName(), lrTo->GetZ(), modeMC);
+    }
+
     if (!lrFrom->IsDead()) { // active layers are thin, no need for step by step tracking. The track is always in the middle
       float x2x0=0,xrho=0;
       lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
@@ -955,6 +959,9 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
         float x2x0=0,xrho=0;
         lrFrom->getMatBudget(trc->GetX(),trc->GetY(), x2x0, xrho);
         if (fIntegrateMSX2X0) trc->addMSMaterialsSeen(x2x0);
+	if (DBG) {
+	  //	  printf("DB: lr:%s x2x0:%.2e xrho:%.2e coreloss: %f\n",lrFrom->GetName(), x2x0, xrho, corrELoss);
+	}
 	if (!PropagateToZBxByBz(trc,dstZ, fDefStepMat, x2x0, -dir*xrho*corrELoss, modeMC)) return 0;
       }
     }
@@ -978,6 +985,8 @@ Int_t KMCDetectorFwd::PropagateToLayer(KMCProbeFwd* trc, KMCLayerFwd* lrFrom, KM
 Bool_t KMCDetectorFwd::SolveSingleTrackViaKalman(double pt, double yrap, double phi, 
 						 double mass, int charge, double x,double y, double z)
 {
+  DBG = false;
+  KMCProbeFwd::DBG = false;
   // analytical estimate of tracking resolutions
   //  fProbe.SetUseLogTermMS(kTRUE);
   //
@@ -1166,6 +1175,9 @@ Bool_t KMCDetectorFwd::SolveSingleTrackViaKalmanMC(int offset)
   currTr = lr->AddMCTrack(&fProbe); // start with original track at vertex
   //
   //  printf("INI SEED: "); currTr->Print("etp");
+  DBG = true;
+  KMCProbeFwd::DBG = true;
+
   if (!fExternalInput) {if (!TransportKalmanTrackWithMS(currTr, maxLr, kFALSE)) return kFALSE;} // transport it to outermost layer where full MC is done
   else *currTr->GetTrack() = *GetLayer(maxLr)->GetAnProbe()->GetTrack();
   //printf("LastTrackedMS: "); currTr->GetTrack()->Print();

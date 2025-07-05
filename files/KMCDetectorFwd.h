@@ -307,6 +307,8 @@ protected:
   static const Double_t fgkFldEps; // offset for field region boundaries crossing
   Double_t *fZSteps;
   //
+  bool DBG = false;
+  
  protected:
 
   ClassDef(KMCDetectorFwd,1);
