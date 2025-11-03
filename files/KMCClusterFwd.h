@@ -23,8 +23,8 @@ class KMCClusterFwd : public TObject {
   Double_t GetYLab() const   {return GetY();}
   Double_t GetZLab() const   {return GetZ();}
   Double_t GetXTF() const   {return fZ;}
-  Double_t GetYTF() const   {return fY;}
-  Double_t GetZTF() const   {return -fX;}
+  Double_t GetYTF() const   {return fX;}
+  Double_t GetZTF() const   {return fY;}
   void     SetX(double v)    {fX = v;}
   void     SetY(double v)    {fY = v;}
   void     SetZ(double v)    {fZ = v;}

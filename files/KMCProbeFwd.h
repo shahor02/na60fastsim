@@ -77,14 +77,14 @@ class KMCProbeFwd: public TObject {
   Bool_t   Update(Double_t cov[3]);
 
   Double_t GetR()                        const {double x=GetX(),y=GetY(),r=x*x+y*y; return r>0?TMath::Sqrt(r):0;}
-  Double_t GetX()                        const {return -fTrack.GetZ();} // Z of local frame!
-  Double_t GetY()                        const {return  fTrack.GetY();} // Y of local frame
+  Double_t GetX()                        const {return fTrack.GetY();} 
+  Double_t GetY()                        const {return fTrack.GetZ();} 
   Double_t GetZ()                        const {return NegDir() ? -fTrack.GetX():fTrack.GetX();}
   void     GetXYZ(double *xyz)           const;
   void     GetPXYZ(double *pxyz)         const;  
   double   GetP()                        const {return fTrack.GetP();}
-  Double_t GetSigmaX2()                  const {return fTrack.GetSigmaZ2();}
-  Double_t GetSigmaY2()                  const {return fTrack.GetSigmaY2();}
+  Double_t GetSigmaX2()                  const {return fTrack.GetSigmaY2();}
+  Double_t GetSigmaY2()                  const {return fTrack.GetSigmaZ2();}
   Double_t GetSigmaXY()                  const {return fTrack.GetSigmaZY();}  
   Double_t GetSigmaP2()                  const;
   Double_t GetSigmaPX2()                 const;
@@ -154,16 +154,16 @@ inline void  KMCProbeFwd::Lab2Trk(const double *vLab, double *vTrk)
 {
   // convert alice coordinates to modified
   vTrk[0] = vLab[2];
-  vTrk[1] = vLab[1];
-  vTrk[2] =-vLab[0];
+  vTrk[1] = vLab[0];
+  vTrk[2] = vLab[1];
 }
 
 //_______________________________________________________________________
 inline void  KMCProbeFwd::Trk2Lab(const double *vTrk, double *vLab)
 {
   // convert modified coordinates to Lab ones
-  vLab[0] =-vTrk[2];
-  vLab[1] = vTrk[1];
+  vLab[0] = vTrk[1];
+  vLab[1] = vTrk[2];
   vLab[2] = vTrk[0];
 }
 
@@ -211,7 +211,7 @@ inline Bool_t KMCProbeFwd::Update(Double_t cov[3])
 {
   // dummy update with measurement errors in the plane normal to Z axis (in Lab X,Y axis) 
   //  printf("Before update %f %f %f\n",cov[0],cov[1],cov[2]); fTrack.Print();
-  double p[2] = {GetX(), fTrack.GetY()};
+  double p[2] = {GetX(), GetY()};
   if (!fTrack.Update(p,cov)) return kFALSE;
   //  printf("After update: \n"); fTrack.Print();
   return kTRUE;  

@@ -1439,8 +1439,8 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
   double sgy = lrP->GetYRes(probe), sgx = lrP->GetXRes(probe); 
   double measErr2[3] = { sgy*sgy, 0, sgx*sgx}; 
   double meas[2] = {0,0};
-  double tolerY = probe->GetTrack()->GetSigmaY2() + measErr2[0];
-  double tolerX = probe->GetTrack()->GetSigmaZ2() + measErr2[2]; // Xlab = -Zloc
+  double tolerY = probe->GetSigmaY2() + measErr2[0];
+  double tolerX = probe->GetSigmaX2() + measErr2[2]; // Xlab = -Zloc
   tolerY = TMath::Sqrt(fMaxChi2Cl*tolerY);
   tolerX = TMath::Sqrt(fMaxChi2Cl*tolerX);
   double yMin = probe->GetY() - tolerY;
@@ -1471,7 +1471,7 @@ void KMCDetectorFwd::CheckTrackProlongations(KMCProbeFwd *probe, KMCLayerFwd* lr
     if (x>xMax) continue;
     if (y<yMin || y>yMax) continue; 
     //
-    meas[0] = y; meas[1] = -x;
+    meas[0] = cl->GetYTF(); meas[1] = cl->GetZTF(); //meas[0] = y; meas[1] = -x;
     double chi2 = probe->GetPredictedChi2(meas,measErr2);
     //
     //    AliInfo(Form("Seed-to-cluster chi2 = Chi2=%.2f for cl:",chi2));
